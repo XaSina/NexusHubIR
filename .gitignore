@@ -1,0 +1,7 @@
+nexushub/app/config.php
+nexushub/app/installed.lock
+nexushub/uploads/*
+!nexushub/uploads/.htaccess
+!nexushub/uploads/index.html
+.DS_Store
+Thumbs.db

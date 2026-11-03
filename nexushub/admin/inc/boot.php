@@ -1,0 +1,236 @@
+<?php
+/**
+ * هسته‌ی پنل مدیریت: لایه‌بندی و توابع فرم
+ */
+require dirname(__DIR__, 2) . '/app/bootstrap.php';
+
+header('X-Frame-Options: SAMEORIGIN');
+header('Cache-Control: no-store');
+
+if (!defined('NX_ADMIN_PUBLIC')) {
+    $ME = require_login();
+}
+
+function adm_icon(string $name, int $size = 20): string
+{
+    static $ext = [
+        'dashboard' => '<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>',
+        'posts' => '<path d="M4 4h12l4 4v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 14h8M8 18h5"/>',
+        'plus' => '<path d="M12 5v14M5 12h14"/>',
+        'folder' => '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+        'image' => '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
+        'ads' => '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/>',
+        'palette' => '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4-4-7.6-9-7.6Z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/>',
+        'pages' => '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+        'users' => '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/>',
+        'settings' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
+        'logout' => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+        'edit' => '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+        'trash' => '<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+        'upload' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+        'database' => '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+        'inbox' => '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1Z"/>',
+        'star' => '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z"/>',
+        'chart' => '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+        'click' => '<path d="m9 9 5 12 1.8-5.2L21 14Z"/><path d="M7.2 2.2 8 5.1M5.1 8l-2.9-.8M14 4.1 12 6M6 12l-1.9 2"/>',
+    ];
+    if (isset($ext[$name])) {
+        return '<svg class="ic" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $ext[$name] . '</svg>';
+    }
+    return icon($name, $size);
+}
+
+function adm_nav(): array
+{
+    $pendingC = (int) val("SELECT COUNT(*) FROM comments WHERE status = 'pending'");
+    $unread = (int) val('SELECT COUNT(*) FROM messages WHERE is_read = 0');
+    return [
+        ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
+        ['همه اخبار', 'posts.php', 'posts', 'posts', 'posts', 0],
+        ['افزودن خبر', 'post-edit.php', 'plus', 'posts', 'post-new', 0],
+        ['دسته‌بندی‌ها', 'categories.php', 'folder', 'categories', 'categories', 0],
+        ['نظرات', 'comments.php', 'comment', 'comments', 'comments', $pendingC],
+        ['کتابخانه رسانه', 'media.php', 'image', 'media', 'media', 0],
+        ['تبلیغات', 'ads.php', 'ads', '*', 'ads', 0],
+        ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
+        ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
+        ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],
+        ['کاربران', 'users.php', 'users', '*', 'users', 0],
+        ['تنظیمات', 'settings.php', 'settings', '*', 'settings', 0],
+        ['پشتیبان‌گیری', 'backup.php', 'database', '*', 'backup', 0],
+    ];
+}
+
+function adm_head(string $title, string $active = ''): void
+{
+    $u = current_user();
+    $colors = theme_colors();
+    ?><!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title><?= e($title) ?> | پنل مدیریت <?= e(setting('site_title')) ?></title>
+<link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
+<style><?= theme_css_vars() ?></style>
+</head>
+<body class="adm-body">
+<div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
+<div class="adm">
+    <aside class="adm-side" id="admSide">
+        <a class="adm-brand" href="<?= e(url('admin/')) ?>">
+            <span class="adm-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></span>
+            <span><b><?= e(setting('site_title')) ?></b><small>پنل مدیریت</small></span>
+        </a>
+        <nav class="adm-nav">
+            <?php foreach (adm_nav() as [$label, $href, $ic, $cap, $key, $badge]):
+                if ($cap === '*' && !can('*')) continue;
+                if ($cap && $cap !== '*' && !can($cap)) continue; ?>
+                <a href="<?= e(url('admin/' . $href)) ?>" class="<?= $active === $key ? 'active' : '' ?>">
+                    <?= adm_icon($ic, 19) ?><span><?= e($label) ?></span>
+                    <?php if ($badge): ?><em class="nav-badge"><?= fa_num((string) $badge) ?></em><?php endif; ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+        <div class="adm-user">
+            <?= user_avatar($u, 40) ?>
+            <div><b><?= e($u['display_name'] ?: $u['username']) ?></b><small><?= e(role_names()[$u['role']] ?? $u['role']) ?></small></div>
+            <a class="adm-ib" href="<?= e(url('admin/profile.php')) ?>" title="پروفایل"><?= adm_icon('edit', 17) ?></a>
+            <a class="adm-ib" href="<?= e(url('admin/logout.php')) ?>" title="خروج"><?= adm_icon('logout', 17) ?></a>
+        </div>
+    </aside>
+    <div class="adm-overlay" id="admOverlay"></div>
+    <div class="adm-main">
+        <header class="adm-top">
+            <button class="adm-ib adm-burger" id="admBurger" aria-label="منو"><?= icon('menu', 22) ?></button>
+            <h1 class="adm-title"><?= e($title) ?></h1>
+            <span class="adm-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?></span>
+            <div class="adm-top-actions">
+                <?php if (can('posts')): ?><a class="abtn abtn-primary abtn-sm" href="<?= e(url('admin/post-edit.php')) ?>"><?= adm_icon('plus', 17) ?><span>خبر جدید</span></a><?php endif; ?>
+                <a class="abtn abtn-ghost abtn-sm" href="<?= e(url('')) ?>" target="_blank"><?= icon('external', 16) ?><span>مشاهده سایت</span></a>
+            </div>
+        </header>
+        <main class="adm-content">
+    <?php
+}
+
+function adm_foot(array $scripts = []): void
+{
+    $fl = flashes();
+    ?>
+        </main>
+        <footer class="adm-foot">NEXUS | HUB CMS · نسخه <?= fa_num(NX_VERSION) ?> · <?= jdate('Y') ?></footer>
+    </div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div class="modal" id="mediaModal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-box">
+        <div class="modal-head"><b>انتخاب تصویر</b>
+            <label class="abtn abtn-primary abtn-sm"><?= adm_icon('upload', 16) ?> آپلود جدید<input type="file" accept="image/*" multiple hidden id="mmUpload"></label>
+            <button class="adm-ib" data-close aria-label="بستن"><?= icon('close', 18) ?></button>
+        </div>
+        <div class="mm-grid" id="mmGrid"></div>
+        <div class="mm-foot"><button class="abtn abtn-ghost abtn-sm" id="mmMore" hidden>بارگذاری بیشتر</button></div>
+    </div>
+</div>
+<script>
+window.NXA = <?= json_encode([
+    'base' => nx_base_path(),
+    'csrf' => csrf_token(),
+    'ajax' => url('admin/ajax.php'),
+    'flashes' => $fl,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+</script>
+<script src="<?= e(asset('js/admin.js')) ?>"></script>
+<?php foreach ($scripts as $s): ?><script src="<?= e(asset('js/' . $s)) ?>"></script><?php endforeach; ?>
+</body>
+</html>
+<?php
+}
+
+/* ---------------- فرم‌ها ---------------- */
+
+function f_text(string $name, string $label, $value = '', array $o = []): string
+{
+    $type = $o['type'] ?? 'text';
+    $attrs = '';
+    foreach (['placeholder', 'maxlength', 'min', 'max', 'step', 'pattern', 'id'] as $a) if (isset($o[$a])) $attrs .= ' ' . $a . '="' . e($o[$a]) . '"';
+    if (!empty($o['required'])) $attrs .= ' required';
+    if (!empty($o['ltr'])) $attrs .= ' dir="ltr"';
+    if (!empty($o['attrs'])) $attrs .= ' ' . $o['attrs'];
+    return '<label class="af"><span class="af-label">' . e($label) . '</span><input type="' . e($type) . '" name="' . e($name) . '" value="' . e($value) . '"' . $attrs . '>'
+        . (!empty($o['hint']) ? '<small class="af-hint">' . $o['hint'] . '</small>' : '') . '</label>';
+}
+
+function f_textarea(string $name, string $label, $value = '', array $o = []): string
+{
+    $rows = (int) ($o['rows'] ?? 4);
+    $attrs = !empty($o['ltr']) ? ' dir="ltr"' : '';
+    if (isset($o['placeholder'])) $attrs .= ' placeholder="' . e($o['placeholder']) . '"';
+    if (isset($o['maxlength'])) $attrs .= ' maxlength="' . (int) $o['maxlength'] . '"';
+    if (!empty($o['attrs'])) $attrs .= ' ' . $o['attrs'];
+    return '<label class="af"><span class="af-label">' . e($label) . '</span><textarea name="' . e($name) . '" rows="' . $rows . '"' . $attrs . (!empty($o['code']) ? ' class="code"' : '') . '>' . e($value) . '</textarea>'
+        . (!empty($o['hint']) ? '<small class="af-hint">' . $o['hint'] . '</small>' : '') . '</label>';
+}
+
+function f_select(string $name, string $label, array $options, $value = '', array $o = []): string
+{
+    $h = '<label class="af"><span class="af-label">' . e($label) . '</span><select name="' . e($name) . '"' . (!empty($o['attrs']) ? ' ' . $o['attrs'] : '') . '>';
+    foreach ($options as $k => $v) $h .= '<option value="' . e($k) . '"' . ((string) $k === (string) $value ? ' selected' : '') . '>' . e($v) . '</option>';
+    return $h . '</select>' . (!empty($o['hint']) ? '<small class="af-hint">' . $o['hint'] . '</small>' : '') . '</label>';
+}
+
+function f_switch(string $name, string $label, bool $checked, string $hint = ''): string
+{
+    return '<label class="sw-row"><span class="sw-text"><b>' . e($label) . '</b>' . ($hint ? '<small>' . e($hint) . '</small>' : '') . '</span>'
+        . '<input type="hidden" name="' . e($name) . '" value="0"><input type="checkbox" class="sw" name="' . e($name) . '" value="1"' . ($checked ? ' checked' : '') . '></label>';
+}
+
+function f_color(string $name, string $label, string $value): string
+{
+    return '<label class="af af-color"><span class="af-label">' . e($label) . '</span><span class="color-field"><input type="color" value="' . e($value) . '" data-sync="' . e($name) . '"><input type="text" name="' . e($name) . '" value="' . e($value) . '" dir="ltr" maxlength="7" pattern="#[0-9a-fA-F]{6}"></span></label>';
+}
+
+function f_range(string $name, string $label, $value, int $min, int $max, string $unit = ''): string
+{
+    return '<label class="af af-range"><span class="af-label">' . e($label) . ' <output>' . e($value) . '</output>' . e($unit) . '</span><input type="range" name="' . e($name) . '" value="' . e($value) . '" min="' . $min . '" max="' . $max . '"></label>';
+}
+
+function f_image(string $name, string $label, ?string $value, string $hint = ''): string
+{
+    $url = $value ? media_url($value) : '';
+    return '<div class="af af-image" data-image-field><span class="af-label">' . e($label) . '</span>'
+        . '<div class="img-pick' . ($url ? ' has' : '') . '"><img src="' . e($url) . '" alt=""><span class="img-empty">' . adm_icon('image', 30) . '<small>انتخاب یا آپلود تصویر</small></span></div>'
+        . '<input type="hidden" name="' . e($name) . '" value="' . e((string) $value) . '">'
+        . '<div class="img-actions"><button type="button" class="abtn abtn-ghost abtn-sm" data-pick>' . adm_icon('image', 15) . ' انتخاب</button><button type="button" class="abtn abtn-ghost abtn-sm" data-clear>' . adm_icon('trash', 15) . ' حذف</button></div>'
+        . ($hint ? '<small class="af-hint">' . e($hint) . '</small>' : '') . '</div>';
+}
+
+function f_jdate(string $name, string $label, ?string $datetime, string $hint = ''): string
+{
+    return '<label class="af"><span class="af-label">' . e($label) . '</span><span class="jd-field"><input type="text" name="' . e($name) . '" value="' . e(datetime_to_jalali_input($datetime)) . '" dir="ltr" placeholder="1405/08/12 14:30" data-jdp autocomplete="off">' . icon('calendar', 18) . '</span>'
+        . ($hint ? '<small class="af-hint">' . e($hint) . '</small>' : '') . '</label>';
+}
+
+function status_badge(string $status, ?string $publishedAt = null): string
+{
+    if ($status === 'published' && $publishedAt && strtotime($publishedAt) > time()) return '<span class="badge b-info">زمان‌بندی‌شده</span>';
+    return match ($status) {
+        'published' => '<span class="badge b-ok">منتشر شده</span>',
+        'draft' => '<span class="badge b-muted">پیش‌نویس</span>',
+        'pending' => '<span class="badge b-warn">در انتظار</span>',
+        'approved' => '<span class="badge b-ok">تایید شده</span>',
+        'spam' => '<span class="badge b-err">اسپم</span>',
+        default => '<span class="badge">' . e($status) . '</span>',
+    };
+}
+
+function post_check(): void
+{
+    if (!is_post()) return;
+    csrf_check();
+}
