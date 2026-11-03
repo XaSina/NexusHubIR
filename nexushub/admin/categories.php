@@ -4,7 +4,7 @@ require_cap('categories');
 
 $edit = (int) ($_GET['edit'] ?? 0);
 $c = $edit ? row('SELECT * FROM categories WHERE id = ?', [$edit]) : null;
-$c = $c ?: ['id' => 0, 'name' => '', 'slug' => '', 'description' => '', 'color' => '#ff1f3d', 'icon' => '📰', 'sort_order' => (int) val('SELECT COALESCE(MAX(sort_order),0)+1 FROM categories'), 'show_on_home' => 1];
+$c = $c ?: ['id' => 0, 'name' => '', 'slug' => '', 'description' => '', 'color' => '#ff1f3d', 'icon' => '📰', 'sort_order' => (int) val('SELECT COALESCE(MAX(sort_order),0)+1 FROM categories'), 'show_on_home' => 1, 'show_in_header' => 0, 'show_in_mobile' => 1, 'show_in_footer' => 1];
 
 if (is_post()) {
     csrf_check();
@@ -13,6 +13,12 @@ if (is_post()) {
         q('UPDATE posts SET category_id = NULL WHERE category_id = ?', [$did]);
         q('DELETE FROM categories WHERE id = ?', [$did]);
         flash('دسته‌بندی حذف شد. اخبار آن بدون دسته شدند.');
+        redirect('admin/categories.php');
+    }
+    if (!empty($_POST['toggle']) && in_array($_POST['toggle'], ['show_in_header', 'show_in_mobile', 'show_in_footer', 'show_on_home'], true)) {
+        $col = $_POST['toggle'];
+        q("UPDATE categories SET `$col` = 1 - `$col` WHERE id = ?", [(int) ($_POST['cid'] ?? 0)]);
+        flash('نمایش دسته بروزرسانی شد.');
         redirect('admin/categories.php');
     }
     if (!empty($_POST['order'])) {
@@ -27,6 +33,9 @@ if (is_post()) {
         'icon' => mb_substr(trim((string) ($_POST['icon'] ?? '📰')), 0, 8) ?: '📰',
         'sort_order' => (int) ($_POST['sort_order'] ?? 0),
         'show_on_home' => !empty($_POST['show_on_home']) ? 1 : 0,
+        'show_in_header' => !empty($_POST['show_in_header']) ? 1 : 0,
+        'show_in_mobile' => !empty($_POST['show_in_mobile']) ? 1 : 0,
+        'show_in_footer' => !empty($_POST['show_in_footer']) ? 1 : 0,
     ];
     if ($data['name'] === '') { flash('نام دسته را وارد کنید.', 'error'); redirect('admin/categories.php' . ($c['id'] ? '?edit=' . $c['id'] : '')); }
     $data['slug'] = unique_slug('categories', slugify(trim((string) ($_POST['slug'] ?? '')) ?: $data['name']), (int) $c['id']);
@@ -49,7 +58,11 @@ adm_head('دسته‌بندی‌ها', 'categories');
                     <span class="cat-dot" style="--c:<?= e($k['color']) ?>"><?= e($k['icon']) ?></span>
                     <b><?= e($k['name']) ?> <small class="muted ltr">/<?= e($k['slug']) ?></small></b>
                     <span class="badge"><?= fa_num((string) $k['cnt']) ?> خبر</span>
-                    <?php if (!$k['show_on_home']): ?><span class="badge b-muted">مخفی در خانه</span><?php endif; ?>
+                    <form method="post" class="cat-places"><?= csrf_field() ?><input type="hidden" name="cid" value="<?= (int) $k['id'] ?>">
+                        <?php foreach (['show_in_header' => ['🖥️', 'منوی کامپیوتر'], 'show_in_mobile' => ['📱', 'منوی موبایل'], 'show_in_footer' => ['⬇️', 'فوتر'], 'show_on_home' => ['🏠', 'بلوک صفحه اصلی']] as $col => [$ic, $lbl]): ?>
+                            <button class="cp<?= $k[$col] ? ' on' : '' ?>" name="toggle" value="<?= $col ?>" title="<?= e($lbl) ?>: <?= $k[$col] ? 'روشن — برای خاموش کردن کلیک کنید' : 'خاموش — برای روشن کردن کلیک کنید' ?>"><?= $ic ?></button>
+                        <?php endforeach; ?>
+                    </form>
                     <a class="adm-ib" href="?edit=<?= (int) $k['id'] ?>" title="ویرایش"><?= adm_icon('edit', 16) ?></a>
                     <form method="post" style="display:inline"><?= csrf_field() ?><button class="adm-ib" name="delete_id" value="<?= (int) $k['id'] ?>" data-confirm="دسته «<?= e($k['name']) ?>» حذف شود؟"><?= adm_icon('trash', 16) ?></button></form>
                 </div>
@@ -75,7 +88,11 @@ adm_head('دسته‌بندی‌ها', 'categories');
             </div>
             <?= f_textarea('description', 'توضیحات', (string) $c['description'], ['rows' => 3]) ?>
             <?= f_text('sort_order', 'ترتیب', (string) $c['sort_order'], ['type' => 'number']) ?>
-            <?= f_switch('show_on_home', 'نمایش بلوک در صفحه اصلی', (bool) $c['show_on_home']) ?>
+            <div class="af-label" style="margin:10px 0 2px">کجا نمایش داده شود؟</div>
+            <?= f_switch('show_in_header', '🖥️ منوی بالای سایت (کامپیوتر)', (bool) $c['show_in_header'], 'کنار «خانه» و «همه اخبار» در نوار بالا؛ روی موبایل نمایش داده نمی‌شود') ?>
+            <?= f_switch('show_in_mobile', '📱 منوی موبایل', (bool) $c['show_in_mobile'], 'داخل منوی کشویی موبایل (دکمه ☰)') ?>
+            <?= f_switch('show_in_footer', '⬇️ فوتر', (bool) $c['show_in_footer'], 'ستون «دسته‌بندی‌ها» پایین سایت') ?>
+            <?= f_switch('show_on_home', '🏠 بلوک در صفحه اصلی', (bool) $c['show_on_home'], 'ردیف اخبار این دسته در صفحه اصلی') ?>
             <button class="abtn abtn-primary abtn-block mt" type="submit"><?= $c['id'] ? 'ذخیره تغییرات' : 'افزودن دسته' ?></button>
         </form>
     </div>

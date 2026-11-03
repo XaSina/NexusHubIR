@@ -255,3 +255,38 @@ function content_for_display(string $html): string
 {
     return preg_replace('~(src|href)="(uploads/)~i', '$1="' . nx_base_path() . '/$2', $html);
 }
+
+/** استوری‌های فعال و منقضی‌نشده همراه اسلایدهایشان (برای صفحه اصلی) */
+function get_active_stories(): array
+{
+    try {
+        $list = rows('SELECT * FROM stories WHERE is_active = 1 AND (expires_at IS NULL OR expires_at > ?) ORDER BY sort_order, id DESC', [now()]);
+    } catch (Throwable $e) {
+        return [];
+    }
+    if (!$list) return [];
+    $ids = array_map(fn($s) => (int) $s['id'], $list);
+    $items = [];
+    foreach (rows('SELECT * FROM story_items WHERE story_id IN (' . implode(',', $ids) . ') ORDER BY sort_order, id') as $it) {
+        $items[(int) $it['story_id']][] = [
+            'type' => $it['media_type'] === 'video' ? 'video' : 'image',
+            'src' => media_url($it['media']),
+            'caption' => (string) $it['caption'],
+            'link' => safe_link((string) $it['link']),
+            'linkText' => (string) ($it['link_text'] ?: 'مشاهده'),
+            'duration' => max(2, min(30, (int) $it['duration'])),
+        ];
+    }
+    $out = [];
+    foreach ($list as $s) {
+        if (empty($items[(int) $s['id']])) continue;                       // a story without slides is not shown
+        $first = $items[(int) $s['id']][0];
+        $cover = $s['cover'] ? media_url($s['cover']) : ($first['type'] === 'image' ? $first['src'] : media_url((string) setting('logo')));
+        $out[] = [
+            'id' => (int) $s['id'], 'title' => $s['title'], 'cover' => $cover,
+            'v' => strtotime($s['updated_at']),                              // changes when edited → shows as unseen again
+            'ago' => jago($s['updated_at']), 'items' => $items[(int) $s['id']],
+        ];
+    }
+    return $out;
+}

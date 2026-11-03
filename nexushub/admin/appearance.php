@@ -127,7 +127,7 @@ adm_head('ظاهر سایت', 'appearance');
         </div>
         <div class="card">
             <div class="card-head"><h3>📰 نوار فوری و استوری‌ها</h3></div>
-            <?= f_switch('show_stories', 'دایره‌های دسته‌بندی (سبک استوری)', setting_on('show_stories')) ?>
+            <?= f_switch('show_stories', 'استوری‌ها (بالای صفحه اصلی)', setting_on('show_stories'), 'استوری‌ها از بخش «استوری‌ها» در منوی پنل ساخته می‌شوند') ?>
             <?= f_switch('show_ticker', 'نوار اخبار فوری متحرک', setting_on('show_ticker'), 'اخبار با تیک «فوری» نمایش داده می‌شوند') ?>
             <?= f_text('ticker_label', 'برچسب نوار', $s['ticker_label']) ?>
             <?= f_range('ticker_speed', 'مدت یک دور حرکت (هرچه بیشتر، کندتر)', $s['ticker_speed'], 10, 120, ' ثانیه') ?>

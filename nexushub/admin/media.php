@@ -27,9 +27,11 @@ adm_head('کتابخانه رسانه', 'media');
     <div class="media-grid">
         <?php foreach ($list as $m): $u = site_url($m['path']); ?>
             <div class="m-item" style="cursor:default">
-                <img src="<?= e(media_url($m['path'])) ?>" alt="" loading="lazy">
+                <?php if (str_starts_with((string) $m['mime'], 'video/')): ?>
+                    <video src="<?= e(media_url($m['path'])) ?>#t=0.5" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video><span class="badge b-info" style="position:absolute;top:6px;right:6px">🎬 ویدیو</span>
+                <?php else: ?><img src="<?= e(media_url($m['path'])) ?>" alt="" loading="lazy"><?php endif; ?>
                 <div class="m-info" style="opacity:1">
-                    <span><?= fa_num((string) $m['width']) ?>×<?= fa_num((string) $m['height']) ?> · <?= fa_num(number_format($m['size'] / 1024)) ?>KB</span>
+                    <span><?= $m['width'] ? fa_num((string) $m['width']) . '×' . fa_num((string) $m['height']) . ' · ' : '' ?><?= fa_num(number_format($m['size'] / 1024)) ?>KB</span>
                     <span class="row-flex" style="gap:4px">
                         <button class="adm-ib" style="width:28px;height:28px" data-copy="<?= e($u) ?>" title="کپی لینک"><?= icon('copy', 14) ?></button>
                         <form method="post" style="display:inline"><?= csrf_field() ?><button class="adm-ib" style="width:28px;height:28px" name="delete_id" value="<?= (int) $m['id'] ?>" data-confirm="این فایل حذف شود؟ (اگر در خبری استفاده شده باشد، تصویر آن خبر از بین می‌رود)" title="حذف"><?= adm_icon('trash', 14) ?></button></form>

@@ -32,6 +32,7 @@ function adm_icon(string $name, int $size = 20): string
         'inbox' => '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1Z"/>',
         'star' => '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z"/>',
         'chart' => '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+        'story' => '<circle cx="12" cy="12" r="9" stroke-dasharray="4 2.2"/><circle cx="12" cy="12" r="5"/>',
         'click' => '<path d="m9 9 5 12 1.8-5.2L21 14Z"/><path d="M7.2 2.2 8 5.1M5.1 8l-2.9-.8M14 4.1 12 6M6 12l-1.9 2"/>',
     ];
     if (isset($ext[$name])) {
@@ -52,6 +53,7 @@ function adm_nav(): array
         ['دسته‌بندی‌ها', 'categories.php', 'folder', 'categories', 'categories', 0],
         ['نظرات', 'comments.php', 'comment', 'comments', 'comments', $pendingC],
         ['کتابخانه رسانه', 'media.php', 'image', 'media', 'media', 0],
+        ['استوری‌ها', 'stories.php', 'story', '*', 'stories', 0],
         ['تبلیغات', 'ads.php', 'ads', '*', 'ads', 0],
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],

@@ -10,17 +10,37 @@ $tgLink = safe_link((string) setting('social_telegram'));
 $middleAdDone = false;
 ?>
 
-<?php if (setting_on('show_stories') && $cats): ?>
-<section class="container stories" aria-label="دسته‌بندی‌ها">
+<?php $stories = setting_on('show_stories') ? get_active_stories() : []; if ($stories): ?>
+<section class="container stories" aria-label="استوری‌ها">
     <div class="stories-track">
-        <?php foreach ($cats as $i => $c): ?>
-            <a class="story" href="<?= e(cat_url($c)) ?>" style="--c:<?= e($c['color']) ?>;--i:<?= $i ?>">
-                <span class="story-ring"><span class="story-inner"><?= e($c['icon']) ?></span></span>
-                <span class="story-name"><?= e($c['name']) ?></span>
-            </a>
+        <?php foreach ($stories as $i => $s): ?>
+            <button type="button" class="story" data-story="<?= $i ?>" data-sid="<?= (int) $s['id'] ?>" data-v="<?= (int) $s['v'] ?>" style="--i:<?= $i ?>">
+                <span class="story-ring"><span class="story-inner"><img src="<?= e($s['cover']) ?>" alt="" loading="lazy" decoding="async"></span></span>
+                <span class="story-name"><?= e($s['title']) ?></span>
+            </button>
         <?php endforeach; ?>
     </div>
 </section>
+<div class="sv" id="storyViewer" hidden aria-modal="true" role="dialog">
+    <div class="sv-frame">
+        <div class="sv-bars"></div>
+        <div class="sv-head">
+            <span class="sv-av"><img alt=""></span>
+            <span class="sv-meta"><b class="sv-title"></b><small class="sv-ago"></small></span>
+            <button type="button" class="sv-btn sv-mute" aria-label="صدا" hidden>🔇</button>
+            <button type="button" class="sv-btn sv-close" aria-label="بستن"><?= icon('close', 22) ?></button>
+        </div>
+        <div class="sv-media"></div>
+        <div class="sv-loading"><i></i></div>
+        <div class="sv-tap sv-prev" aria-hidden="true"></div>
+        <div class="sv-tap sv-next" aria-hidden="true"></div>
+        <div class="sv-cap"></div>
+        <a class="sv-link" target="_blank" rel="noopener" hidden><span></span> <?= icon('arrow-up', 16) ?></a>
+    </div>
+    <button type="button" class="sv-side sv-side-prev" aria-label="قبلی"><?= icon('chevron-right', 26) ?></button>
+    <button type="button" class="sv-side sv-side-next" aria-label="بعدی"><?= icon('chevron-left', 26) ?></button>
+</div>
+<script>window.NX_STORIES = <?= json_encode($stories, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;</script>
 <?php endif; ?>
 
 <?php foreach ($sections as $sec): if (empty($sec['on'])) continue; switch ($sec['key']):

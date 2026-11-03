@@ -28,6 +28,9 @@ return [
   `icon` VARCHAR(32) NOT NULL DEFAULT '📰',
   `sort_order` INT NOT NULL DEFAULT 0,
   `show_on_home` TINYINT(1) NOT NULL DEFAULT 1,
+  `show_in_header` TINYINT(1) NOT NULL DEFAULT 0,
+  `show_in_mobile` TINYINT(1) NOT NULL DEFAULT 1,
+  `show_in_footer` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `u_cat_slug` (`slug`)
@@ -215,6 +218,34 @@ return [
   UNIQUE KEY `u_m_email` (`email`),
   UNIQUE KEY `u_m_user` (`username`),
   KEY `k_m_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+"CREATE TABLE IF NOT EXISTS `stories` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(80) NOT NULL,
+  `cover` VARCHAR(255) NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `expires_at` DATETIME NULL,
+  `views` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `k_story_active` (`is_active`, `expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+"CREATE TABLE IF NOT EXISTS `story_items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `story_id` INT UNSIGNED NOT NULL,
+  `media` VARCHAR(255) NOT NULL,
+  `media_type` VARCHAR(10) NOT NULL DEFAULT 'image',
+  `caption` VARCHAR(300) NULL,
+  `link` VARCHAR(500) NULL,
+  `link_text` VARCHAR(60) NULL,
+  `duration` INT NOT NULL DEFAULT 6,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `k_si_story` (`story_id`, `sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
 "CREATE TABLE IF NOT EXISTS `login_attempts` (

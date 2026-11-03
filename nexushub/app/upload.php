@@ -98,3 +98,69 @@ function delete_media(int $id): void
     if (str_starts_with($m['path'], 'uploads/') && is_file($file)) @unlink($file);
     q('DELETE FROM media WHERE id = ?', [$id]);
 }
+
+/** حداکثر حجم آپلود سرور (بایت) — کمترین مقدار upload_max_filesize و post_max_size */
+function server_upload_limit(): int
+{
+    $toBytes = function ($v) {
+        $v = trim((string) $v);
+        if ($v === '') return PHP_INT_MAX;
+        $n = (float) $v;
+        return (int) match (strtolower(substr($v, -1))) { 'g' => $n * 1073741824, 'm' => $n * 1048576, 'k' => $n * 1024, default => $n };
+    };
+    $a = $toBytes(ini_get('upload_max_filesize'));
+    $b = $toBytes(ini_get('post_max_size'));
+    $lim = min($a ?: PHP_INT_MAX, $b ?: PHP_INT_MAX);
+    return $lim === PHP_INT_MAX ? 0 : $lim;
+}
+
+/**
+ * آپلود ویدیو برای استوری (MP4 / WebM — فرمت‌هایی که در همه مرورگرهای موبایل پخش می‌شوند)
+ */
+function upload_video(array $file, int $maxBytes = 60 * 1024 * 1024): array
+{
+    if (!isset($file['error']) || is_array($file['error'])) return ['ok' => false, 'error' => 'فایل نامعتبر است.'];
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return ['ok' => false, 'error' => in_array($file['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)
+            ? 'حجم ویدیو بیش از حد مجاز سرور است (' . fa_num((string) round(server_upload_limit() / 1048576)) . ' مگابایت).'
+            : 'خطا در آپلود فایل (کد ' . $file['error'] . ')'];
+    }
+    if ($file['size'] > $maxBytes) return ['ok' => false, 'error' => 'حداکثر حجم ویدیو ' . fa_num((string) round($maxBytes / 1048576)) . ' مگابایت است.'];
+    $mime = '';
+    if (function_exists('finfo_open')) {
+        $fi = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = (string) finfo_file($fi, $file['tmp_name']);
+        finfo_close($fi);
+    }
+    $exts = ['video/mp4' => 'mp4', 'video/webm' => 'webm'];
+    if (!isset($exts[$mime])) return ['ok' => false, 'error' => 'فقط ویدیوهای MP4 و WebM مجاز هستند.'];
+
+    $sub = 'uploads/' . date('Y/m');
+    $dir = NX_ROOT . '/' . $sub;
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) return ['ok' => false, 'error' => 'پوشه‌ی uploads قابل نوشتن نیست.'];
+    $name = date('His') . '-' . bin2hex(random_bytes(6)) . '.' . $exts[$mime];
+    if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) return ['ok' => false, 'error' => 'ذخیره فایل ناموفق بود.'];
+    @chmod($dir . '/' . $name, 0644);
+    $path = $sub . '/' . $name;
+    $id = insert('media', [
+        'path' => $path, 'original_name' => mb_substr((string) $file['name'], 0, 250), 'mime' => $mime,
+        'size' => (int) filesize($dir . '/' . $name), 'width' => null, 'height' => null,
+        'uploaded_by' => current_user()['id'] ?? null, 'created_at' => now(),
+    ]);
+    return ['ok' => true, 'id' => $id, 'path' => $path, 'url' => media_url($path), 'type' => 'video'];
+}
+
+/** آپلود رسانه‌ی استوری: تصویر یا ویدیو بر اساس محتوای واقعی فایل */
+function upload_story_media(array $file): array
+{
+    $mime = '';
+    if (!empty($file['tmp_name']) && is_file($file['tmp_name']) && function_exists('finfo_open')) {
+        $fi = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = (string) finfo_file($fi, $file['tmp_name']);
+        finfo_close($fi);
+    }
+    if (str_starts_with($mime, 'video/')) return upload_video($file);
+    $r = upload_image($file, 1440);
+    if ($r['ok']) $r['type'] = 'image';
+    return $r;
+}

@@ -72,6 +72,16 @@ switch ($seg[1] ?? '') {
             'message' => $status === 'approved' ? 'نظر شما منتشر شد 🎉' : 'نظر شما ثبت شد و پس از تایید نمایش داده می‌شود ✅',
         ]);
 
+    case 'story-view':
+        $sid = (int) ($_POST['story_id'] ?? 0);
+        $seen = $_SESSION['story_seen'] ?? [];
+        if ($sid && !current_user() && !in_array($sid, $seen, true)) {   // once per visitor session; panel users not counted
+            q('UPDATE stories SET views = views + 1 WHERE id = ?', [$sid]);
+            $seen[] = $sid;
+            $_SESSION['story_seen'] = array_slice($seen, -100);
+        }
+        json_out(['ok' => true]);
+
     /* ---------------- ورود و ثبت‌نام اعضا ---------------- */
 
     case 'auth-check':

@@ -27,6 +27,14 @@ $pages = rows("SELECT title, slug, show_in_menu, show_in_footer FROM pages WHERE
 $cats = get_categories();
 $tgLink = safe_link((string) setting('social_telegram'));
 $me = current_member();
+$navItems = $menu;
+$navPaths = array_map(fn($m) => rtrim((string) parse_url(menu_link((string) ($m['url'] ?? '/')), PHP_URL_PATH), '/'), $menu);
+foreach ($cats as $c) {
+    if (empty($c['show_in_header'])) continue;
+    $u = '/category/' . $c['slug'];
+    if (in_array(rtrim((string) parse_url(menu_link($u), PHP_URL_PATH), '/'), $navPaths, true)) continue;
+    $navItems[] = ['title' => $c['name'], 'url' => $u];
+}
 ?><!doctype html>
 <html lang="fa" dir="rtl" class="<?= $colors['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
@@ -122,7 +130,7 @@ $me = current_member();
                 </span>
             </a>
             <nav class="main-nav" aria-label="منوی اصلی">
-                <?php foreach ($menu as $m):
+                <?php foreach ($navItems as $m):
                     $href = menu_link((string) ($m['url'] ?? '/'));
                     $active = rtrim($reqPath, '/') === rtrim(parse_url($href, PHP_URL_PATH) ?: '', '/');
                 ?>
@@ -184,7 +192,7 @@ $me = current_member();
         <div>
             <h4>دسته‌بندی‌ها</h4>
             <ul class="f-links">
-                <?php foreach (array_slice($cats, 0, 8) as $c): ?><li><a href="<?= e(cat_url($c)) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a></li><?php endforeach; ?>
+                <?php foreach ($cats as $c): if (empty($c['show_in_footer'])) continue; ?><li><a href="<?= e(cat_url($c)) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a></li><?php endforeach; ?>
             </ul>
         </div>
         <div>
@@ -237,7 +245,7 @@ $me = current_member();
             <?php endforeach; ?>
         </nav>
         <div class="drawer-cats">
-            <?php foreach ($cats as $c): ?><a href="<?= e(cat_url($c)) ?>" style="--c:<?= e($c['color']) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a><?php endforeach; ?>
+            <?php foreach ($cats as $c): if (empty($c['show_in_mobile'])) continue; ?><a href="<?= e(cat_url($c)) ?>" style="--c:<?= e($c['color']) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a><?php endforeach; ?>
         </div>
         <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
         <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> ورود | ثبت‌نام</a><?php endif; ?>

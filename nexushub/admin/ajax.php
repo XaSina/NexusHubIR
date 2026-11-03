@@ -13,12 +13,18 @@ switch ($_POST['action'] ?? '') {
         if (empty($_FILES['file'])) json_out(['ok' => false, 'error' => 'فایلی ارسال نشد.'], 422);
         json_out(upload_image($_FILES['file']));
 
+    case 'upload_story':
+        if (!can('*')) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
+        if (empty($_FILES['file'])) json_out(['ok' => false, 'error' => 'فایلی ارسال نشد (شاید حجم فایل از حد مجاز سرور بیشتر است).'], 422);
+        json_out(upload_story_media($_FILES['file']));
+
     case 'media_list':
         $page = max(1, (int) ($_POST['page'] ?? 1));
         $per = 40;
         $off = ($page - 1) * $per;
-        $items = rows("SELECT * FROM media ORDER BY id DESC LIMIT $per OFFSET $off");
-        $total = (int) val('SELECT COUNT(*) FROM media');
+        // the picker is used for images (covers, logos, editor): never offer videos there
+        $items = rows("SELECT * FROM media WHERE mime IS NULL OR mime LIKE 'image/%' ORDER BY id DESC LIMIT $per OFFSET $off");
+        $total = (int) val("SELECT COUNT(*) FROM media WHERE mime IS NULL OR mime LIKE 'image/%'");
         json_out([
             'ok' => true,
             'items' => array_map(fn($m) => ['id' => (int) $m['id'], 'path' => $m['path'], 'url' => media_url($m['path']), 'w' => $m['width'], 'h' => $m['height']], $items),

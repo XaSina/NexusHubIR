@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 2;
+const NX_DB_VERSION = 3;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -16,6 +16,12 @@ function nx_migrate(): void
     }
     if ($v >= NX_DB_VERSION) return;
     foreach (require NX_APP . '/schema.php' as $sql) db()->exec($sql); // همه CREATE TABLE IF NOT EXISTS هستند
+    // v3: per-category visibility (desktop header / mobile menu / footer).
+    // Checked via information_schema: MySQL 8 has no "ADD COLUMN IF NOT EXISTS".
+    $cols = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories'"), 'COLUMN_NAME');
+    foreach (['show_in_header' => 0, 'show_in_mobile' => 1, 'show_in_footer' => 1] as $col => $def) {
+        if (!in_array($col, $cols, true)) db()->exec("ALTER TABLE `categories` ADD COLUMN `$col` TINYINT(1) NOT NULL DEFAULT $def");
+    }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
 
