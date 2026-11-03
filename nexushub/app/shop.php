@@ -35,32 +35,59 @@ function http_json(string $url, int $timeout = 4): ?array
     return is_array($j) ? $j : null;
 }
 
-/** TON price in USD from free public APIs (no key). Returns [price, sourceName] or [null, errors]. */
-function fetch_ton_usd(): array
+/** TON price in USD from free public APIs (no key). Returns [price, sourceName] or [null, failedSources]. $log gets one line per source. */
+function fetch_ton_usd(?array &$log = null, float $budget = 0): array
 {
+    $start = microtime(true);
     $sources = [
-        'Nobitex' => ['https://api.nobitex.ir/market/stats?srcCurrency=ton&dstCurrency=usdt', fn($j) => $j['stats']['ton-usdt']['latest'] ?? null],
         'CoinGecko' => ['https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd', fn($j) => $j['the-open-network']['usd'] ?? null],
+        'Nobitex' => ['https://api.nobitex.ir/market/stats?srcCurrency=ton&dstCurrency=usdt', fn($j) => $j['stats']['ton-usdt']['latest'] ?? null],
         'OKX' => ['https://www.okx.com/api/v5/market/ticker?instId=TON-USDT', fn($j) => $j['data'][0]['last'] ?? null],
+        'KuCoin' => ['https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=TON-USDT', fn($j) => $j['data']['price'] ?? null],
         'TonAPI' => ['https://tonapi.io/v2/rates?tokens=ton&currencies=usd', fn($j) => $j['rates']['TON']['prices']['USD'] ?? null],
     ];
-    $errors = [];
+    $failed = [];
     foreach ($sources as $name => [$url, $pick]) {
-        $j = http_json($url);
+        if ($budget > 0 && microtime(true) - $start > $budget) break;   // never hold a page view for long
+        $t = microtime(true);
+        $j = http_json($url, 3);
         $v = $j ? (float) $pick($j) : 0.0;
-        if ($v > 0.01 && $v < 10000) return [$v, $name];
-        $errors[] = $name;
+        $ms = (int) round((microtime(true) - $t) * 1000);
+        if ($v > 0.01 && $v < 10000) { $log[] = [$name, true, $v, $ms]; return [$v, $name]; }
+        $log[] = [$name, false, null, $ms];
+        $failed[] = $name;
     }
-    return [null, $errors];
+    return [null, $failed];
 }
 
-/** USDT (≈ dollar) price in toman from Nobitex (free, no key). */
-function fetch_usdt_toman(): array
+/**
+ * USDT (≈ dollar) price in toman from free public APIs of Iranian exchanges (no key), tried in order.
+ * Some exchanges answer only Iranian servers and some only foreign ones, so several are tried.
+ */
+function fetch_usdt_toman(?array &$log = null, float $budget = 0): array
 {
-    $j = http_json('https://api.nobitex.ir/market/stats?srcCurrency=usdt&dstCurrency=rls');
-    $rial = $j ? (float) ($j['stats']['usdt-rls']['latest'] ?? 0) : 0.0;
-    if ($rial > 100000) return [round($rial / 10), 'Nobitex'];
-    return [null, ['Nobitex']];
+    $start = microtime(true);
+    $bitpin = function ($j) { foreach ((array) $j as $t) if (is_array($t) && strtoupper((string) ($t['symbol'] ?? '')) === 'USDT_IRT') return $t['price'] ?? null; return null; };
+    $sources = [
+        'Nobitex' => ['https://api.nobitex.ir/market/stats?srcCurrency=usdt&dstCurrency=rls', fn($j) => $j['stats']['usdt-rls']['latest'] ?? null],
+        'Nobitex v3' => ['https://api.nobitex.ir/v3/orderbook/USDTIRT', fn($j) => $j['lastTradePrice'] ?? null],
+        'Wallex' => ['https://api.wallex.ir/v1/markets', fn($j) => $j['result']['symbols']['USDTTMN']['stats']['lastPrice'] ?? null],
+        'Bitpin' => ['https://api.bitpin.org/api/v1/mkt/tickers/', $bitpin],
+        'Tetherland' => ['https://api.tetherland.com/currencies', fn($j) => $j['data']['currencies']['USDT']['price'] ?? null],
+    ];
+    $failed = [];
+    foreach ($sources as $name => [$url, $pick]) {
+        if ($budget > 0 && microtime(true) - $start > $budget) break;   // never hold a page view for long
+        $t = microtime(true);
+        $j = http_json($url, 3);
+        $v = $j ? (float) str_replace(',', '', (string) $pick($j)) : 0.0;
+        if ($v > 1500000) $v /= 10;        // rial → toman
+        $ms = (int) round((microtime(true) - $t) * 1000);
+        if ($v > 10000 && $v < 1500000) { $log[] = [$name, true, round($v), $ms]; return [round($v), $name]; }
+        $log[] = [$name, false, null, $ms];
+        $failed[] = $name;
+    }
+    return [null, $failed];
 }
 
 /**
@@ -84,7 +111,7 @@ function shop_rates(bool $force = false): array
         $fresh = $c && $now - (int) $c['at'] < 600;
         $retry = $force || $now - (int) ($cache['usd_fail'] ?? 0) > 180;
         if (!$fresh && $retry) {
-            [$v, $src] = fetch_usdt_toman();
+            $nl = null; [$v, $src] = fetch_usdt_toman($nl, $force ? 0 : 4);
             if ($v) { $cache['usd'] = ['v' => $v, 'src' => $src, 'at' => $now]; unset($cache['usd_fail']); $c = $cache['usd']; }
             else $cache['usd_fail'] = $now;
             $dirty = true;
@@ -100,7 +127,7 @@ function shop_rates(bool $force = false): array
         $fresh = $c && $now - (int) $c['at'] < 300;
         $retry = $force || $now - (int) ($cache['ton_fail'] ?? 0) > 180;
         if (!$fresh && $retry) {
-            [$v, $src] = fetch_ton_usd();
+            $nl = null; [$v, $src] = fetch_ton_usd($nl, $force ? 0 : 4);
             if ($v) { $cache['ton'] = ['v' => $v, 'src' => $src, 'at' => $now]; unset($cache['ton_fail']); $c = $cache['ton']; }
             else $cache['ton_fail'] = $now;
             $dirty = true;

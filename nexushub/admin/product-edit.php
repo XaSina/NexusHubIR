@@ -207,9 +207,9 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
         </div>
         <div class="card mt">
             <div class="card-head"><h3>🎨 ظاهر</h3></div>
-            <div class="logo-pick"><?= f_image('image', 'تصویر محصول (اختیاری)', $p['image'], 'بدون تصویر، آیکن ایموجی با هاله رنگی نمایش داده می‌شود') ?></div>
+            <div class="logo-pick"><?= f_image('image', 'تصویر محصول (اختیاری)', $p['image'], 'بدون تصویر، آیکن ایموجی با هاله رنگی نمایش داده می‌شود', preset_images('product')) ?></div>
             <div class="grid g2">
-                <?= f_text('icon', 'آیکن (ایموجی)', $p['icon'], ['maxlength' => 16]) ?>
+                <?= f_text('icon', 'آیکن (ایموجی)', $p['icon'], ['maxlength' => 16, 'attrs' => 'data-emoji']) ?>
                 <?= f_color('color', 'رنگ', $p['color']) ?>
             </div>
             <?= f_text('badge', 'برچسب روی کارت', (string) $p['badge'], ['placeholder' => 'مثلاً: پرفروش 🔥 / تخفیف']) ?>

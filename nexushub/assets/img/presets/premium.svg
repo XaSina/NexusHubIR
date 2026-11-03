@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#7b2ff7" stop-opacity=".55"/><stop offset=".45" stop-color="#2a0845"/><stop offset="1" stop-color="#050507"/></radialGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f107a3" stop-opacity=".7"/><stop offset="1" stop-color="#f107a3" stop-opacity="0"/></radialGradient>
+  <linearGradient id="ig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b2ff7"/><stop offset="1" stop-color="#f107a3"/></linearGradient>
+  <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b2ff7" stop-opacity=".9"/><stop offset="1" stop-color="#f107a3" stop-opacity=".2"/></linearGradient>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="1"/></pattern>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1"/></filter>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<rect width="800" height="600" fill="url(#grid)"/>
+<g stroke="#fff" stroke-opacity=".06" stroke-width="2"><path d="M-200 600 L100 0"/><path d="M-130 600 L170 0"/><path d="M-60 600 L240 0"/><path d="M10 600 L310 0"/><path d="M80 600 L380 0"/><path d="M150 600 L450 0"/><path d="M220 600 L520 0"/><path d="M290 600 L590 0"/><path d="M360 600 L660 0"/><path d="M430 600 L730 0"/><path d="M500 600 L800 0"/><path d="M570 600 L870 0"/><path d="M640 600 L940 0"/><path d="M710 600 L1010 0"/><path d="M780 600 L1080 0"/><path d="M850 600 L1150 0"/></g>
+<circle cx="400" cy="300" r="270" fill="url(#glow)" opacity=".55"/>
+<circle cx="400" cy="300" r="225" fill="none" stroke="url(#ring)" stroke-width="2" stroke-dasharray="6 10"/>
+<circle cx="400" cy="300" r="185" fill="none" stroke="url(#ring)" stroke-width="1.5" opacity=".6"/>
+<circle cx="400" cy="300" r="150" fill="#0b0b12" fill-opacity=".55" stroke="#fff" stroke-opacity=".12" stroke-width="2"/>
+<g transform="translate(400 300) scale(11) translate(-12 -12)" filter="url(#soft)" opacity=".75"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="url(#ig)" stroke="#fff" stroke-opacity=".55" stroke-width=".5" stroke-linejoin="round"/></g>
+<g transform="translate(400 300) scale(11) translate(-12 -12)"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="url(#ig)" stroke="#fff" stroke-opacity=".55" stroke-width=".5" stroke-linejoin="round"/></g>
+<circle cx="120" cy="110" r="3" fill="#fff" opacity="0.7"/><circle cx="690" cy="140" r="2.4" fill="#fff" opacity="0.6"/><circle cx="640" cy="470" r="3" fill="#fff" opacity="0.5"/><circle cx="150" cy="470" r="2" fill="#fff" opacity="0.5"/><circle cx="560" cy="90" r="1.8" fill="#fff" opacity="0.6"/><circle cx="250" cy="200" r="1.6" fill="#fff" opacity="0.5"/><circle cx="720" cy="330" r="2.2" fill="#fff" opacity="0.45"/><circle cx="90" cy="300" r="1.8" fill="#fff" opacity="0.4"/>
+<path d="M0 560 Q400 520 800 560 V600 H0Z" fill="#7b2ff7" opacity=".08"/>
+</svg>

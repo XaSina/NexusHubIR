@@ -67,7 +67,7 @@ adm_head('دسته‌های فروشگاه', 'products');
         <div class="card-head"><h3><?= $c['id'] ? '✏️ ویرایش دسته' : '➕ دسته جدید' ?></h3></div>
         <?= f_text('name', 'نام دسته *', $c['name'], ['required' => true]) ?>
         <?= f_text('slug', 'نامک', $c['slug'], ['ltr' => true]) ?>
-        <div class="grid g2"><?= f_text('icon', 'آیکن', $c['icon']) ?><?= f_color('color', 'رنگ', $c['color']) ?></div>
+        <div class="grid g2"><?= f_text('icon', 'آیکن', $c['icon'], ['attrs' => 'data-emoji']) ?><?= f_color('color', 'رنگ', $c['color']) ?></div>
         <?= f_text('sort_order', 'ترتیب', (string) $c['sort_order'], ['type' => 'number', 'ltr' => true]) ?>
         <?= f_switch('is_active', 'نمایش در فروشگاه', (bool) $c['is_active']) ?>
         <button class="abtn abtn-primary abtn-block" type="submit"><?= icon('check', 18) ?> ذخیره</button>

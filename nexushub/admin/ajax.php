@@ -77,13 +77,14 @@ switch ($_POST['action'] ?? '') {
 
     case 'rates_test':
         if (!can('*')) json_out(['ok' => false], 403);
-        $tests = [];
-        $t0 = microtime(true); [$ton, $src] = fetch_ton_usd();
-        $tests[] = $ton ? '✅ TON: $' . number_format($ton, 3) . ' از ' . $src . ' (' . round((microtime(true) - $t0) * 1000) . 'ms)' : '❌ هیچ‌کدام از منابع قیمت TON پاسخ ندادند: ' . implode('، ', (array) $src);
-        $t0 = microtime(true); [$usd, $src2] = fetch_usdt_toman();
-        $tests[] = $usd ? '✅ تتر (دلار): ' . money((int) $usd) . ' تومان از Nobitex (' . round((microtime(true) - $t0) * 1000) . 'ms)' : '❌ نوبیتکس برای قیمت تتر پاسخ نداد';
+        $lines = [];
+        $logT = []; [$ton] = fetch_ton_usd($logT);
+        foreach ($logT as [$n, $ok, $v, $ms]) $lines[] = ($ok ? '✅ ' : '❌ ') . 'TON — ' . $n . ($ok ? ': $' . number_format((float) $v, 3) : ': پاسخ نداد') . ' (' . fa_num((string) $ms) . 'ms)';
+        $logU = []; [$usd] = fetch_usdt_toman($logU);
+        foreach ($logU as [$n, $ok, $v, $ms]) $lines[] = ($ok ? '✅ ' : '❌ ') . 'تتر — ' . $n . ($ok ? ': ' . money((int) $v) . ' تومان' : ': پاسخ نداد') . ' (' . fa_num((string) $ms) . 'ms)';
+        if (!$usd) $lines[] = 'ℹ️ هیچ صرافی ایرانی به هاست شما جواب نداد (معمولاً یعنی هاست خارج از ایران است)؛ حالت «دستی» را برای دلار نگه دارید.';
         $r = shop_rates(true);
-        json_out(['ok' => true, 'lines' => $tests, 'ton' => $r['ton'], 'usd' => $r['usd'], 'ton_src' => $r['ton_src'], 'usd_src' => $r['usd_src']]);
+        json_out(['ok' => true, 'lines' => $lines, 'ton' => $r['ton'], 'usd' => $r['usd'], 'ton_src' => $r['ton_src'], 'usd_src' => $r['usd_src']]);
 
     case 'slug':
         json_out(['ok' => true, 'slug' => slugify((string) input('text'))]);

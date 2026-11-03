@@ -142,7 +142,7 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
             <div class="card-head"><h3>📢 بنر تبلیغ فروشگاه</h3></div>
             <?= f_switch('shop_banner_on', 'نمایش بنر فروشگاه', setting_on('shop_banner_on')) ?>
             <div class="grid g2">
-                <?= f_text('shop_banner_emoji', 'ایموجی', $s['shop_banner_emoji']) ?>
+                <?= f_text('shop_banner_emoji', 'ایموجی', $s['shop_banner_emoji'], ['attrs' => 'data-emoji']) ?>
                 <?= f_text('shop_banner_badge', 'روبان گوشه (اختیاری)', $s['shop_banner_badge']) ?>
             </div>
             <?= f_text('shop_banner_title', 'عنوان', $s['shop_banner_title'], ['attrs' => 'data-bp="title"']) ?>
@@ -151,17 +151,17 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
                 <?= f_text('shop_banner_btn', 'متن دکمه', $s['shop_banner_btn']) ?>
                 <?= f_color('shop_banner_accent', 'رنگ (خالی = رنگ تم)', $s['shop_banner_accent'] ?: (string) setting('color_primary', '#ff1f3d')) ?>
             </div>
-            <div class="logo-pick"><?= f_image('shop_banner_image', 'تصویر کنار متن (اختیاری)', $s['shop_banner_image']) ?></div>
+            <div class="logo-pick"><?= f_image('shop_banner_image', 'تصویر کنار متن (اختیاری)', $s['shop_banner_image'], '', preset_images('product')) ?></div>
         </div>
     </div>
     <div class="card mt">
         <div class="card-head"><h3>📍 کجا نمایش داده شود؟</h3></div>
-        <div class="chk-grid">
-            <label class="chk-row"><input type="checkbox" disabled <?= $homeOn ? 'checked' : '' ?>> 🏠 صفحه اصلی — بخش فروشگاه (بنر + محصولات ویژه) <a href="appearance.php" class="small">← ترتیب در «ظاهر سایت»</a></label>
-            <?php foreach (shop_banner_places() as $k => $n): ?>
-                <label class="chk-row"><input type="checkbox" name="places[]" value="<?= $k ?>" <?= in_array($k, $places, true) ? 'checked' : '' ?>> <?= e($n) ?></label>
-            <?php endforeach; ?>
-        </div>
+        <label class="af"><span class="af-label">جایگاه‌های بنر (چند مورد قابل انتخاب)</span>
+            <select name="places[]" multiple data-multi data-placeholder="هیچ جایگاهی انتخاب نشده">
+                <?php foreach (shop_banner_places() as $k => $n): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($n) ?></option><?php endforeach; ?>
+            </select></label>
+        <div class="alert alert-info small mt">🏠 بخش «فروشگاه» صفحه اصلی (بنر + محصولات ویژه) <?= $homeOn ? '<b>روشن</b> است' : '<b>خاموش</b> است' ?> — روشن/خاموش و ترتیبش از <a href="appearance.php">ظاهر سایت ← چیدمان صفحه اصلی</a>.</div>
+        <input type="hidden" name="places[]" value="">
     </div>
     <div class="card mt">
         <div class="card-head"><h3>🎨 تم بنر</h3><span class="muted small">همان تم‌های بخش تبلیغات</span></div>

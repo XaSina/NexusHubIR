@@ -80,7 +80,7 @@ adm_head('دسته‌بندی‌ها', 'categories');
             <?= f_text('name', 'نام دسته', $c['name'], ['required' => true, 'id' => 'cName']) ?>
             <?= f_text('slug', 'نامک (انگلیسی پیشنهاد می‌شود)', $c['slug'], ['ltr' => true, 'attrs' => 'data-slug-from="#cName"']) ?>
             <div class="grid g2">
-                <?= f_text('icon', 'ایموجی / آیکون', $c['icon'], ['maxlength' => 8]) ?>
+                <?= f_text('icon', 'ایموجی / آیکون', $c['icon'], ['maxlength' => 8, 'attrs' => 'data-emoji']) ?>
                 <?= f_color('color', 'رنگ', $c['color']) ?>
             </div>
             <div class="row-flex mb" style="gap:6px">

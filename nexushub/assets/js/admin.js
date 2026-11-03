@@ -203,6 +203,109 @@
         $('[data-clear]', f).addEventListener('click', function () { input.value = ''; img.removeAttribute('src'); box.classList.remove('has'); input.dispatchEvent(new Event('change', { bubbles: true })); });
     });
 
+    // ready-made images under an image field
+    $$('[data-image-field]').forEach(function (f) {
+        var input = $('input[type=hidden]', f), box = $('.img-pick', f), img = $('img', box);
+        var mark = function () { $$('.ip', f).forEach(function (b) { b.classList.toggle('on', b.dataset.preset === input.value); }); };
+        $$('.ip', f).forEach(function (b) {
+            b.addEventListener('click', function () { input.value = b.dataset.preset; img.src = b.dataset.url; box.classList.add('has'); mark(); input.dispatchEvent(new Event('change', { bubbles: true })); });
+        });
+        input.addEventListener('change', mark); mark();
+    });
+
+    /* ---------- Emoji / icon picker for icon fields (input[data-emoji]) ---------- */
+    var EMO = {
+        'فروشگاه': '🛍️ 🛒 🎁 💎 ⭐ 🌟 ✨ 💳 💰 💵 🏷️ 🔥 ⚡ 🚀 👑 🎯 🔑 🎟️ 📦 🧾 ✅ 💯 🆕 🎊',
+        'تلگرام و شبکه': '✈️ 📢 💬 📱 📲 🤖 👥 🔔 📣 🌐 🔗 📡 📧 🛰️ 🧭',
+        'گیم': '🎮 🕹️ 👾 🏆 🎲 🧩 ⚔️ 🛡️ 🏁 🥇 🎰 🃏',
+        'تکنولوژی': '💻 🖥️ ⌨️ 🖱️ 📷 🎧 🔋 💾 🧠 ⚙️ 🛠️ 🔐 📈 🤑',
+        'سرگرمی و هنر': '🎬 🎵 🎤 🎨 📸 🎉 🎭 🍿 📺 📰 📚 ✍️ 🎸 🎹',
+        'دیگر': '❤️ 💜 💙 💚 🧡 🖤 🌈 ☕ 🍀 🌙 ☀️ ⏰ 📍 🧸 🎈 🪙'
+    };
+    var emoPop = null;
+    var closeEmo = function () { if (emoPop) { emoPop.parentNode.removeChild(emoPop); emoPop = null; } };
+    $$('input[data-emoji]').forEach(function (inp) {
+        var wrap = document.createElement('span'); wrap.className = 'emo-field';
+        inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+        var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'emo-btn'; btn.title = 'انتخاب آیکن';
+        btn.innerHTML = '<span>' + (inp.value || '😀') + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>';
+        wrap.appendChild(btn);
+        inp.addEventListener('input', function () { btn.firstChild.textContent = inp.value || '😀'; });
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (emoPop && emoPop._for === inp) { closeEmo(); return; }
+            closeEmo();
+            var pop = document.createElement('div'); pop.className = 'emo-pop'; pop._for = inp;
+            var tabs = '<div class="emo-tabs">', panes = '';
+            Object.keys(EMO).forEach(function (k, i) {
+                tabs += '<button type="button" data-et="' + i + '" class="' + (i ? '' : 'on') + '">' + k + '</button>';
+                panes += '<div class="emo-grid" data-ep="' + i + '"' + (i ? ' hidden' : '') + '>' + EMO[k].split(' ').map(function (x) { return '<button type="button" class="emo" data-e="' + x + '">' + x + '</button>'; }).join('') + '</div>';
+            });
+            pop.innerHTML = tabs + '</div>' + panes + '<small class="emo-hint">یا هر ایموجی دیگری را مستقیم در فیلد تایپ یا پیست کنید</small>';
+            document.body.appendChild(pop);
+            var r = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, w = Math.min(340, vw - 16);
+            pop.style.width = w + 'px';
+            pop.style.left = Math.max(8, Math.min(r.right - w, vw - w - 8)) + 'px';
+            var below = window.innerHeight - r.bottom;
+            if (below < 300 && r.top > below) pop.style.bottom = (window.innerHeight - r.top + 6) + 'px'; else pop.style.top = (r.bottom + 6) + 'px';
+            pop.addEventListener('click', function (ev) {
+                ev.stopPropagation();
+                var t = ev.target.closest('[data-et]');
+                if (t) { $$('[data-et]', pop).forEach(function (x) { x.classList.toggle('on', x === t); }); $$('[data-ep]', pop).forEach(function (g) { g.hidden = g.dataset.ep !== t.dataset.et; }); return; }
+                var em = ev.target.closest('[data-e]');
+                if (em) { inp.value = em.dataset.e; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); closeEmo(); }
+            });
+            emoPop = pop;
+        });
+    });
+    document.addEventListener('click', closeEmo);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeEmo(); });
+    window.addEventListener('scroll', closeEmo, { passive: true });
+
+    /* ---------- Multi-select dropdown (select[multiple][data-multi]) ---------- */
+    $$('select[multiple][data-multi]').forEach(function (sel) {
+        var wrap = document.createElement('div'); wrap.className = 'nsel nsel-multi';
+        sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
+        sel.classList.add('nsel-native'); sel.tabIndex = -1;
+        var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'nsel-btn';
+        btn.innerHTML = '<span class="nsel-val"></span><svg class="nsel-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+        wrap.appendChild(btn);
+        var val = $('.nsel-val', btn), menu = document.createElement('div'); menu.className = 'nsel-menu nsel-mmenu'; menu.hidden = true;
+        document.body.appendChild(menu);   // on <body>: a card's stacking context must not cover the list
+        var place = function () {
+            var r = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+            menu.style.width = Math.min(r.width, vw - 16) + 'px';
+            menu.style.left = Math.max(8, r.left) + 'px';
+            menu.style.maxHeight = 'none';
+            var full = menu.offsetHeight, below = vh - r.bottom - 16, above = r.top - 16, up = full > below && above > below;
+            menu.style.maxHeight = Math.min(full, up ? above : below) + 'px';
+            menu.style.top = up ? '' : (r.bottom + 6) + 'px';
+            menu.style.bottom = up ? (vh - r.top + 6) + 'px' : '';
+        };
+        window.addEventListener('scroll', function () { if (!menu.hidden) place(); }, { passive: true });
+        window.addEventListener('resize', function () { if (!menu.hidden) place(); });
+        var render = function () {
+            var on = Array.prototype.filter.call(sel.options, function (o) { return o.selected; });
+            val.innerHTML = on.length ? on.map(function (o) { return '<em class="nsel-chip">' + o.textContent + '</em>'; }).join('') : '<span class="muted">' + (sel.dataset.placeholder || 'انتخاب کنید') + '</span>';
+            menu.innerHTML = Array.prototype.map.call(sel.options, function (o, i) {
+                return '<div class="nsel-opt nsel-chk' + (o.selected ? ' sel' : '') + '" data-i="' + i + '"><i class="nsel-box"></i>' + o.textContent + '</div>';
+            }).join('') + '<div class="nsel-mfoot"><button type="button" data-all>انتخاب همه</button><button type="button" data-none>هیچ‌کدام</button><button type="button" data-done class="ok">تایید</button></div>';
+        };
+        render();
+        btn.addEventListener('click', function (e) { e.stopPropagation(); menu.hidden = !menu.hidden; wrap.classList.toggle('open', !menu.hidden); if (!menu.hidden) place(); });
+        menu.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var o = e.target.closest('[data-i]');
+            if (o) { var opt = sel.options[+o.dataset.i]; opt.selected = !opt.selected; }
+            else if (e.target.closest('[data-all]')) Array.prototype.forEach.call(sel.options, function (x) { x.selected = true; });
+            else if (e.target.closest('[data-none]')) Array.prototype.forEach.call(sel.options, function (x) { x.selected = false; });
+            else if (e.target.closest('[data-done]')) { menu.hidden = true; wrap.classList.remove('open'); }
+            render();
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        document.addEventListener('click', function () { if (!menu.hidden) { menu.hidden = true; wrap.classList.remove('open'); } });
+    });
+
     /* ---------- Tag input ---------- */
     $$('[data-tag-input]').forEach(function (wrap) {
         var hidden = $('input[type=hidden]', wrap), inp = $('input[type=text]', wrap);

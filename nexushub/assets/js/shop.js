@@ -15,6 +15,56 @@
     };
     var trimNum = function (n) { return String(+(+n).toFixed(6)); };
 
+    /* ---------- themed dropdowns: native <select> lists look white/blue and off-design on phones & PCs ---------- */
+    var openX = null;
+    var closeX = function () { if (!openX) return; openX.wrap.classList.remove('open'); if (openX.menu.parentNode) openX.menu.parentNode.removeChild(openX.menu); openX = null; };
+    function xselect(sel) {
+        if (sel._x || sel.multiple || sel.size > 1) return;
+        sel._x = true;
+        var wrap = document.createElement('div'); wrap.className = 'xsel';
+        sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
+        sel.classList.add('xsel-native'); sel.tabIndex = -1;
+        var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'xsel-btn'; btn.setAttribute('aria-haspopup', 'listbox');
+        btn.innerHTML = '<span class="xsel-val"></span><svg class="xsel-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+        wrap.appendChild(btn);
+        var val = $('.xsel-val', btn), menu = document.createElement('div'); menu.className = 'xsel-menu'; menu.setAttribute('role', 'listbox');
+        var refresh = function () { var o = sel.options[sel.selectedIndex]; val.textContent = o ? o.textContent : ''; val.classList.toggle('ph', !o || o.value === '' || o.value === '0'); };
+        var place = function () {
+            var r = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+            var w = Math.min(Math.max(r.width, 180), vw - 16);
+            menu.style.width = w + 'px'; menu.style.left = Math.max(8, Math.min(r.right - w, vw - w - 8)) + 'px';
+            menu.style.maxHeight = 'none';
+            var full = menu.offsetHeight, below = vh - r.bottom - 16, above = r.top - 16, up = full > below && above > below;
+            menu.style.maxHeight = Math.min(full, up ? above : below) + 'px';
+            menu.style.top = up ? '' : (r.bottom + 6) + 'px'; menu.style.bottom = up ? (vh - r.top + 6) + 'px' : '';
+            menu.classList.toggle('up', up);
+        };
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (openX && openX.wrap === wrap) { closeX(); return; }
+            closeX();
+            menu.innerHTML = Array.prototype.map.call(sel.options, function (o, i) {
+                return '<div class="xsel-opt' + (i === sel.selectedIndex ? ' sel' : '') + (o.disabled ? ' dis' : '') + '" role="option" data-i="' + i + '"></div>';
+            }).join('');
+            $$('.xsel-opt', menu).forEach(function (el, i) { el.textContent = sel.options[i].textContent; });
+            document.body.appendChild(menu); wrap.classList.add('open'); openX = { wrap: wrap, menu: menu, place: place }; place();
+            var cur = $('.xsel-opt.sel', menu); if (cur) cur.scrollIntoView({ block: 'nearest' });
+        });
+        menu.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var o = e.target.closest('[data-i]'); if (!o || o.classList.contains('dis')) return;
+            sel.selectedIndex = +o.dataset.i; refresh(); closeX();
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        sel.addEventListener('change', refresh);
+        refresh();
+    }
+    $$('.shop-page select, .pd-wrap select, .field select').forEach(xselect);
+    document.addEventListener('click', closeX);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeX(); });
+    window.addEventListener('resize', closeX);
+    window.addEventListener('scroll', function () { if (openX) openX.place(); }, { passive: true });   // follow the field (phones scroll while tapping)
+
     /* ---------- qty steppers ---------- */
     $$('.qty').forEach(function (q) {
         var inp = $('input', q);

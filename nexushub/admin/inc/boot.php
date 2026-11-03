@@ -223,14 +223,31 @@ function f_range(string $name, string $label, $value, int $min, int $max, string
     return '<label class="af af-range"><span class="af-label">' . e($label) . ' <output>' . e($value) . '</output>' . e($unit) . '</span><input type="range" name="' . e($name) . '" value="' . e($value) . '" min="' . $min . '" max="' . $max . '"></label>';
 }
 
-function f_image(string $name, string $label, ?string $value, string $hint = ''): string
+function f_image(string $name, string $label, ?string $value, string $hint = '', array $presets = []): string
 {
     $url = $value ? media_url($value) : '';
+    $pre = '';
+    if ($presets) {
+        $pre = '<div class="img-presets"><small class="af-label">🖼️ تصاویر آماده</small><div class="ip-grid">';
+        foreach ($presets as $path => $title) $pre .= '<button type="button" class="ip" data-preset="' . e($path) . '" data-url="' . e(media_url($path)) . '" title="' . e($title) . '"><img src="' . e(media_url($path)) . '" alt="' . e($title) . '" loading="lazy"></button>';
+        $pre .= '</div></div>';
+    }
     return '<div class="af af-image" data-image-field><span class="af-label">' . e($label) . '</span>'
         . '<div class="img-pick' . ($url ? ' has' : '') . '"><img src="' . e($url) . '" alt=""><span class="img-empty">' . adm_icon('image', 30) . '<small>انتخاب یا آپلود تصویر</small></span></div>'
         . '<input type="hidden" name="' . e($name) . '" value="' . e((string) $value) . '">'
         . '<div class="img-actions"><button type="button" class="abtn abtn-ghost abtn-sm" data-pick>' . adm_icon('image', 15) . ' انتخاب</button><button type="button" class="abtn abtn-ghost abtn-sm" data-clear>' . adm_icon('trash', 15) . ' حذف</button></div>'
-        . ($hint ? '<small class="af-hint">' . e($hint) . '</small>' : '') . '</div>';
+        . ($hint ? '<small class="af-hint">' . e($hint) . '</small>' : '') . $pre . '</div>';
+}
+
+/** Ready-made images that ship with the site (assets/img/presets) */
+function preset_images(string $set = 'product'): array
+{
+    return [
+        'assets/img/presets/premium.svg' => 'پریمیوم تلگرام', 'assets/img/presets/stars.svg' => 'استارز', 'assets/img/presets/ton.svg' => 'تون / کریپتو',
+        'assets/img/presets/gift.svg' => 'گیفت کارت', 'assets/img/presets/game.svg' => 'بازی', 'assets/img/presets/account.svg' => 'اکانت / اشتراک',
+        'assets/img/presets/service.svg' => 'خدمات', 'assets/img/presets/telegram.svg' => 'تلگرام', 'assets/img/presets/sale.svg' => 'تخفیف / فروش ویژه',
+        'assets/img/presets/shop.svg' => 'فروشگاه',
+    ];
 }
 
 function f_jdate(string $name, string $label, ?string $datetime, string $hint = ''): string

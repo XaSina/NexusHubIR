@@ -83,7 +83,7 @@ adm_head($a['id'] ? 'ویرایش تبلیغ' : 'تبلیغ جدید', 'ads');
                 <div data-fmt="card">
                     <div class="grid g2">
                         <?= f_text('heading', 'تیتر تبلیغ', (string) $a['heading'], ['placeholder' => 'مثلاً: قرعه‌کشی ویژه شروع شد!']) ?>
-                        <?= f_text('emoji', 'ایموجی', (string) $a['emoji'], ['maxlength' => 8]) ?>
+                        <?= f_text('emoji', 'ایموجی', (string) $a['emoji'], ['maxlength' => 8, 'attrs' => 'data-emoji']) ?>
                     </div>
                     <?= f_textarea('body', 'متن تبلیغ', (string) $a['body'], ['rows' => 3]) ?>
                     <div class="grid g2">

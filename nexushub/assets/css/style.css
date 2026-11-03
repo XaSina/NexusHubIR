@@ -733,7 +733,21 @@ html.nx-lock, html.nx-lock body { overflow: hidden; }
 @media (max-width: 420px) {
     .brand-text small { display: none; }
     .trend-grid { grid-template-columns: 1fr; }
+    /* narrow phones (360–420px): the header must never be wider than the screen */
+    .header-inner { gap: 6px; padding: 7px 8px 7px 10px; }
+    .brand { gap: 7px; min-width: 0; flex-shrink: 1; }
+    .brand-logo { width: 38px; height: 38px; }
+    .brand-logo img { width: 33px; height: 33px; }
+    .brand-text { min-width: 0; overflow: hidden; }
+    .brand-text b { font-size: .86rem; letter-spacing: 0; white-space: nowrap; }
+    .header-actions { gap: 5px; }
+    .header-actions .icon-btn, .btn-account, .btn-account.is-in { width: 36px; height: 36px; border-radius: 11px; }
+    .btn-tg { padding: 8px 9px; border-radius: 11px; }
+    .ba-avatar { width: 28px; height: 28px; }
+    /* member on a shop page = 5 buttons: keep the logo, drop the title text */
+    .header-inner:has(.nb-wrap):has(.cart-btn) .brand-text { display: none; }
 }
+@supports (overflow-x: clip) { html, body { overflow-x: clip; } }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     .ticker-move { animation: tickerRun 60s linear infinite !important; animation-iteration-count: infinite !important; animation-duration: 60s !important; }
