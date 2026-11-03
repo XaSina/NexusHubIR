@@ -140,7 +140,10 @@
         });
         try {
             var blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase().replace(/[<>]/g, '');
-            if (this.blockSel && ['p', 'h2', 'h3', 'h4', 'pre'].indexOf(blk) >= 0) this.blockSel.value = blk;
+            if (this.blockSel && ['p', 'h2', 'h3', 'h4', 'pre'].indexOf(blk) >= 0 && this.blockSel.value !== blk) {
+                this.blockSel.value = blk;
+                if (this.blockSel._nxRefresh) this.blockSel._nxRefresh();
+            }
         } catch (e) {}
     };
     Editor.prototype.uploadInsert = function (file) {

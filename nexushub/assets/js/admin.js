@@ -319,6 +319,115 @@
     document.addEventListener('click', function (e) { if (picker && !picker.contains(e.target) && !e.target.matches('[data-jdp]')) closePicker(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closePicker(); if (mm && !mm.hidden) A.closeMedia(); } });
 
+    /* ==========================================================================
+       Custom select (glass dropdown) — replaces the native popup, keeps the
+       native <select> in the form for submission, validation and change events
+       ========================================================================== */
+    var openSel = null;
+    function closeSelect() {
+        if (!openSel) return;
+        openSel.wrap.classList.remove('open');
+        openSel.menu.remove();
+        openSel = null;
+    }
+    A.enhanceSelect = function (sel) {
+        if (sel._nx || sel.multiple || sel.size > 1 || sel.hasAttribute('data-native')) return;
+        sel._nx = true;
+        var wrap = document.createElement('div');
+        wrap.className = 'nsel' + (sel.closest('.ed-toolbar') ? ' nsel-ed' : '') + (sel.closest('.toolbar') ? ' nsel-tb' : '');
+        sel.parentNode.insertBefore(wrap, sel);
+        wrap.appendChild(sel);
+        sel.classList.add('nsel-native');
+        sel.tabIndex = -1;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'nsel-btn';
+        btn.setAttribute('aria-haspopup', 'listbox');
+        btn.innerHTML = '<span class="nsel-val"></span><svg class="nsel-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+        wrap.appendChild(btn);
+        var val = btn.querySelector('.nsel-val'), menu = document.createElement('div'), hi = -1;
+        menu.className = 'nsel-menu';
+        menu.setAttribute('role', 'listbox');
+
+        var refresh = function () {
+            var o = sel.options[sel.selectedIndex];
+            val.textContent = o ? o.textContent : '';
+            btn.disabled = sel.disabled;
+        };
+        sel._nxRefresh = refresh;
+        var highlight = function (i) {
+            var items = $$('.nsel-opt', menu);
+            if (!items.length) return;
+            hi = Math.max(0, Math.min(items.length - 1, i));
+            items.forEach(function (it, k) { it.classList.toggle('hi', k === hi); });
+            items[hi].scrollIntoView({ block: 'nearest' });
+        };
+        var choose = function (i) {
+            if (i < 0 || i >= sel.options.length || sel.options[i].disabled) return;
+            var changed = sel.selectedIndex !== i;
+            sel.selectedIndex = i;
+            refresh();
+            closeSelect();
+            if (changed) {
+                sel.dispatchEvent(new Event('input', { bubbles: true }));
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        };
+        var place = function () {
+            var r = btn.getBoundingClientRect(), mh = Math.min(320, menu.scrollHeight + 2);
+            var below = window.innerHeight - r.bottom - 10, up = below < mh && r.top > below;
+            menu.style.minWidth = r.width + 'px';
+            menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+            menu.style.maxHeight = Math.max(140, Math.min(320, (up ? r.top : below) - 10)) + 'px';
+            menu.style.top = up ? '' : (r.bottom + 6) + 'px';
+            menu.style.bottom = up ? (window.innerHeight - r.top + 6) + 'px' : '';
+            menu.classList.toggle('up', up);
+        };
+        var open = function () {
+            if (sel.disabled) return;
+            closeSelect();
+            menu.innerHTML = '';
+            Array.prototype.forEach.call(sel.options, function (o, i) {
+                var it = document.createElement('div');
+                it.className = 'nsel-opt' + (i === sel.selectedIndex ? ' sel' : '') + (o.disabled ? ' dis' : '');
+                it.setAttribute('role', 'option');
+                it.textContent = o.textContent;
+                it.dataset.i = i;
+                menu.appendChild(it);
+            });
+            document.body.appendChild(menu);
+            wrap.classList.add('open');
+            openSel = { wrap: wrap, menu: menu };
+            place();
+            highlight(sel.selectedIndex);
+        };
+        // جلوگیری از گرفتن فوکوس (برای حفظ انتخاب متن در ویرایشگر)
+        btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        menu.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        btn.addEventListener('click', function (e) { e.stopPropagation(); if (openSel && openSel.wrap === wrap) closeSelect(); else open(); });
+        menu.addEventListener('click', function (e) { e.stopPropagation(); var it = e.target.closest('.nsel-opt'); if (it) choose(+it.dataset.i); });
+        menu.addEventListener('mousemove', function (e) { var it = e.target.closest('.nsel-opt'); if (it && +it.dataset.i !== hi) highlight(+it.dataset.i); });
+        btn.addEventListener('keydown', function (e) {
+            var isOpen = openSel && openSel.wrap === wrap;
+            if (['ArrowDown', 'ArrowUp', 'Enter', ' '].indexOf(e.key) >= 0) e.preventDefault();
+            if (!isOpen) { if (['ArrowDown', 'ArrowUp', 'Enter', ' '].indexOf(e.key) >= 0) open(); return; }
+            if (e.key === 'ArrowDown') highlight(hi + 1);
+            else if (e.key === 'ArrowUp') highlight(hi - 1);
+            else if (e.key === 'Enter' || e.key === ' ') choose(hi);
+            else if (e.key === 'Escape' || e.key === 'Tab') closeSelect();
+        });
+        sel.addEventListener('change', refresh);
+        if (sel.form) sel.form.addEventListener('reset', function () { setTimeout(refresh, 0); });
+        refresh();
+    };
+    A.enhanceSelects = function (root) { $$('select', root).forEach(A.enhanceSelect); };
+    document.addEventListener('click', closeSelect);
+    window.addEventListener('resize', closeSelect);
+    window.addEventListener('scroll', function (e) { if (openSel && !openSel.menu.contains(e.target)) closeSelect(); }, true);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSelect(); });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { A.enhanceSelects(); });
+    else A.enhanceSelects();
+
     /* ---------- Countdown (ad previews) ---------- */
     setInterval(function () {
         $$('.ad-countdown').forEach(function (c) {
