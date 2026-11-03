@@ -676,3 +676,21 @@ select option, select optgroup { background: #15151c; color: #f2f2f6; }
 .rate-live + .abtn { margin-top: 4px; }
 .nsel-multi + .place-note, .place-note { margin-top: 16px; line-height: 2; padding: 12px 16px; }
 .af .nsel-multi { margin-top: 2px; }
+
+/* ---------- theme gallery groups / card-style thumbnails ---------- */
+.theme-group-title { margin: 18px 0 10px; font-size: .95rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+.theme-group-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--a-line), transparent); }
+.theme-group-title:first-of-type { margin-top: 4px; }
+.sw-decor { position: absolute; top: 8px; left: 10px; font-size: 1.15rem; text-decoration: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+.cs-thumb { position: relative; display: block; height: 56px; border-radius: 12px; margin-bottom: 8px; background: radial-gradient(circle at 70% 20%, rgba(var(--primary-rgb), .35), transparent 60%), #0c0c12; overflow: hidden; }
+.cs-thumb i { position: absolute; top: 10px; bottom: 10px; width: 38%; border-radius: 10px; }
+.cs-thumb i:first-child { right: 10px; } .cs-thumb i:last-child { left: 10px; }
+.cs-glass i { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); }
+.cs-solid i { background: #1b1b24; }
+.cs-outline i { border: 1px solid rgba(var(--primary-rgb), .6); }
+.cs-neon i { background: rgba(255,255,255,.05); box-shadow: 0 0 0 1px rgba(var(--primary-rgb), .6), 0 0 14px rgba(var(--primary-rgb), .5); }
+.cs-gradient i { background: #14141c; box-shadow: inset 0 0 0 1.5px transparent; border: 1.5px solid transparent; background-image: linear-gradient(#14141c, #14141c), linear-gradient(135deg, var(--primary), var(--secondary), #00e5ff); background-origin: border-box; background-clip: padding-box, border-box; }
+.cs-holo i { background: linear-gradient(120deg, rgba(255,0,150,.25), rgba(0,229,255,.25), rgba(255,230,0,.2)); border: 1px solid rgba(255,255,255,.2); }
+.cs-cyber i { background: rgba(var(--primary-rgb), .12); border: 1px solid rgba(var(--primary-rgb), .6); border-radius: 0; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.cs-elevated i { background: #1d1d27; box-shadow: 0 10px 18px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.12) inset; transform: translateY(-3px); }
+.cs-frost i { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); }

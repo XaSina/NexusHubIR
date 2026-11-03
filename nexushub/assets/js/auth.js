@@ -30,7 +30,7 @@
         warp.style.setProperty('--wx', '50%'); warp.style.setProperty('--wy', '50%');
         warp.classList.add('cover');
         try { sessionStorage.setItem('nx_warp', '1'); } catch (e) {}
-        setTimeout(function () { location.href = href; }, 820);
+        setTimeout(function () { location.href = href; }, 950);
     }
     document.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-warp]');

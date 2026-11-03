@@ -89,6 +89,7 @@ $jsCfg['cart'] = $cartN;
 <link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">
 <?php if ($shopOn || $me): ?><link rel="stylesheet" href="<?= e(asset('css/shop.css')) ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
+<?php $decorHtml = decor_html('site'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 <?php if (setting('custom_css')): ?><style><?= str_ireplace('</style', '', (string) setting('custom_css')) ?></style><?php endif; ?>
 <?php if (!empty($meta['type']) && $meta['type'] === 'article'): ?>
@@ -115,11 +116,14 @@ $jsCfg['cart'] = $cartN;
 </div>
 <?php endif; ?>
 
+<?= $decorHtml ?>
 <div class="bg-layer" aria-hidden="true">
     <div class="bg-blob b1"></div><div class="bg-blob b2"></div><div class="bg-blob b3"></div>
     <?php if ($bgEffect === 'grid'): ?><div class="bg-grid"></div><?php endif; ?>
+    <?php if ($bgEffect === 'nebula'): ?><div class="bg-nebula"><i></i><i></i><i></i></div><?php endif; ?>
+    <?php if ($bgEffect === 'hex'): ?><div class="bg-hex"></div><?php endif; ?>
     <?php if ($bgEffect === 'aurora'): ?><div class="bg-aurora"></div><?php endif; ?>
-    <?php if (in_array($bgEffect, ['particles', 'matrix'], true)): ?><canvas id="bgCanvas"></canvas><?php endif; ?>
+    <?php if (in_array($bgEffect, ['particles', 'matrix', 'stars', 'waves', 'bokeh', 'fireflies', 'embers', 'rain'], true)): ?><canvas id="bgCanvas"></canvas><?php endif; ?>
     <div class="bg-vignette"></div>
 </div>
 <?php if (setting_on('anim_cursor')): ?><div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div><?php endif; ?>

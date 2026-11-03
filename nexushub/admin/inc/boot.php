@@ -90,10 +90,12 @@ function adm_head(string $title, string $active = ''): void
 <link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">
+<?php $decorHtml = decor_html('admin'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 </head>
 <body class="adm-body">
 <div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
+<?= $decorHtml ?>
 <div class="adm">
     <aside class="adm-side" id="admSide">
         <a class="adm-brand" href="<?= e(url('admin/')) ?>">

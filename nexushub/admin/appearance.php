@@ -6,7 +6,7 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
-    'latest_mode', 'latest_count', 'latest_hours', 'latest_since'];
+    'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin'];
 
 if (is_post()) {
     csrf_check();
@@ -21,6 +21,10 @@ if (is_post()) {
     // اعتبارسنجی
     foreach (['color_primary', 'color_secondary', 'color_bg'] as $ck) if (isset($save[$ck])) $save[$ck] = valid_hex($save[$ck], default_settings()[$ck]);
     if (!array_key_exists($save['theme_preset'] ?? '', theme_presets())) $save['theme_preset'] = 'nexus';
+    if (isset($save['card_style']) && !isset(card_styles()[$save['card_style']])) $save['card_style'] = 'glass';
+    if (isset($save['bg_effect']) && !isset(bg_effects()[$save['bg_effect']])) $save['bg_effect'] = 'particles';
+    if (isset($save['theme_decor']) && !in_array($save['theme_decor'], array_merge(['auto', 'off'], array_keys(decor_types())), true)) $save['theme_decor'] = 'auto';
+    if (isset($save['decor_density'])) $save['decor_density'] = (string) max(6, min(40, (int) $save['decor_density']));
     foreach (['social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'announce_link'] as $lk) if (isset($save[$lk])) $save[$lk] = safe_link($save[$lk]);
     // «آخرین اخبار» صفحه اصلی: تعداد ثابت، چند ساعت اخیر، یا از یک تاریخ
     if (isset($save['latest_mode'])) {
@@ -64,15 +68,27 @@ adm_head('ظاهر سایت', 'appearance');
 
 <div data-pane="theme">
     <div class="card">
-        <div class="card-head"><h3><?= adm_icon('palette', 20) ?> تم‌های آماده</h3><span class="muted small">با یک کلیک کل سایت تغییر می‌کند</span></div>
-        <div class="opt-grid">
-            <?php foreach ($presets as $k => $p): $pp = $p['primary'] ?? $s['color_primary']; $ps = $p['secondary'] ?? $s['color_secondary']; $pb = $p['bg'] ?? $s['color_bg']; ?>
+        <div class="card-head"><h3><?= adm_icon('palette', 20) ?> تم‌های آماده</h3><span class="muted small">با یک کلیک کل سایت، صفحه ورود، صفحه انتقال و پنل تغییر می‌کند</span></div>
+        <?php foreach (theme_groups() as $gk => $gname): ?>
+        <h4 class="theme-group-title"><?= e($gname) ?></h4>
+        <div class="opt-grid theme-grid">
+            <?php foreach ($presets as $k => $p): if (($p['group'] ?? 'base') !== $gk) continue; $pp = $p['primary'] ?? $s['color_primary']; $ps = $p['secondary'] ?? $s['color_secondary']; $pb = $p['bg'] ?? $s['color_bg']; ?>
                 <label class="opt">
-                    <input type="radio" name="theme_preset" value="<?= e($k) ?>" <?= $s['theme_preset'] === $k ? 'checked' : '' ?>>
-                    <span class="swatch" style="background:<?= e($pb) ?>;--sp:<?= e($pp) ?>;--ss:<?= e($ps) ?>"><em></em><i></i></span>
+                    <input type="radio" name="theme_preset" value="<?= e($k) ?>" data-fx="<?= e((string) ($p['fx'] ?? '')) ?>" <?= $s['theme_preset'] === $k ? 'checked' : '' ?>>
+                    <span class="swatch" style="background:<?= e($pb) ?>;--sp:<?= e($pp) ?>;--ss:<?= e($ps) ?>"><em></em><i></i><?php if (!empty($p['decor'])): ?><u class="sw-decor"><?= e((string) array_slice(explode(' ', decor_types()[$p['decor']] ?? ''), -1)[0]) ?></u><?php endif; ?></span>
                     <b><?= e($p['name']) ?></b><small><?= e($p['desc']) ?></small>
                 </label>
             <?php endforeach; ?>
+        </div>
+        <?php endforeach; ?>
+        <label class="chk-row mt"><input type="checkbox" id="fxFollow" checked> با انتخاب تم، افکت پس‌زمینه‌ی پیشنهادی همان تم هم انتخاب شود (در تب «چیدمان صفحه اصلی»)</label>
+    </div>
+    <div class="card mt">
+        <div class="card-head"><h3>🎉 افکت مناسبتی (برف، شکوفه، قلب، خفاش ...)</h3><span class="muted small">ذرات سبک و روان روی صفحه — روی سایت، صفحه ورود و پنل</span></div>
+        <div class="grid g3">
+            <?= f_select('theme_decor', 'افکت', ['auto' => '🪄 خودکار (همان افکت تم انتخابی)', 'off' => '⛔ خاموش'] + decor_types(), (string) ($s['theme_decor'] ?? 'auto')) ?>
+            <?= f_range('decor_density', 'تعداد ذرات', $s['decor_density'] ?? '18', 6, 40) ?>
+            <div><?= f_switch('decor_admin', 'نمایش در پنل مدیریت هم باشد', setting_on('decor_admin'), 'در پنل کم‌رنگ‌تر و با ذرات کمتر') ?></div>
         </div>
     </div>
     <div class="grid g2 mt">
@@ -94,8 +110,8 @@ adm_head('ظاهر سایت', 'appearance');
     <div class="card mt">
         <div class="card-head"><h3>🃏 سبک کارت‌ها</h3></div>
         <div class="opt-grid">
-            <?php foreach (['glass' => ['شیشه‌ای', 'مات و شفاف با بلور'], 'solid' => ['توپر', 'سبک و سریع‌تر'], 'outline' => ['خطی', 'فقط حاشیه'], 'neon' => ['نئونی', 'درخشش رنگی دور کارت']] as $k => [$n, $d]): ?>
-                <label class="opt"><input type="radio" name="card_style" value="<?= $k ?>" <?= $s['card_style'] === $k ? 'checked' : '' ?>><b><?= $n ?></b><small><?= $d ?></small></label>
+            <?php foreach (card_styles() as $k => [$n, $d]): ?>
+                <label class="opt"><input type="radio" name="card_style" value="<?= $k ?>" <?= $s['card_style'] === $k ? 'checked' : '' ?>><span class="cs-thumb cs-<?= $k ?>"><i></i><i></i></span><b><?= $n ?></b><small><?= $d ?></small></label>
             <?php endforeach; ?>
         </div>
     </div>
@@ -114,7 +130,7 @@ adm_head('ظاهر سایت', 'appearance');
     <div class="card mt">
         <div class="card-head"><h3>🌌 افکت پس‌زمینه</h3></div>
         <div class="opt-grid">
-            <?php foreach (['particles' => ['شبکه ذرات', 'ذرات متصل متحرک (تعاملی با موس)'], 'matrix' => ['ماتریکس', 'باران کاراکترهای سایبری'], 'grid' => ['گرید سایبری', 'شبکه سه‌بعدی متحرک'], 'aurora' => ['شفق قطبی', 'نور چرخان ملایم'], 'none' => ['ساده', 'فقط هاله‌های رنگی']] as $k => [$n, $d]): ?>
+            <?php foreach (bg_effects() as $k => [$n, $d]): ?>
                 <label class="opt"><input type="radio" name="bg_effect" value="<?= $k ?>" <?= $s['bg_effect'] === $k ? 'checked' : '' ?>><b><?= $n ?></b><small><?= $d ?></small></label>
             <?php endforeach; ?>
         </div>
@@ -266,6 +282,15 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', function () {
         document.getElementById('secInput').value = JSON.stringify([].map.call(secList.querySelectorAll('.sort-item'), function (i) { return { key: i.dataset.key, on: i.querySelector('.sw').checked ? 1 : 0 }; }));
         document.getElementById('menuInput').value = JSON.stringify([].map.call(menuList.querySelectorAll('.sort-item'), function (i) { var x = i.querySelectorAll('input'); return { title: x[0].value.trim(), url: x[1].value.trim() }; }).filter(function (m) { return m.title && m.url; }));
+    });
+    // picking a theme also picks the background effect that suits it
+    document.querySelectorAll('input[name=theme_preset]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            var fx = r.dataset.fx, follow = document.getElementById('fxFollow');
+            if (!fx || !follow || !follow.checked) return;
+            var t = document.querySelector('input[name=bg_effect][value="' + fx + '"]');
+            if (t) { t.checked = true; NXA.toast && NXA.toast('افکت پس‌زمینه‌ی پیشنهادی این تم انتخاب شد ✨'); }
+        });
     });
 });
 </script>

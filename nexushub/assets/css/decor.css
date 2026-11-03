@@ -1,0 +1,41 @@
+/* NEXUS | HUB — occasion effects (snow, petals, hearts, bats, leaves, embers, stars).
+   Only transform/opacity animate → composited on the GPU, smooth on phones. Never catches clicks. */
+.nx-decor { position: fixed; inset: 0; z-index: 45; pointer-events: none; overflow: hidden; contain: strict; }
+.nx-decor.da-admin { z-index: 1; opacity: .55; }
+.nx-decor span { position: absolute; left: var(--x); top: -8vh; width: var(--s); height: var(--s); will-change: transform; animation: dFall var(--t) linear var(--d) infinite; }
+.nx-decor span i { display: block; font-style: normal; font-size: var(--s); line-height: 1; animation: dSway calc(var(--t) / 3) ease-in-out var(--d) infinite alternate; }
+
+/* falling (snow, petals, leaves, yalda) */
+@keyframes dFall { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 118vh, 0); } }
+@keyframes dSway { from { transform: translateX(calc(var(--w) * -.5)) rotate(-25deg); } to { transform: translateX(calc(var(--w) * .5)) rotate(35deg); } }
+
+/* rising (hearts, embers) */
+.dm-rise span { top: auto; bottom: -8vh; animation-name: dRise; }
+@keyframes dRise { 0% { transform: translate3d(0, 0, 0); opacity: 0; } 12% { opacity: 1; } 85% { opacity: .9; } 100% { transform: translate3d(0, -118vh, 0); opacity: 0; } }
+
+/* twinkling in place (ramadan, sparkles) */
+.dm-twinkle span { top: var(--y); animation-name: dTwinkle; }
+.dm-twinkle span i { animation: none; }
+@keyframes dTwinkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* flying across (halloween bats) */
+.dm-fly span { top: var(--y); left: -10vw; animation-name: dFly; }
+@keyframes dFly { 0% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(60vw, calc(var(--w) * 1.4), 0); } 100% { transform: translate3d(125vw, 0, 0); } }
+
+/* type looks */
+.decor-snow span i, .decor-embers span i, .decor-yalda span i:empty { width: var(--s); height: var(--s); border-radius: 50%; }
+.decor-snow span i { background: radial-gradient(circle, #fff 0 35%, rgba(255,255,255,.55) 55%, transparent 72%); }
+.decor-embers span i { background: radial-gradient(circle, #fff6c2 0 18%, #ffb000 38%, rgba(255,80,0,.6) 60%, transparent 74%); animation-name: dFlicker; }
+@keyframes dFlicker { 0%, 100% { transform: translateX(calc(var(--w) * -.3)) scale(1); opacity: 1; } 50% { transform: translateX(calc(var(--w) * .3)) scale(.6); opacity: .6; } }
+.decor-yalda span i:empty { background: radial-gradient(circle, #ff6b7a 0 30%, #c3002f 55%, transparent 72%); }
+.decor-ramadan span i, .decor-sparkles span i { color: #ffd76b; text-shadow: 0 0 12px rgba(255,215,107,.9); }
+.decor-sparkles span i { color: #fff3b0; }
+.decor-hearts span i { filter: none; }
+
+/* phones: half the particles */
+@media (hover: none), (max-width: 900px) {
+    .nx-decor span:nth-child(2n) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .nx-decor { display: none; }
+}

@@ -114,3 +114,46 @@ function theme_css_vars(): string
     foreach ($vars as $k => $v) $css .= $k . ':' . $v . ';';
     return $css . '}';
 }
+
+/** The occasion effect in use: setting theme_decor = auto (follow the theme) | off | a decor_types() key */
+function active_decor(): ?string
+{
+    $d = (string) setting('theme_decor', 'auto');
+    if ($d === 'off') return null;
+    if ($d === 'auto') {
+        $p = theme_presets()[(string) setting('theme_preset', 'nexus')] ?? null;
+        $d = (string) ($p['decor'] ?? '');
+    }
+    return isset(decor_types()[$d]) ? $d : null;
+}
+
+/**
+ * Falling / rising / twinkling particles for occasion themes (snow, petals, hearts, bats, embers...).
+ * Pure CSS (transform + opacity), fixed overlay, never catches clicks. $area: site | auth | admin
+ */
+function decor_html(string $area = 'site'): string
+{
+    $type = active_decor();
+    if (!$type || ($area === 'admin' && !setting_on('decor_admin'))) return '';
+    $n = max(6, min(40, (int) setting('decor_density', 18)));
+    if ($area === 'admin') $n = (int) ceil($n * .6);
+    $glyphs = [
+        'snow' => [''], 'petals' => ['🌸', '🌸', '💮'], 'hearts' => ['💖', '❤️', '💕', '💗'], 'halloween' => ['🦇', '🦇', '🎃', '🕸️'],
+        'leaves' => ['🍁', '🍂', '🍁'], 'leaves_green' => ['🍃', '🌿', '🍀'], 'yalda' => ['🍉', '', '', '🔴'], 'embers' => [''],
+        'ramadan' => ['✦', '✦', '🌙', '✧'], 'sparkles' => ['✦', '✧', '✨'],
+    ][$type];
+    $mode = match ($type) { 'embers', 'hearts' => 'rise', 'ramadan', 'sparkles' => 'twinkle', 'halloween' => 'fly', default => 'fall' };
+    mt_srand(crc32($type . $area));
+    $h = '<div class="nx-decor decor-' . e($type) . ' dm-' . $mode . ' da-' . e($area) . '" aria-hidden="true">';
+    for ($i = 0; $i < $n; $i++) {
+        $g = $glyphs[$i % count($glyphs)];
+        $x = mt_rand(0, 1000) / 10;
+        $y = mt_rand(0, 900) / 10;
+        $size = $type === 'snow' || $type === 'embers' || $g === '' ? mt_rand(4, 11) : mt_rand(14, 30);
+        $dur = $mode === 'twinkle' ? mt_rand(25, 60) / 10 : ($mode === 'fly' ? mt_rand(140, 260) / 10 : mt_rand(90, 200) / 10);
+        $delay = -mt_rand(0, (int) ($dur * 10)) / 10;
+        $sway = mt_rand(20, 90) * (mt_rand(0, 1) ? 1 : -1);
+        $h .= '<span style="--x:' . $x . '%;--y:' . $y . '%;--s:' . $size . 'px;--t:' . $dur . 's;--d:' . $delay . 's;--w:' . $sway . 'px"><i>' . ($g === '' ? '' : e($g)) . '</i></span>';
+    }
+    return $h . '</div>';
+}
