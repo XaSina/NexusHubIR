@@ -152,7 +152,7 @@ switch ($seg[0] ?? '') {
         break;
 
     case 'auth':
-        if (current_member()) redirect('account');
+        if (current_member()) { header('Location: ' . after_login_url()); exit; }
         header('Cache-Control: no-store');
         echo view('auth');
         break;
@@ -197,6 +197,185 @@ switch ($seg[0] ?? '') {
         ]);
         break;
 
+    /* ======================= Shop ======================= */
+    case 'shop':
+        if (!shop_on()) not_found();
+        track_visit();
+        $slug = $seg[1] ?? '';
+        if ($slug === '') {
+            $scats = rows('SELECT * FROM shop_categories WHERE is_active = 1 ORDER BY sort_order, id');
+            $catSlug = (string) ($_GET['cat'] ?? '');
+            $curCat = null;
+            foreach ($scats as $c) if ($c['slug'] === $catSlug) $curCat = $c;
+            $qstr = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 80);
+            $products = shop_products(['category_id' => $curCat['id'] ?? 0, 'search' => $qstr]);
+            page_out('shop', ['products' => $products, 'scats' => $scats, 'curCat' => $curCat, 'q' => $qstr, 'bodyClass' => 'page-shop'], [
+                'title' => setting('shop_title') . ' | ' . setting('site_title'), 'description' => setting('shop_tagline'),
+            ]);
+            break;
+        }
+        $product = row("SELECT p.*, c.name AS cat_name, c.slug AS cat_slug FROM products p LEFT JOIN shop_categories c ON c.id = p.category_id WHERE p.slug = ? AND (p.status IN ('active','soldout') OR ? = 1)", [$slug, current_user() ? 1 : 0]);
+        if (!$product) not_found();
+        $formErr = []; $formMsg = '';
+        if (is_post()) {
+            if (!csrf_valid()) $formMsg = 'نشست منقضی شده؛ صفحه را رفرش کنید.';
+            else {
+                [$vals, $formErr] = validate_product_fields($product, (array) ($_POST['f'] ?? []));
+                if (!$formErr) {
+                    $amount = isset($_POST['amount']) && $_POST['amount'] !== '' ? (float) en_num((string) $_POST['amount']) : null;
+                    $formMsg = cart_add($product, (int) ($_POST['vid'] ?? 0), $amount, (int) ($_POST['qty'] ?? 1), $vals);
+                    if ($formMsg === '') redirect(($_POST['go'] ?? '') === 'checkout' ? 'checkout' : 'cart');
+                }
+            }
+        }
+        page_out('product', ['product' => $product, 'formErr' => $formErr, 'formMsg' => $formMsg, 'old' => $_POST, 'bodyClass' => 'page-shop page-product'], [
+            'title' => $product['title'] . ' | ' . setting('shop_title'), 'description' => $product['subtitle'] ?: str_excerpt((string) $product['description']),
+            'image' => $product['image'] ? site_url($product['image']) : '',
+        ]);
+        break;
+
+    case 'cart':
+        if (!shop_on()) not_found();
+        header('Cache-Control: no-store');
+        if (is_post() && csrf_valid()) {
+            $key = (string) ($_POST['key'] ?? '');
+            $cart = cart_raw();
+            switch ($_POST['act'] ?? '') {
+                case 'qty': if (isset($cart[$key]) && $cart[$key]['vid']) $cart[$key]['qty'] = max(1, min(20, (int) ($_POST['qty'] ?? 1))); break;
+                case 'remove': unset($cart[$key]); break;
+                case 'clear': $cart = []; break;
+            }
+            $_SESSION['cart'] = $cart;
+            redirect('cart');
+        }
+        page_out('cart', ['lines' => cart_lines(), 'bodyClass' => 'page-shop page-cart'], ['title' => 'سبد خرید | ' . setting('shop_title'), 'noindex' => true]);
+        break;
+
+    case 'checkout':
+        if (!shop_on()) not_found();
+        header('Cache-Control: no-store');
+        $member = current_member();
+        if (!$member) { $_SESSION['after_login'] = 'checkout'; redirect('auth'); }
+        $lines = cart_lines();
+        if (!$lines) redirect('cart');
+        $err = '';
+        if (is_post()) {
+            if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
+            elseif (empty($_POST['agree'])) $err = 'برای ثبت سفارش، قوانین فروشگاه را بپذیرید.';
+            else {
+                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''));
+                if ($order) redirect('order/' . $order['code'] . '?new=1');
+            }
+        }
+        page_out('checkout', ['lines' => $lines, 'member' => $member, 'err' => $err, 'bodyClass' => 'page-shop page-checkout'], ['title' => 'تکمیل خرید | ' . setting('shop_title'), 'noindex' => true]);
+        break;
+
+    case 'order':
+        header('Cache-Control: no-store');
+        shop_expire_due();
+        $order = row('SELECT * FROM orders WHERE code = ?', [strtoupper((string) ($seg[1] ?? ''))]);
+        $member = current_member();
+        $isAdmin = (bool) current_user();
+        if (!$order || (!$isAdmin && (!$member || (int) $member['id'] !== (int) $order['member_id']))) {
+            if (!$member && !$isAdmin) { $_SESSION['after_login'] = 'order/' . ($seg[1] ?? ''); redirect('auth'); }
+            not_found();
+        }
+        if (($seg[2] ?? '') === 'receipt') {
+            if (!$order['receipt']) { http_response_code(404); exit; }
+            serve_private((string) $order['receipt']);
+        }
+        $err = '';
+        if (is_post() && $member && (int) $member['id'] === (int) $order['member_id']) {
+            if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
+            elseif (($_POST['act'] ?? '') === 'receipt' && in_array($order['status'], ['pending_payment', 'rejected'], true)) {
+                $up = upload_private_image($_FILES['receipt'] ?? [], 'receipts');
+                if (!$up['ok']) $err = $up['error'];
+                else {
+                    order_set_status($order, 'reviewing', [
+                        'receipt' => $up['path'], 'reject_reason' => null,
+                        'receipt_ref' => mb_substr(en_num(trim((string) ($_POST['ref'] ?? ''))), 0, 60) ?: null,
+                    ]);
+                    redirect('order/' . $order['code'] . '?sent=1');
+                }
+            } elseif (($_POST['act'] ?? '') === 'cancel' && $order['status'] === 'pending_payment') {
+                order_set_status($order, 'canceled', ['reject_reason' => 'لغو توسط مشتری']);
+                redirect('order/' . $order['code']);
+            }
+        }
+        notifs_cleanup();
+        if ($member) q('UPDATE notifications SET is_read = 1 WHERE audience = ? AND ref_type = ? AND ref_id = ?', ['m:' . $member['id'], 'order', $order['id']]);
+        page_out('order', ['order' => $order, 'items' => order_items((int) $order['id']), 'err' => $err, 'bodyClass' => 'page-shop page-order'], ['title' => 'سفارش ' . $order['code'] . ' | ' . setting('shop_title'), 'noindex' => true]);
+        break;
+
+    case 'orders':
+        $member = current_member();
+        if (!$member) { $_SESSION['after_login'] = 'orders'; redirect('auth'); }
+        header('Cache-Control: no-store');
+        shop_expire_due();
+        $orders = rows('SELECT * FROM orders WHERE member_id = ? ORDER BY id DESC LIMIT 100', [$member['id']]);
+        page_out('orders', ['orders' => $orders, 'member' => $member, 'bodyClass' => 'page-shop page-orders'], ['title' => 'سفارش‌های من | ' . setting('shop_title'), 'noindex' => true]);
+        break;
+
+    case 'support':
+        if (!setting_on('shop_support_on')) not_found();
+        $member = current_member();
+        if (!$member && !current_user()) { $_SESSION['after_login'] = 'support' . (isset($seg[1]) ? '/' . $seg[1] : ''); redirect('auth'); }
+        header('Cache-Control: no-store');
+        $code = strtoupper((string) ($seg[1] ?? ''));
+        $err = '';
+        if ($code === '') {
+            if (!$member) redirect('admin/tickets.php');
+            if (is_post()) {
+                $subject = mb_substr(trim((string) ($_POST['subject'] ?? '')), 0, 150);
+                $body = mb_substr(trim((string) ($_POST['body'] ?? '')), 0, 4000);
+                $oid = (int) ($_POST['order_id'] ?? 0);
+                if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
+                elseif (mb_strlen($subject) < 3) $err = 'موضوع را بنویسید.';
+                elseif (mb_strlen($body) < 5) $err = 'متن پیام خیلی کوتاه است.';
+                elseif (time() - (int) ($_SESSION['last_ticket'] ?? 0) < 30) $err = 'لطفاً چند ثانیه بعد دوباره تلاش کنید.';
+                elseif ((int) val("SELECT COUNT(*) FROM tickets WHERE member_id = ? AND status = 'open'", [$member['id']]) >= 5) $err = 'شما ۵ تیکت باز دارید؛ لطفاً منتظر پاسخ بمانید.';
+                else {
+                    $att = null;
+                    if (!empty($_FILES['file']['name'])) { $up = upload_private_image($_FILES['file'], 'tickets'); if (!$up['ok']) $err = $up['error']; else $att = $up['path']; }
+                    if (!$err) {
+                        if ($oid && !val('SELECT id FROM orders WHERE id = ? AND member_id = ?', [$oid, $member['id']])) $oid = 0;
+                        $tcode = new_code('tickets', 'T');
+                        $tid = insert('tickets', ['code' => $tcode, 'member_id' => $member['id'], 'order_id' => $oid ?: null, 'subject' => $subject, 'status' => 'open', 'created_at' => now(), 'updated_at' => now()]);
+                        ticket_add_message(row('SELECT * FROM tickets WHERE id = ?', [$tid]), 'member', $body, $att);
+                        $_SESSION['last_ticket'] = time();
+                        redirect('support/' . $tcode);
+                    }
+                }
+            }
+            $tickets = rows('SELECT t.*, (SELECT COUNT(*) FROM ticket_messages m WHERE m.ticket_id = t.id) AS msgs FROM tickets t WHERE member_id = ? ORDER BY updated_at DESC LIMIT 100', [$member['id']]);
+            $myOrders = rows('SELECT id, code, total, created_at FROM orders WHERE member_id = ? ORDER BY id DESC LIMIT 30', [$member['id']]);
+            page_out('support', ['tickets' => $tickets, 'myOrders' => $myOrders, 'err' => $err, 'old' => $_POST, 'pre' => (string) ($_GET['order'] ?? ''), 'bodyClass' => 'page-shop page-support'], ['title' => 'پشتیبانی فروشگاه | ' . setting('site_title'), 'noindex' => true]);
+            break;
+        }
+        $ticket = row('SELECT * FROM tickets WHERE code = ?', [$code]);
+        if (!$ticket || (!current_user() && (int) $ticket['member_id'] !== (int) $member['id'])) not_found();
+        if (($seg[2] ?? '') === 'file') {
+            $msg = row('SELECT attachment FROM ticket_messages WHERE id = ? AND ticket_id = ?', [(int) ($seg[3] ?? 0), $ticket['id']]);
+            if (!$msg || !$msg['attachment']) { http_response_code(404); exit; }
+            serve_private((string) $msg['attachment']);
+        }
+        if (is_post() && $member && (int) $ticket['member_id'] === (int) $member['id']) {
+            $body = mb_substr(trim((string) ($_POST['body'] ?? '')), 0, 4000);
+            if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
+            elseif (($_POST['act'] ?? '') === 'close') { q("UPDATE tickets SET status = 'closed', updated_at = ? WHERE id = ?", [now(), $ticket['id']]); unnotify('admin', 'ticket', (int) $ticket['id']); redirect('support/' . $code); }
+            elseif (mb_strlen($body) < 2) $err = 'متن پیام را بنویسید.';
+            else {
+                $att = null;
+                if (!empty($_FILES['file']['name'])) { $up = upload_private_image($_FILES['file'], 'tickets'); if (!$up['ok']) $err = $up['error']; else $att = $up['path']; }
+                if (!$err) { ticket_add_message($ticket, 'member', $body, $att); redirect('support/' . $code . '#end'); }
+            }
+        }
+        if ($member) q('UPDATE notifications SET is_read = 1 WHERE audience = ? AND ref_type = ? AND ref_id = ?', ['m:' . $member['id'], 'ticket', $ticket['id']]);
+        $tmsgs = rows('SELECT * FROM ticket_messages WHERE ticket_id = ? ORDER BY id', [$ticket['id']]);
+        $tOrder = $ticket['order_id'] ? row('SELECT * FROM orders WHERE id = ?', [$ticket['order_id']]) : null;
+        page_out('ticket', ['ticket' => $ticket, 'msgs' => $tmsgs, 'tOrder' => $tOrder, 'err' => $err, 'bodyClass' => 'page-shop page-ticket'], ['title' => $ticket['subject'] . ' | پشتیبانی', 'noindex' => true]);
+        break;
+
     case 'go':
         $ad = row('SELECT * FROM ads WHERE id = ?', [(int) ($seg[1] ?? 0)]);
         $link = $ad ? safe_link($ad['link']) : '';
@@ -219,7 +398,7 @@ switch ($seg[0] ?? '') {
 
     case 'robots.txt':
         header('Content-Type: text/plain; charset=utf-8');
-        echo "User-agent: *\nDisallow: /admin/\nDisallow: /install/\nDisallow: /search\nSitemap: " . site_url('sitemap.xml') . "\n";
+        echo "User-agent: *\nDisallow: /admin/\nDisallow: /install/\nDisallow: /search\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order/\nDisallow: /orders\nDisallow: /support\nSitemap: " . site_url('sitemap.xml') . "\n";
         break;
 
     default:

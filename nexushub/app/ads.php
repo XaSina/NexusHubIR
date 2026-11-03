@@ -21,11 +21,12 @@ function active_ads(string $position): array
 /** خروجی HTML جایگاه تبلیغ */
 function ad_slot(string $position): string
 {
+    $shop = shop_banner_slot($position);   // the shop's own promo banner can sit in any of these places too
     $ads = active_ads($position);
-    if (!$ads) return '';
+    if (!$ads) return $shop;
     $mobile = is_mobile_ua();
     $ads = array_values(array_filter($ads, fn($a) => $a['device'] === 'all' || ($a['device'] === 'mobile') === $mobile));
-    if (!$ads) return '';
+    if (!$ads) return $shop;
 
     if ($position === 'popup') $ads = [$ads[0]];
     if ($position === 'floating') $ads = [$ads[0]];
@@ -50,7 +51,7 @@ function ad_slot(string $position): string
     }
     $stack = in_array($position, ['sidebar'], true);
     $rotate = !$stack && count($ads) > 1;
-    return '<div class="ad-slot ad-pos-' . e($position) . ($rotate ? ' ad-rotate' : '') . '" data-reveal>' . $inner . '</div>';
+    return $shop . '<div class="ad-slot ad-pos-' . e($position) . ($rotate ? ' ad-rotate' : '') . '" data-reveal>' . $inner . '</div>';
 }
 
 function render_ad(array $a, bool $preview = false): string
@@ -64,7 +65,7 @@ function render_ad(array $a, bool $preview = false): string
     $link = safe_link($a['link'] ?? '');
     $href = $preview || !$id ? ($link ?: '#') : url('go/' . $id);
     $target = !empty($a['new_tab']) ? ' target="_blank"' : '';
-    $label = (string) setting('ad_label', 'تبلیغ');
+    $label = !empty($a['no_label']) ? '' : (string) setting('ad_label', 'تبلیغ');
 
     $deco = match ($theme) {
         'fire' => '<span class="ad-embers" aria-hidden="true">' . str_repeat('<i></i>', 10) . '</span>',
@@ -107,4 +108,32 @@ function render_ad(array $a, bool $preview = false): string
         $out .= '</a>';
     }
     return $out . '</div>';
+}
+
+/** Places the shop banner may use (ad slots) */
+function shop_banner_places(): array
+{
+    return ['home_top' => 'صفحه اصلی — زیر اسلایدر', 'home_middle' => 'صفحه اصلی — وسط', 'sidebar' => 'سایدبار', 'post_top' => 'خبر — بالای متن',
+        'post_bottom' => 'خبر — پایان متن', 'footer_top' => 'بالای فوتر (همه صفحات)', 'header_top' => 'بالای هدر (همه صفحات)'];
+}
+
+function shop_banner_ad(): array
+{
+    return [
+        'id' => 0, 'no_label' => true, 'format' => 'card', 'theme' => (string) setting('shop_banner_style', 'neon'),
+        'accent' => (string) setting('shop_banner_accent') ?: (string) setting('color_primary', '#ff1f3d'),
+        'image' => (string) setting('shop_banner_image'), 'link' => url('shop'), 'new_tab' => 0,
+        'heading' => (string) setting('shop_banner_title'), 'body' => (string) setting('shop_banner_text'),
+        'button_text' => (string) setting('shop_banner_btn'), 'emoji' => (string) setting('shop_banner_emoji', '🛍️'),
+        'badge' => (string) setting('shop_banner_badge'),
+    ];
+}
+
+function shop_banner_slot(string $position): string
+{
+    static $places = null;
+    if (!shop_on() || !setting_on('shop_banner_on') || !isset(shop_banner_places()[$position])) return '';
+    $places ??= array_filter(array_map('trim', explode(',', (string) setting('shop_banner_places'))));
+    if (!in_array($position, $places, true)) return '';
+    return '<div class="ad-slot ad-pos-' . e($position) . ' shop-promo" data-reveal>' . render_ad(shop_banner_ad(), true) . '</div>';
 }

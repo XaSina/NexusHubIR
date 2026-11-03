@@ -299,6 +299,55 @@
         });
     });
 
+    /* ---------- Shop notifications bell (new receipts / support messages) ---------- */
+    (function () {
+        var btn = $('#anbBtn'), panel = $('#anbPanel'), list = $('#anbList'), cnt = $('#anbCount');
+        if (!btn) return;
+        var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; };
+        var setN = function (n) { cnt.hidden = !n; cnt.textContent = fa(n); };
+        var render = function (items) {
+            list.innerHTML = items.length ? items.map(function (n) {
+                return '<a class="anb-item' + (n.read ? '' : ' unread') + '" href="' + esc(n.link) + '"><span>' + esc(n.icon) + '</span><span><b>' + esc(n.title) + '</b><small>' + esc(n.body) + '</small><small>' + esc(n.ago) + '</small></span></a>';
+            }).join('') : '<div class="anb-empty">🎉 کار انجام‌نشده‌ای نیست</div>';
+        };
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            panel.hidden = !panel.hidden;
+            if (!panel.hidden) A.post('admin_notifs', { read: 1 }).then(function (j) { if (j.ok) { render(j.items); setN(0); } });
+        });
+        document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target) && e.target !== btn) panel.hidden = true; });
+        var seen = null;
+        var poll = function () {
+            if (document.hidden) return;
+            A.post('admin_notifs', {}).then(function (j) {
+                if (!j.ok) return;
+                setN(j.unread);
+                var k = j.latest ? j.latest.key : '';
+                if (seen !== null && k && k !== seen) {
+                    btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
+                    var t = document.createElement('a');
+                    t.className = 'anb-toast'; t.href = j.latest.link;
+                    t.innerHTML = '<span style="font-size:1.4rem">' + esc(j.latest.icon) + '</span><span><b>' + esc(j.latest.title) + '</b><br><small class="muted">' + esc(j.latest.body) + '</small></span>';
+                    document.body.appendChild(t);
+                    requestAnimationFrame(function () { t.classList.add('in'); });
+                    setTimeout(function () { t.classList.remove('in'); setTimeout(function () { t.remove(); }, 500); }, 7000);
+                }
+                seen = k;
+                // keep the sidebar badges current
+                $$('.adm-nav a').forEach(function (a) {
+                    var n = /orders\.php$/.test(a.getAttribute('href')) ? j.review : /tickets\.php$/.test(a.getAttribute('href')) ? j.tickets : null;
+                    if (n === null) return;
+                    var b = $('.nav-badge', a);
+                    if (!n) { if (b) b.remove(); return; }
+                    if (!b) { b = document.createElement('em'); b.className = 'nav-badge'; a.appendChild(b); }
+                    b.textContent = fa(n);
+                });
+            }).catch(function () {});
+        };
+        poll();
+        setInterval(poll, 30000);
+    })();
+
     /* ---------- Copy ---------- */
     document.addEventListener('click', function (e) {
         var b = e.target.closest('[data-copy]'); if (!b) return;

@@ -67,6 +67,24 @@ switch ($_POST['action'] ?? '') {
         }
         json_out(['ok' => false, 'error' => $r['description'] ?? 'خطا']);
 
+    case 'admin_notifs':
+        if (!can('shop')) json_out(['ok' => false], 403);
+        if (!empty($_POST['read'])) q("UPDATE notifications SET is_read = 1 WHERE audience = 'admin'");
+        $items = array_map(function ($n) { $j = notif_json($n); $j['link'] = url((string) $n['link']); return $j; }, notifs_for('admin', 30));
+        $latest = row("SELECT * FROM notifications WHERE audience = 'admin' AND is_read = 0 ORDER BY updated_at DESC LIMIT 1");
+        json_out(['ok' => true, 'items' => $items, 'unread' => notifs_unread('admin'), 'latest' => $latest ? notif_json($latest) : null,
+            'review' => (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')"), 'tickets' => (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'")]);
+
+    case 'rates_test':
+        if (!can('*')) json_out(['ok' => false], 403);
+        $tests = [];
+        $t0 = microtime(true); [$ton, $src] = fetch_ton_usd();
+        $tests[] = $ton ? '✅ TON: $' . number_format($ton, 3) . ' از ' . $src . ' (' . round((microtime(true) - $t0) * 1000) . 'ms)' : '❌ هیچ‌کدام از منابع قیمت TON پاسخ ندادند: ' . implode('، ', (array) $src);
+        $t0 = microtime(true); [$usd, $src2] = fetch_usdt_toman();
+        $tests[] = $usd ? '✅ تتر (دلار): ' . money((int) $usd) . ' تومان از Nobitex (' . round((microtime(true) - $t0) * 1000) . 'ms)' : '❌ نوبیتکس برای قیمت تتر پاسخ نداد';
+        $r = shop_rates(true);
+        json_out(['ok' => true, 'lines' => $tests, 'ton' => $r['ton'], 'usd' => $r['usd'], 'ton_src' => $r['ton_src'], 'usd_src' => $r['usd_src']]);
+
     case 'slug':
         json_out(['ok' => true, 'slug' => slugify((string) input('text'))]);
 

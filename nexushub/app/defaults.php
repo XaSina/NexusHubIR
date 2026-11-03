@@ -60,6 +60,7 @@ function default_settings(): array
             ['key' => 'categories', 'on' => 1],
             ['key' => 'trending', 'on' => 1],
             ['key' => 'telegram', 'on' => 1],
+            ['key' => 'shop', 'on' => 1],
         ]),
         'menu' => json_encode([
             ['title' => 'خانه', 'url' => '/'],
@@ -92,6 +93,69 @@ function default_settings(): array
         'maintenance_text' => 'سایت در حال بروزرسانی است؛ به زودی برمی‌گردیم 🔧',
         'ad_label' => 'تبلیغ',
         'post_middle_paragraph' => '3',
+
+        // فروشگاه
+        'shop_enabled' => '1',
+        'shop_title' => 'فروشگاه NEXUS',
+        'shop_tagline' => 'پریمیوم تلگرام، استارز، تون و هر چیزی که لازم داری — سریع، امن و با پشتیبانی واقعی',
+        'shop_card_number' => '6219861939982061',
+        'shop_card_name' => 'مهدیه عباس زاده',
+        'shop_card_bank' => 'بانک سامان',
+        'shop_usd_mode' => 'manual',      // manual | auto (قیمت تتر نوبیتکس)
+        'shop_usd_rate' => '0',           // قیمت دلار به تومان (دستی)
+        'shop_ton_mode' => 'auto',        // auto | manual
+        'shop_ton_usd' => '0',            // قیمت دستی / پشتیبان هر تون به دلار
+        'shop_margin' => '0',             // درصد سود روی قیمت‌های دلاری و تونی
+        'shop_round' => '1000',           // گرد کردن قیمت نهایی (رو به بالا)
+        'shop_pay_minutes' => '60',
+        'shop_notice' => 'پس از واریز، تصویر فیش را ارسال کنید. سفارش‌ها معمولاً بین ۵ تا ۳۰ دقیقه انجام می‌شوند.',
+        'shop_terms' => "• سفارش پس از تایید فیش واریزی انجام می‌شود.\n• اطلاعات تحویل (مثل آیدی تلگرام) را با دقت وارد کنید؛ مسئولیت اطلاعات اشتباه با خریدار است.\n• در صورت عدم امکان انجام سفارش، مبلغ کامل به کارت شما برگشت داده می‌شود.\n• برای پیگیری از بخش پشتیبانی تیکت ثبت کنید.",
+        'shop_in_header' => '1',
+        'shop_in_mobile' => '1',
+        'shop_in_footer' => '1',
+        'shop_menu_label' => 'فروشگاه',
+        'shop_banner_on' => '1',
+        'shop_banner_title' => 'فروشگاه NEXUS افتتاح شد 🛍️',
+        'shop_banner_text' => 'پریمیوم تلگرام، استارز و تون با بهترین قیمت؛ پرداخت کارت‌به‌کارت و تحویل سریع.',
+        'shop_banner_btn' => 'ورود به فروشگاه',
+        'shop_banner_style' => 'flow',    // یکی از تم‌های تبلیغ
+        'shop_banner_places' => 'sidebar,post_bottom',
+        'shop_banner_emoji' => '🛍️',
+        'shop_banner_accent' => '',
+        'shop_banner_image' => '',
+        'shop_banner_badge' => 'جدید',
+        'shop_support_on' => '1',
+        'shop_tg_admin_chat' => '',
+        'shop_rate_cache' => '',
+    ];
+}
+
+/** انواع محصول فروشگاه + فیلدهای پیش‌فرض هر نوع */
+function product_types(): array
+{
+    $tgUser = ['key' => 'tg_username', 'label' => 'آیدی تلگرام گیرنده', 'type' => 'username', 'required' => 1, 'placeholder' => '@username'];
+    return [
+        'premium' => ['name' => 'پریمیوم تلگرام', 'icon' => '⭐', 'color' => '#a855f7', 'fields' => [$tgUser]],
+        'stars' => ['name' => 'استارز تلگرام', 'icon' => '🌟', 'color' => '#ffc53d', 'fields' => [$tgUser]],
+        'ton' => ['name' => 'تون (TON)', 'icon' => '💎', 'color' => '#0098ea', 'fields' => [['key' => 'wallet', 'label' => 'آدرس کیف پول TON', 'type' => 'text', 'required' => 1, 'placeholder' => 'UQ... یا EQ...']]],
+        'giftcard' => ['name' => 'گیفت کارت', 'icon' => '🎁', 'color' => '#ff3d8b', 'fields' => []],
+        'game' => ['name' => 'بازی / آیتم گیم', 'icon' => '🎮', 'color' => '#ff1f3d', 'fields' => [['key' => 'account', 'label' => 'ایمیل یا آیدی اکانت', 'type' => 'text', 'required' => 1, 'placeholder' => '']]],
+        'account' => ['name' => 'اکانت / اشتراک', 'icon' => '🔑', 'color' => '#1de9b6', 'fields' => []],
+        'service' => ['name' => 'خدمات', 'icon' => '🛠️', 'color' => '#3dbbff', 'fields' => []],
+        'other' => ['name' => 'سایر', 'icon' => '🛍️', 'color' => '#ff7a3d', 'fields' => []],
+    ];
+}
+
+function order_statuses(): array
+{
+    return [
+        'pending_payment' => ['name' => 'در انتظار پرداخت', 'icon' => '💳', 'tone' => 'warn'],
+        'reviewing' => ['name' => 'در حال بررسی فیش', 'icon' => '🔎', 'tone' => 'info'],
+        'rejected' => ['name' => 'فیش تایید نشد', 'icon' => '⚠️', 'tone' => 'error'],
+        'approved' => ['name' => 'پرداخت تایید شد — در حال انجام', 'icon' => '⚙️', 'tone' => 'info'],
+        'completed' => ['name' => 'انجام شد', 'icon' => '✅', 'tone' => 'success'],
+        'canceled' => ['name' => 'لغو شد', 'icon' => '✖️', 'tone' => 'muted'],
+        'expired' => ['name' => 'منقضی شد', 'icon' => '⌛', 'tone' => 'muted'],
     ];
 }
 
@@ -162,5 +226,6 @@ function home_section_names(): array
         'categories' => 'بلوک دسته‌بندی‌ها',
         'trending' => 'پربازدیدترین‌ها',
         'telegram' => 'دعوت به کانال تلگرام',
+        'shop' => 'بنر فروشگاه + محصولات ویژه',
     ];
 }

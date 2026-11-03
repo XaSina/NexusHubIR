@@ -75,7 +75,53 @@ switch ($seg[1] ?? '') {
     case 'ping':   // heartbeat from open pages: keeps the visitor "online" and returns the live count
         track_online();
         [$tot, $mem] = online_count();
-        json_out(['ok' => true, 'online' => max(1, $tot), 'online_fa' => fa_num((string) max(1, $tot))]);
+        $out = ['ok' => true, 'online' => max(1, $tot), 'online_fa' => fa_num((string) max(1, $tot))];
+        if ($cm = current_member()) {
+            $out['notif'] = notifs_unread('m:' . $cm['id']);
+            $latest = row('SELECT * FROM notifications WHERE audience = ? AND is_read = 0 ORDER BY updated_at DESC LIMIT 1', ['m:' . $cm['id']]);
+            if ($latest) $out['latest'] = notif_json($latest);
+        }
+        json_out($out);
+
+    /* ---------- shop ---------- */
+    case 'cart-add':
+        if (!shop_on()) json_out(['ok' => false, 'error' => 'فروشگاه غیرفعال است.'], 403);
+        $p = row('SELECT * FROM products WHERE id = ?', [(int) ($_POST['pid'] ?? 0)]);
+        if (!$p) json_out(['ok' => false, 'error' => 'محصول یافت نشد.'], 404);
+        [$vals, $ferr] = validate_product_fields($p, (array) ($_POST['f'] ?? []));
+        if ($ferr) json_out(['ok' => false, 'errors' => $ferr, 'error' => reset($ferr)], 422);
+        $amount = isset($_POST['amount']) && $_POST['amount'] !== '' ? (float) en_num((string) $_POST['amount']) : null;
+        $e = cart_add($p, (int) ($_POST['vid'] ?? 0), $amount, (int) ($_POST['qty'] ?? 1), $vals);
+        if ($e !== '') json_out(['ok' => false, 'error' => $e], 422);
+        json_out(['ok' => true, 'count' => cart_count(), 'count_fa' => fa_num((string) cart_count())]);
+
+    case 'price':   // live price for a custom amount (product page)
+        $p = row("SELECT * FROM products WHERE id = ? AND status = 'active'", [(int) ($_POST['pid'] ?? 0)]);
+        if (!$p) json_out(['ok' => false], 404);
+        $t = custom_price($p, (float) en_num((string) ($_POST['amount'] ?? '0')));
+        json_out(['ok' => $t !== null, 'toman' => $t, 'fa' => money($t)]);
+
+    case 'order-status':
+        $cm = current_member();
+        $o = row('SELECT code, status, member_id, updated_at FROM orders WHERE code = ?', [strtoupper((string) ($_POST['code'] ?? ''))]);
+        if (!$o || ((!$cm || (int) $cm['id'] !== (int) $o['member_id']) && !current_user())) json_out(['ok' => false], 404);
+        shop_expire_due();
+        $o = row('SELECT code, status, updated_at FROM orders WHERE code = ?', [$o['code']]);
+        json_out(['ok' => true, 'status' => $o['status'], 'v' => strtotime($o['updated_at'])]);
+
+    case 'ticket-poll':
+        $cm = current_member();
+        $t = row('SELECT * FROM tickets WHERE code = ?', [strtoupper((string) ($_POST['code'] ?? ''))]);
+        if (!$t || ((!$cm || (int) $cm['id'] !== (int) $t['member_id']) && !current_user())) json_out(['ok' => false], 404);
+        $last = (int) val('SELECT MAX(id) FROM ticket_messages WHERE ticket_id = ?', [$t['id']]);
+        json_out(['ok' => true, 'last' => $last, 'status' => $t['status']]);
+
+    case 'notifs':
+        $cm = current_member();
+        if (!$cm) json_out(['ok' => false], 403);
+        $aud = 'm:' . $cm['id'];
+        if (!empty($_POST['read'])) q('UPDATE notifications SET is_read = 1 WHERE audience = ?', [$aud]);
+        json_out(['ok' => true, 'items' => array_map('notif_json', notifs_for($aud)), 'unread' => notifs_unread($aud)]);
 
     case 'story-view':
         $sid = (int) ($_POST['story_id'] ?? 0);
@@ -118,7 +164,7 @@ switch ($seg[1] ?? '') {
         if ($m['status'] !== 'active') json_out(['ok' => false, 'error' => 'این حساب مسدود شده است.'], 403);
         q('DELETE FROM login_attempts WHERE ip = ?', ['m:' . client_ip()]);
         member_login($m);
-        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => url('account'), 'csrf' => csrf_token()]);
+        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => after_login_url(), 'csrf' => csrf_token()]);
 
     case 'auth-register':
         if (!setting_on('members_register')) json_out(['ok' => false, 'error' => 'ثبت‌نام در حال حاضر غیرفعال است.'], 403);
@@ -143,7 +189,7 @@ switch ($seg[1] ?? '') {
         $m = row("SELECT * FROM members WHERE id = ? AND status = 'active'", [(int) $p['id']]);
         if (!$m) json_out(['ok' => false, 'error' => 'حساب یافت نشد.'], 404);
         member_login($m);
-        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => url('account'), 'csrf' => csrf_token()]);
+        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => after_login_url(), 'csrf' => csrf_token()]);
 
     case 'auth-logout':
         member_logout();

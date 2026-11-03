@@ -34,6 +34,10 @@ function adm_icon(string $name, int $size = 20): string
         'chart' => '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
         'story' => '<circle cx="12" cy="12" r="9" stroke-dasharray="4 2.2"/><circle cx="12" cy="12" r="5"/>',
         'click' => '<path d="m9 9 5 12 1.8-5.2L21 14Z"/><path d="M7.2 2.2 8 5.1M5.1 8l-2.9-.8M14 4.1 12 6M6 12l-1.9 2"/>',
+        'bag' => '<path d="M5 7h14l-1.2 12.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/>',
+        'orders' => '<path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+        'ticket' => '<path d="M3 12a9 9 0 1 1 18 0v5a2 2 0 0 1-2 2h-2v-6h4M3 12v5a2 2 0 0 0 2 2h2v-6H3"/>',
+        'shopset' => '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/>',
     ];
     if (isset($ext[$name])) {
         return '<svg class="ic" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $ext[$name] . '</svg>';
@@ -46,8 +50,15 @@ function adm_nav(): array
     $pendingC = (int) val("SELECT COUNT(*) FROM comments WHERE status = 'pending'");
     $unread = (int) val('SELECT COUNT(*) FROM messages WHERE is_read = 0');
     $newMembers = (int) val('SELECT COUNT(*) FROM members WHERE created_at >= ?', [date('Y-m-d 00:00:00')]);
+    shop_expire_due();
+    $toReview = (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')");
+    $openT = (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'");
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
+        ['سفارش‌ها', 'orders.php', 'orders', 'shop', 'orders', $toReview],
+        ['محصولات فروشگاه', 'products.php', 'bag', 'shop', 'products', 0],
+        ['تیکت‌های پشتیبانی', 'tickets.php', 'ticket', 'shop', 'tickets', $openT],
+        ['تنظیمات فروشگاه', 'shop-settings.php', 'shopset', '*', 'shop-settings', 0],
         ['همه اخبار', 'posts.php', 'posts', 'posts', 'posts', 0],
         ['افزودن خبر', 'post-edit.php', 'plus', 'posts', 'post-new', 0],
         ['دسته‌بندی‌ها', 'categories.php', 'folder', 'categories', 'categories', 0],
@@ -113,6 +124,12 @@ function adm_head(string $title, string $active = ''): void
             <h1 class="adm-title"><?= e($title) ?></h1>
             <span class="adm-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?></span>
             <div class="adm-top-actions">
+                <?php if (can('shop')): $an = notifs_unread('admin'); ?>
+                <div class="anb">
+                    <button class="adm-ib anb-btn" id="anbBtn" type="button" aria-label="اعلان‌ها" title="اعلان‌ها"><?= icon('bell', 19) ?><em class="nav-badge anb-count" id="anbCount"<?= $an ? '' : ' hidden' ?>><?= fa_num((string) $an) ?></em></button>
+                    <div class="anb-panel" id="anbPanel" hidden><div class="anb-head"><b>🔔 اعلان‌های فروشگاه</b><a href="<?= e(url('admin/orders.php')) ?>">همه سفارش‌ها</a></div><div class="anb-list" id="anbList"></div></div>
+                </div>
+                <?php endif; ?>
                 <?php if (can('posts')): ?><a class="abtn abtn-primary abtn-sm" href="<?= e(url('admin/post-edit.php')) ?>"><?= adm_icon('plus', 17) ?><span>خبر جدید</span></a><?php endif; ?>
                 <a class="abtn abtn-ghost abtn-sm" href="<?= e(url('')) ?>" target="_blank"><?= icon('external', 16) ?><span>مشاهده سایت</span></a>
             </div>
@@ -239,4 +256,17 @@ function post_check(): void
 {
     if (!is_post()) return;
     csrf_check();
+}
+
+function order_badge(string $st): string
+{
+    $S = order_statuses();
+    $cls = ['pending_payment' => 'b-warn', 'reviewing' => 'b-info', 'rejected' => 'b-err', 'approved' => 'b-hot', 'completed' => 'b-ok', 'canceled' => 'b-muted', 'expired' => 'b-muted'][$st] ?? 'b-muted';
+    return '<span class="badge ' . $cls . '">' . e(($S[$st]['icon'] ?? '') . ' ' . ($S[$st]['name'] ?? $st)) . '</span>';
+}
+
+function ticket_badge(string $st): string
+{
+    $T = ticket_statuses();
+    return '<span class="badge ' . (['open' => 'b-warn', 'answered' => 'b-ok', 'closed' => 'b-muted'][$st] ?? 'b-muted') . '">' . e($T[$st]['name'] ?? $st) . '</span>';
 }

@@ -37,6 +37,7 @@
         return fetch((NX.base || '') + '/' + path, { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'X-CSRF-Token': NX.csrf } })
             .then(function (r) { return r.json(); });
     }
+    window.nxApi = api;
 
     /* ---------- Cinematic page warp (login / account links) ---------- */
     var warp = $('#nxWarp'), warpIn = document.documentElement.classList.contains('warp-in');
@@ -355,9 +356,21 @@
     $$('[data-copy]').forEach(function (b) {
         b.addEventListener('click', function () {
             var txt = b.dataset.copy;
-            var done = function () { toast('لینک کپی شد ✅'); };
-            if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, function () { prompt('کپی کنید:', txt); });
-            else { prompt('کپی کنید:', txt); }
+            var done = function () {
+                toast(b.dataset.copyMsg || (/^https?:/.test(txt) ? 'لینک کپی شد ✅' : 'کپی شد ✅'));
+                b.classList.remove('copied'); void b.offsetWidth; b.classList.add('copied');
+                setTimeout(function () { b.classList.remove('copied'); }, 1600);
+            };
+            var legacy = function () {
+                var ta = document.createElement('textarea');
+                ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+                document.body.appendChild(ta); ta.select();
+                var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+                ta.remove();
+                if (ok) done(); else prompt('کپی کنید:', txt);
+            };
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, legacy);
+            else legacy();
         });
     });
     $$('[data-share]').forEach(function (b) {
@@ -471,9 +484,12 @@
         function ping() {
             if (document.hidden) return;
             lastPing = Date.now();
-            api('api/ping', {}).then(function (j) { if (j && j.ok && out) out.textContent = j.online_fa; }).catch(function () {});
+            api('api/ping', {}).then(function (j) {
+                if (j && j.ok && out) out.textContent = j.online_fa;
+                if (j && j.ok) document.dispatchEvent(new CustomEvent('nx:ping', { detail: j }));
+            }).catch(function () {});
         }
-        setInterval(ping, 60000);
+        setInterval(ping, NX.member ? 30000 : 60000);
         document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - lastPing > 55000) ping(); });
     })();
 

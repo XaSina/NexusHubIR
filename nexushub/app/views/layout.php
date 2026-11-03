@@ -58,6 +58,13 @@ foreach ($cats as $c) {   // switched-on categories that aren't in the manual me
     if (!empty($c['show_in_mobile']) && !in_array((int) $c['id'], $drawerCatIds, true)) $extraDrawer[] = $item;
 }
 array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
+// shop: menu places are chosen in the panel (desktop header / mobile menu / footer)
+$shopOn = shop_on();
+if ($shopOn && setting_on('shop_in_header')) $navItems[] = shop_menu_item();
+if ($shopOn && setting_on('shop_in_mobile')) array_splice($drawerItems, min(1, count($drawerItems)), 0, [shop_menu_item()]);
+$cartN = $shopOn ? cart_count() : 0;
+$jsCfg['member'] = (bool) $me;
+$jsCfg['cart'] = $cartN;
 ?><!doctype html>
 <html lang="fa" dir="rtl" class="<?= $colors['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
@@ -80,6 +87,7 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
+<?php if ($shopOn || $me): ?><link rel="stylesheet" href="<?= e(asset('css/shop.css')) ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <style><?= theme_css_vars() ?></style>
 <?php if (setting('custom_css')): ?><style><?= str_ireplace('</style', '', (string) setting('custom_css')) ?></style><?php endif; ?>
@@ -157,11 +165,21 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
                     $href = menu_link((string) ($m['url'] ?? '/'));
                     $active = rtrim($reqPath, '/') === rtrim(parse_url($href, PHP_URL_PATH) ?: '', '/');
                 ?>
-                    <a href="<?= e($href) ?>" class="<?= $active ? 'active' : '' ?>"<?= preg_match('~^https?://~', (string) ($m['url'] ?? '')) ? ' target="_blank" rel="noopener"' : '' ?>><?= e($m['title'] ?? '') ?></a>
+                    <a href="<?= e($href) ?>" class="<?= $active || (!empty($m['shop']) && str_contains((string) $bodyClass, 'page-shop')) ? 'active' : '' ?><?= !empty($m['shop']) ? ' nav-shop' : '' ?>"<?= preg_match('~^https?://~', (string) ($m['url'] ?? '')) ? ' target="_blank" rel="noopener"' : '' ?>><?= !empty($m['shop']) ? icon('bag', 16) . ' ' : '' ?><?= e($m['title'] ?? '') ?></a>
                 <?php endforeach; ?>
             </nav>
             <div class="header-actions">
                 <button class="icon-btn" id="searchOpen" aria-label="جستجو"><?= icon('search') ?></button>
+                <?php if ($shopOn && ($cartN || str_contains((string) $bodyClass, 'page-shop'))): ?><a class="icon-btn cart-btn" id="cartBtn" href="<?= e(url('cart')) ?>" aria-label="سبد خرید"><?= icon('cart') ?><em class="hb-count" id="cartCount"<?= $cartN ? '' : ' hidden' ?>><?= fa_num((string) $cartN) ?></em></a><?php endif; ?>
+                <?php if ($me): $nUnread = notifs_unread('m:' . $me['id']); ?>
+                <div class="nb-wrap">
+                    <button class="icon-btn nb-btn" id="nbBtn" aria-label="اعلان‌ها" aria-expanded="false"><?= icon('bell') ?><em class="hb-count" id="nbCount"<?= $nUnread ? '' : ' hidden' ?>><?= fa_num((string) $nUnread) ?></em></button>
+                    <div class="nb-panel" id="nbPanel" hidden>
+                        <div class="nb-head"><b><?= icon('bell', 16) ?> اعلان‌ها</b><?php if ($shopOn): ?><a href="<?= e(url('orders')) ?>">سفارش‌های من</a><?php endif; ?></div>
+                        <div class="nb-list" id="nbList"><div class="nb-empty"><span>🔔</span>در حال بارگذاری...</div></div>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <?php if ($tgLink): ?><a class="btn-tg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?><span>عضویت در کانال</span></a><?php endif; ?>
                 <?php if ($me): ?>
                     <a class="btn-account is-in" href="<?= e(url('account')) ?>" data-warp title="حساب کاربری">
@@ -222,6 +240,7 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
             <h4>دسترسی سریع</h4>
             <ul class="f-links">
                 <li><a href="<?= e(url('archive')) ?>">همه اخبار</a></li>
+                <?php if ($shopOn && setting_on('shop_in_footer')): ?><li><a href="<?= e(url('shop')) ?>">🛍️ <?= e(setting('shop_menu_label', 'فروشگاه')) ?></a></li><?php if (setting_on('shop_support_on')): ?><li><a href="<?= e(url('support')) ?>">پشتیبانی فروشگاه</a></li><?php endif; ?><?php endif; ?>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
             </ul>
@@ -262,9 +281,13 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
             <button class="icon-btn" data-close aria-label="بستن"><?= icon('close') ?></button>
         </div>
         <nav class="drawer-nav">
-            <?php foreach ($drawerItems as $i => $m): $dc = $m['cat'] ?? null; ?>
-                <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?><?= $dc ? ';--c:' . e($dc['color']) : '' ?>"<?= $dc ? ' class="dn-cat"' : '' ?>><span><?php if ($dc): ?><i class="dn-ic"><?= e($dc['icon']) ?></i><?php endif; ?><?= e($m['title'] ?? '') ?></span> <?= icon('chevron-left', 16) ?></a>
+            <?php foreach ($drawerItems as $i => $m): $dc = $m['cat'] ?? null; $ds = !empty($m['shop']); ?>
+                <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?><?= $dc ? ';--c:' . e($dc['color']) : '' ?>"<?= $dc ? ' class="dn-cat"' : ($ds ? ' class="dn-shop"' : '') ?>><span><?php if ($dc): ?><i class="dn-ic"><?= e($dc['icon']) ?></i><?php elseif ($ds): ?><i class="dn-ic"><?= icon('bag', 16) ?></i><?php endif; ?><?= e($m['title'] ?? '') ?><?php if ($ds && $cartN): ?> <em class="dn-badge"><?= fa_num((string) $cartN) ?> در سبد</em><?php endif; ?></span> <?= icon('chevron-left', 16) ?></a>
             <?php endforeach; ?>
+            <?php if ($me && $shopOn): ?>
+                <a href="<?= e(url('orders')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic"><?= icon('box', 16) ?></i>سفارش‌های من</span> <?= icon('chevron-left', 16) ?></a>
+                <?php if (setting_on('shop_support_on')): ?><a href="<?= e(url('support')) ?>" style="--i:<?= count($drawerItems) + 1 ?>"><span><i class="dn-ic"><?= icon('support', 16) ?></i>پشتیبانی</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
+            <?php endif; ?>
         </nav>
         <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
         <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> ورود | ثبت‌نام</a><?php endif; ?>
@@ -283,6 +306,7 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
 
 <script>window.NX = <?= json_encode($jsCfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
+<?php if ($shopOn || $me): ?><script src="<?= e(asset('js/shop.js')) ?>" defer></script><?php endif; ?>
 <?php if (str_contains((string) ($bodyClass ?? ''), 'page-account')): ?><script src="<?= e(asset('js/pw.js')) ?>" defer></script><?php endif; ?>
 <?= setting('footer_code') ?>
 </body>

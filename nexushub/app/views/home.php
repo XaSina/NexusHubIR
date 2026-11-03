@@ -171,4 +171,24 @@ case 'telegram': if (!$tgLink) break; ?>
 </section>
 <?php break;
 
+case 'shop':
+    if (!shop_on()) break;
+    $shopItems = shop_products(['featured' => 1, 'limit' => 4]);
+    if (count($shopItems) < 4) $shopItems = array_merge($shopItems, array_filter(shop_products(['limit' => 8]), fn($x) => !$x['is_featured']));
+    $shopItems = array_slice($shopItems, 0, 4);
+    if (!$shopItems && !setting_on('shop_banner_on')) break; ?>
+<section class="container home-shop">
+    <?php if (setting_on('shop_banner_on')): ?><div class="ad-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
+    <?php if ($shopItems): ?>
+    <div class="sec-head" data-reveal>
+        <h2 class="sec-title"><span class="sec-icon"><?= icon('bag', 20) ?></span> <?= e(setting('shop_title')) ?></h2>
+        <a class="sec-more" href="<?= e(url('shop')) ?>">همه محصولات <?= icon('arrow-left', 16) ?></a>
+    </div>
+    <div class="shop-grid">
+        <?php foreach ($shopItems as $i => $p) partial('product-card', ['p' => $p, 'i' => $i]); ?>
+    </div>
+    <?php endif; ?>
+</section>
+<?php break;
+
 endswitch; endforeach; ?>

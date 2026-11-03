@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 5;
+const NX_DB_VERSION = 6;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -35,6 +35,15 @@ function nx_migrate(): void
     }
     // v5: the RSS feed was removed entirely
     if ($v < 5) q("DELETE FROM settings WHERE skey = 'show_rss_link'");
+    // v6: shop — its home banner joins an existing custom home layout (switched on)
+    if ($v < 6) {
+        $hs = json_decode((string) val("SELECT svalue FROM settings WHERE skey = 'home_sections'"), true);
+        if (is_array($hs) && !in_array('shop', array_column($hs, 'key'), true)) {
+            $hs[] = ['key' => 'shop', 'on' => 1];
+            save_settings(['home_sections' => json_encode($hs, JSON_UNESCAPED_UNICODE)]);
+        }
+        private_dir();
+    }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
 

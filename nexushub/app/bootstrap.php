@@ -40,6 +40,7 @@ require NX_APP . '/ads.php';
 require NX_APP . '/upload.php';
 require NX_APP . '/telegram.php';
 require NX_APP . '/members.php';
+require NX_APP . '/shop.php';
 
 nx_session_start();
 

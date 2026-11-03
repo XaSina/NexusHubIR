@@ -12,7 +12,7 @@ function role_caps(): array
 {
     return [
         'admin' => ['*'],
-        'editor' => ['posts', 'edit_others', 'categories', 'comments', 'media', 'pages', 'messages'],
+        'editor' => ['posts', 'edit_others', 'categories', 'comments', 'media', 'pages', 'messages', 'shop'],
         'author' => ['posts', 'media'],
     ];
 }
