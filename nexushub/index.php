@@ -319,12 +319,12 @@ switch ($seg[0] ?? '') {
     case 'support':
         if (!setting_on('shop_support_on')) not_found();
         $member = current_member();
-        if (!$member && !current_user()) { $_SESSION['after_login'] = 'support' . (isset($seg[1]) ? '/' . $seg[1] : ''); redirect('auth'); }
-        header('Cache-Control: no-store');
         $code = strtoupper((string) ($seg[1] ?? ''));
+        // the support desk is for members; an admin without a member account only views ticket pages (from the panel)
+        if (!$member && ($code === '' || !current_user())) { $_SESSION['after_login'] = 'support' . ($code !== '' ? '/' . $code : ''); redirect('auth'); }
+        header('Cache-Control: no-store');
         $err = '';
         if ($code === '') {
-            if (!$member) redirect('admin/tickets.php');
             if (is_post()) {
                 $subject = mb_substr(trim((string) ($_POST['subject'] ?? '')), 0, 150);
                 $body = mb_substr(trim((string) ($_POST['body'] ?? '')), 0, 4000);
