@@ -56,7 +56,8 @@
     /* ==========================================================================
        Canvas FX: embers · hyperspace warp · confetti
        ========================================================================== */
-    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var small = window.innerWidth < 760;
+    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, small ? 1.25 : 2);
     var hex = function (h) { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
     var PC = hex(cssVar('--primary', '#ff1f3d')), SC = hex(cssVar('--secondary', '#ff7a3d'));
     var embers = [], streaks = [], confetti = [], warpUntil = 0, warpStart = 0;
@@ -66,7 +67,7 @@
             r: .5 + Math.random() * 2.2, a: .3 + Math.random() * .7, c: Math.random() < .72 ? PC : SC, w: Math.random() * 6.28 };
     }
     size();
-    var EMBERS = Math.min(110, Math.floor(W * H / 14000));
+    var EMBERS = Math.min(small ? 45 : 110, Math.floor(W * H / 14000));
     for (var i = 0; i < EMBERS; i++) embers.push(ember(false));
     window.addEventListener('resize', function () { size(); });
 
@@ -87,7 +88,7 @@
             ctx.beginPath(); ctx.arc(e.x, e.y, e.r * .8, 0, 6.28); ctx.fill();
         }
         // hyperspace streaks
-        if (warping && !reduce) for (var s = 0; s < 14; s++) {
+        if (warping && !reduce) for (var s = 0; s < (small ? 7 : 14); s++) {
             var ang = Math.random() * 6.283;
             streaks.push({ x: W / 2 + Math.cos(ang) * 20, y: H / 2 + Math.sin(ang) * 20, a: ang, v: 4 + Math.random() * 6, l: 0, c: Math.random() < .5 ? PC : [255, 255, 255] });
         }
@@ -144,13 +145,21 @@
        Intro sequence
        ========================================================================== */
     var title = $('#auTitle'), titleText = title.dataset.text;
-    title.textContent = '';
+    // keep the real text (invisible until stage 3) so the column height never changes and the logo doesn't jump
+    // wait (max 2.5s) until the logo is decoded so it glides in instead of popping in late
+    var logoReady = (function () {
+        var img = $('#auLogo');
+        if (!img) return Promise.resolve();
+        var done = img.complete && img.naturalWidth ? (img.decode ? img.decode() : Promise.resolve()) : new Promise(function (r) { img.addEventListener('load', r, { once: true }); img.addEventListener('error', r, { once: true }); });
+        return Promise.race([done.catch(function () {}), new Promise(function (r) { setTimeout(r, 2500); })]);
+    })();
     (async function intro() {
         await wait(arrivedByWarp ? 380 : 150);
         body.classList.add('s1'); setHud('BOOTING');
-        await wait(650);
-        body.classList.add('s2'); flash(); setHud('SIGNAL LOCKED');
-        await wait(600);
+        await Promise.all([wait(650), logoReady]);
+        body.classList.add('s2'); setHud('SIGNAL LOCKED');
+        setTimeout(flash, reduce ? 0 : 1050);       // flash when the logo lands
+        await wait(1300);
         body.classList.add('s3');
         scramble(title, titleText, 1100);
         await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 45);

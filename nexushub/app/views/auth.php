@@ -17,6 +17,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 <title>ورود | ثبت‌نام — <?= e($siteTitle) ?></title>
 <link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?= e($logo) ?>" as="image">
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/auth.css')) ?>">
 <style><?= theme_css_vars() ?></style>
@@ -28,7 +29,8 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 <!-- ============ Scene ============ -->
 <div class="au-scene" aria-hidden="true">
     <div class="au-sky"></div>
-    <div class="au-sun"><i></i></div>
+    <div class="au-sunglow"><i></i></div>
+    <div class="au-sun"></div>
     <div class="au-floor"><div class="au-grid"></div></div>
     <div class="au-horizon"></div>
     <div class="au-beams"><i></i><i></i><i></i></div>
@@ -64,7 +66,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
             <g class="ticks"><?php for ($i = 0; $i < 60; $i++): $a = $i * 6 * M_PI / 180; $r1 = $i % 5 ? 90 : 87; ?><line x1="<?= round(100 + $r1 * cos($a), 2) ?>" y1="<?= round(100 + $r1 * sin($a), 2) ?>" x2="<?= round(100 + 93 * cos($a), 2) ?>" y2="<?= round(100 + 93 * sin($a), 2) ?>"/><?php endfor; ?></g>
         </svg>
         <span class="au-shock"></span><span class="au-shock d2"></span>
-        <img src="<?= e($logo) ?>" alt="<?= e($siteTitle) ?>">
+        <img src="<?= e($logo) ?>" alt="<?= e($siteTitle) ?>" id="auLogo" decoding="async">
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>
     <p class="au-tagline"><span id="auType"></span><i class="au-caret"></i></p>

@@ -2,10 +2,10 @@
    Animated with transform/opacity only (GPU-composited, no per-frame repaint). */
 .nx-warp { position: fixed; inset: 0; z-index: 10050; pointer-events: none; overflow: hidden; visibility: hidden; transition: visibility 0s linear .85s; }
 .nx-warp-disc {
-    position: absolute; left: var(--wx, 50%); top: var(--wy, 50%); width: 300vmax; height: 300vmax; margin: -150vmax 0 0 -150vmax; border-radius: 50%;
+    position: absolute; left: var(--wx, 50%); top: var(--wy, 50%); width: 100vmax; height: 100vmax; margin: -50vmax 0 0 -50vmax; border-radius: 50%;
     background:
-        repeating-radial-gradient(circle, transparent 0 46px, rgba(255,255,255,.06) 47px 49px),
-        radial-gradient(circle, rgba(255,255,255,.95) 0, var(--secondary, #ff7a3d) 1.6%, var(--primary, #ff1f3d) 6%, #2a0310 18%, #050003 34%);
+        repeating-radial-gradient(circle, transparent 0 15px, rgba(255,255,255,.06) 16px 17px),
+        radial-gradient(circle, rgba(255,255,255,.95) 0, var(--secondary, #ff7a3d) 4.8%, var(--primary, #ff1f3d) 18%, #2a0310 54%, #050003 100%);
     transform: scale(0); will-change: transform;
     transition: transform .85s cubic-bezier(.77,0,.18,1);
 }
@@ -19,7 +19,7 @@
 @keyframes nxWarpSpin { to { transform: rotate(360deg); } }
 
 .nx-warp.cover, .warp-in .nx-warp { visibility: visible; transition: visibility 0s; }
-.nx-warp.cover .nx-warp-disc, .warp-in .nx-warp-disc { transform: scale(1); }
+.nx-warp.cover .nx-warp-disc, .warp-in .nx-warp-disc { transform: scale(3); }
 .nx-warp.cover .nx-warp-core, .warp-in .nx-warp-core { opacity: 1; transform: none; transition-delay: .25s; }
 .warp-in .nx-warp-disc, .warp-in .nx-warp-core { transition: none; }
 .warp-in .preloader { display: none !important; }

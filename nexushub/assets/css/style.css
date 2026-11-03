@@ -232,7 +232,7 @@ body.has-noise::after {
 
 /* ---------- Stories ---------- */
 .stories { margin-top: 22px; }
-.stories-track { display: flex; gap: 18px; overflow-x: auto; padding: 6px 4px 10px; scrollbar-width: none; }
+.stories-track { display: flex; gap: 18px; overflow-x: auto; overflow-y: hidden; padding: 6px 4px 10px; scrollbar-width: none; }
 .stories-track::-webkit-scrollbar { display: none; }
 .story { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; width: 82px; animation: storyIn .7s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
 @keyframes storyIn { from { opacity: 0; transform: translateY(16px) scale(.8); } }
@@ -259,7 +259,13 @@ body.has-noise::after {
 .sidebar { position: sticky; top: calc(var(--header-h) + 20px); display: flex; flex-direction: column; gap: 20px; margin-top: 44px; }
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; }
 .grid-cards.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.h-scroll { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(280px, calc((100% - 66px) / 4)); gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 4px 18px; scrollbar-width: thin; }
+.h-scroll { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(280px, calc((100% - 66px) / 4)); gap: 22px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; padding: 10px 4px 18px; scrollbar-width: thin; scrollbar-color: rgba(var(--primary-rgb), .55) transparent; }
+.h-scroll::-webkit-scrollbar { height: 6px; }
+.h-scroll::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), .55); border: 0; border-radius: 6px; }
+.h-scroll::-webkit-scrollbar-track { background: transparent; }
+/* cards inside a horizontal row slide in sideways, so they never push the row taller */
+.js-reveal .h-scroll [data-reveal] { transform: translateX(-34px); }
+.js-reveal .h-scroll [data-reveal].in { transform: none; }
 .h-scroll > * { scroll-snap-align: start; }
 
 /* ---------- Covers ---------- */
@@ -765,7 +771,8 @@ body.has-noise::after {
 }
 @keyframes mcardIn { from { opacity: 0; transform: perspective(900px) rotateY(-25deg) translateY(30px) scale(.9); } }
 .mcard::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .35; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask: linear-gradient(135deg, #000, transparent 70%); mask: linear-gradient(135deg, #000, transparent 70%); }
-.mcard-holo { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: color-dodge; opacity: .35; background: linear-gradient(115deg, transparent 25%, rgba(255,0,170,.55) 38%, rgba(0,255,255,.5) 48%, rgba(255,255,0,.45) 56%, transparent 68%); background-size: 260% 260%; animation: holo 7s ease-in-out infinite; }
+.mcard-holo { position: absolute; top: 0; bottom: 0; left: -100%; width: 300%; z-index: 1; pointer-events: none; opacity: .2; will-change: transform; background: linear-gradient(115deg, transparent 38%, rgba(255,0,170,.65) 44%, rgba(0,255,255,.6) 50%, rgba(255,255,0,.55) 55%, transparent 61%); animation: holoMove 7s ease-in-out infinite alternate; }
+@keyframes holoMove { from { transform: translateX(-28%); } to { transform: translateX(28%); } }
 .mcard-shine { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(500px circle at var(--mx, 30%) var(--my, 20%), rgba(255,255,255,.18), transparent 40%); }
 .mcard > *:not(.mcard-holo):not(.mcard-shine) { position: relative; z-index: 2; }
 .mcard-top { display: flex; align-items: center; justify-content: space-between; direction: ltr; }
