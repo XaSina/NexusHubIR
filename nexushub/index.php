@@ -150,6 +150,52 @@ switch ($seg[0] ?? '') {
         page_out('contact', ['sent' => $sent, 'errors' => $errors, 'old' => $old], ['title' => 'تماس با ما | ' . setting('site_title')]);
         break;
 
+    case 'auth':
+        if (current_member()) redirect('account');
+        header('Cache-Control: no-store');
+        echo view('auth');
+        break;
+
+    case 'account':
+        $member = current_member();
+        if (!$member) redirect('auth');
+        header('Cache-Control: no-store');
+        $errors = [];
+        $tab = 'info';
+        if (is_post()) {
+            if (!csrf_valid()) { $errors['_'] = 'نشست منقضی شده، دوباره تلاش کنید.'; }
+            elseif (($_POST['act'] ?? '') === 'logout') { member_logout(); redirect(''); }
+            elseif (($_POST['act'] ?? '') === 'profile') {
+                $tab = 'edit';
+                [$d, $errors] = validate_member_input($_POST + ['username' => $member['username']], (int) $member['id'], false);
+                if (!$errors) {
+                    unset($d['username']);
+                    update('members', $d + ['updated_at' => now()], (int) $member['id']);
+                    $_SESSION['account_flash'] = 'اطلاعات شما با موفقیت ذخیره شد ✅';
+                    redirect('account');
+                }
+            } elseif (($_POST['act'] ?? '') === 'password') {
+                $tab = 'password';
+                $new = (string) ($_POST['new_password'] ?? '');
+                if (!password_verify((string) ($_POST['current_password'] ?? ''), $member['password'])) $errors['current_password'] = 'رمز فعلی اشتباه است.';
+                elseif (strlen($new) < 8 || !preg_match('~[A-Za-z]~', $new) || !preg_match('~\d~', en_num($new))) $errors['new_password'] = 'رمز جدید باید حداقل ۸ کاراکتر و شامل حروف انگلیسی و عدد باشد.';
+                elseif ($new !== (string) ($_POST['confirm_password'] ?? '')) $errors['confirm_password'] = 'تکرار رمز مطابقت ندارد.';
+                if (!$errors) {
+                    $hash = password_hash($new, PASSWORD_DEFAULT);
+                    update('members', ['password' => $hash, 'updated_at' => now()], (int) $member['id']);
+                    $_SESSION['mpw'] = substr(hash('sha256', $hash), 0, 32);
+                    $_SESSION['account_flash'] = 'رمز عبور تغییر کرد 🔐';
+                    redirect('account');
+                }
+            }
+        }
+        $flash = $_SESSION['account_flash'] ?? '';
+        unset($_SESSION['account_flash']);
+        page_out('account', ['member' => $member, 'errors' => $errors, 'tab' => $tab, 'flash' => $flash, 'old' => is_post() ? $_POST : [], 'bodyClass' => 'page-account'], [
+            'title' => 'حساب کاربری | ' . setting('site_title'), 'noindex' => true,
+        ]);
+        break;
+
     case 'go':
         $ad = row('SELECT * FROM ads WHERE id = ?', [(int) ($seg[1] ?? 0)]);
         $link = $ad ? safe_link($ad['link']) : '';

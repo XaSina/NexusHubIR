@@ -44,6 +44,7 @@ function adm_nav(): array
 {
     $pendingC = (int) val("SELECT COUNT(*) FROM comments WHERE status = 'pending'");
     $unread = (int) val('SELECT COUNT(*) FROM messages WHERE is_read = 0');
+    $newMembers = (int) val('SELECT COUNT(*) FROM members WHERE created_at >= ?', [date('Y-m-d 00:00:00')]);
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
         ['همه اخبار', 'posts.php', 'posts', 'posts', 'posts', 0],
@@ -55,7 +56,8 @@ function adm_nav(): array
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
         ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],
-        ['کاربران', 'users.php', 'users', '*', 'users', 0],
+        ['اعضای سایت', 'members.php', 'user', '*', 'members', $newMembers],
+        ['کاربران پنل', 'users.php', 'users', '*', 'users', 0],
         ['تنظیمات', 'settings.php', 'settings', '*', 'settings', 0],
         ['پشتیبان‌گیری', 'backup.php', 'database', '*', 'backup', 0],
     ];

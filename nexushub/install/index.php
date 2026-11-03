@@ -89,6 +89,7 @@ if (!$locked && $canInstall && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             ]);
             $defaults = default_settings();
             $defaults['site_title'] = $f['site_title'] ?: 'NEXUS | HUB';
+            $defaults['db_version'] = '2';
             save_settings($defaults);
             if ($f['demo'] === '1') seed_demo($uid);
             db()->commit();

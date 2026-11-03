@@ -30,6 +30,8 @@ $sum30 = array_sum(array_column(array_values($days), 'views'));
 $top = rows("SELECT id, title, slug, views FROM posts WHERE status = 'published' ORDER BY views DESC LIMIT 6");
 $recent = rows(POST_SELECT . ' ORDER BY p.created_at DESC LIMIT 6');
 $comments = rows('SELECT c.*, p.title AS post_title FROM comments c LEFT JOIN posts p ON p.id = c.post_id ORDER BY c.created_at DESC LIMIT 5');
+$newMembers = rows('SELECT * FROM members ORDER BY id DESC LIMIT 5');
+$memTotal = (int) val('SELECT COUNT(*) FROM members');
 $catStats = rows("SELECT c.name, c.icon, c.color, COUNT(p.id) AS cnt, COALESCE(SUM(p.views),0) AS v FROM categories c LEFT JOIN posts p ON p.category_id = c.id AND p.status='published' GROUP BY c.id ORDER BY v DESC");
 $maxCat = max(1, ...array_map(fn($c) => (int) $c['v'], $catStats ?: [['v' => 1]]));
 
@@ -99,6 +101,13 @@ $u = current_user();
             <div class="list-item"><div class="li-body"><b>کل بازدید اخبار</b></div><span class="badge b-ok"><?= fa_num(number_format($totViews)) ?></span></div>
             <div class="list-item"><div class="li-body"><b>تبلیغات فعال</b></div><span class="badge b-hot"><?= fa_num((string) $adsActive) ?></span></div>
             <div class="list-item"><div class="li-body"><b>CTR تبلیغات</b></div><span class="ctr"><?= fa_num($adImps ? number_format($adClicks / $adImps * 100, 2) : '0') ?>٪</span></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3><?= icon('user', 20) ?> اعضای جدید</h3><a class="abtn abtn-ghost abtn-sm" href="members.php">همه (<?= fa_num((string) $memTotal) ?>)</a></div>
+            <?php if (!$newMembers): ?><p class="muted small">هنوز کسی ثبت‌نام نکرده.</p><?php endif; ?>
+            <?php foreach ($newMembers as $nm): ?>
+                <a class="list-item" href="member-view.php?id=<?= (int) $nm['id'] ?>"><span class="avatar avatar-letter" style="width:34px;height:34px"><?= e(mb_substr($nm['first_name'], 0, 1)) ?></span><div class="li-body"><b><?= e(member_full_name($nm)) ?></b><p><span class="ltr"><?= e($nm['member_code']) ?></span> · <?= jago($nm['created_at']) ?></p></div></a>
+            <?php endforeach; ?>
         </div>
         <div class="card">
             <div class="card-head"><h3><?= icon('comment', 20) ?> آخرین نظرات</h3><a class="abtn abtn-ghost abtn-sm" href="comments.php">همه</a></div>

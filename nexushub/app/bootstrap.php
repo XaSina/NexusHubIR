@@ -39,6 +39,7 @@ require NX_APP . '/content.php';
 require NX_APP . '/ads.php';
 require NX_APP . '/upload.php';
 require NX_APP . '/telegram.php';
+require NX_APP . '/members.php';
 
 nx_session_start();
 
@@ -56,3 +57,6 @@ set_exception_handler(function (Throwable $e) {
     }
     echo '</body></html>';
 });
+
+// ارتقای خودکار ساختار پایگاه داده (برای نصب‌های قبلی)
+nx_migrate();

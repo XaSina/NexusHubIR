@@ -38,6 +38,43 @@
             .then(function (r) { return r.json(); });
     }
 
+    /* ---------- Cinematic page warp (login / account links) ---------- */
+    var warp = $('#nxWarp'), warpIn = document.documentElement.classList.contains('warp-in');
+    function warpTo(href, x, y) {
+        if (!warp || reduce) { location.href = href; return; }
+        warp.style.setProperty('--wx', (x == null ? window.innerWidth / 2 : x) + 'px');
+        warp.style.setProperty('--wy', (y == null ? window.innerHeight / 2 : y) + 'px');
+        warp.classList.add('cover');
+        store.sset('nx_warp', '1');
+        setTimeout(function () { location.href = href; }, 820);
+    }
+    window.nxWarpTo = warpTo;
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest('a[data-warp]');
+        if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+        e.preventDefault();
+        warpTo(a.href, e.clientX || null, e.clientY || null);
+    });
+    window.addEventListener('pageshow', function (e) { if (e.persisted && warp) warp.classList.remove('cover'); });
+    if (warpIn) {
+        try { sessionStorage.removeItem('nx_warp'); } catch (e) {}
+        if ($('#preloader')) $('#preloader').remove();
+        setTimeout(function () { document.documentElement.classList.remove('warp-in'); }, 160);
+    }
+
+    /* ---------- Text decode effect ---------- */
+    $$('[data-scramble]').forEach(function (el) {
+        if (reduce) return;
+        var final = el.dataset.scramble, chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&@', start = null, dur = 1400;
+        (function step(t) {
+            if (!start) start = t;
+            var p = Math.min(1, (t - start) / dur), n = Math.floor(final.length * p), out = '';
+            for (var i = 0; i < final.length; i++) out += i < n || final[i] === '-' || final[i] === ' ' ? final[i] : chars[Math.floor(Math.random() * chars.length)];
+            el.textContent = out;
+            if (p < 1) requestAnimationFrame(step);
+        })(performance.now());
+    });
+
     /* ---------- Preloader ---------- */
     var pl = $('#preloader');
     function hidePreloader() { if (pl && !pl.classList.contains('done')) { pl.classList.add('done'); setTimeout(function () { pl.remove(); }, 700); } }

@@ -193,6 +193,30 @@ return [
   PRIMARY KEY (`day`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
+"CREATE TABLE IF NOT EXISTS `members` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `member_code` VARCHAR(20) NOT NULL,
+  `first_name` VARCHAR(60) NOT NULL,
+  `last_name` VARCHAR(60) NOT NULL,
+  `phone` VARCHAR(20) NOT NULL,
+  `email` VARCHAR(190) NOT NULL,
+  `username` VARCHAR(40) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `status` VARCHAR(20) NOT NULL DEFAULT 'active',
+  `note` TEXT NULL,
+  `login_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `last_login` DATETIME NULL,
+  `last_ip` VARCHAR(45) NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `u_m_code` (`member_code`),
+  UNIQUE KEY `u_m_phone` (`phone`),
+  UNIQUE KEY `u_m_email` (`email`),
+  UNIQUE KEY `u_m_user` (`username`),
+  KEY `k_m_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
 "CREATE TABLE IF NOT EXISTS `login_attempts` (
   `ip` VARCHAR(45) NOT NULL,
   `attempts` INT NOT NULL DEFAULT 0,

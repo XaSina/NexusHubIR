@@ -26,6 +26,7 @@ if (setting_on('show_ticker') && !$ticker) $ticker = get_posts(['limit' => 8]);
 $pages = rows("SELECT title, slug, show_in_menu, show_in_footer FROM pages WHERE status = 'published' ORDER BY sort_order, id");
 $cats = get_categories();
 $tgLink = safe_link((string) setting('social_telegram'));
+$me = current_member();
 ?><!doctype html>
 <html lang="fa" dir="rtl" class="<?= $colors['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
@@ -49,6 +50,7 @@ $tgLink = safe_link((string) setting('social_telegram'));
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <style><?= theme_css_vars() ?></style>
 <?php if (setting('custom_css')): ?><style><?= str_ireplace('</style', '', (string) setting('custom_css')) ?></style><?php endif; ?>
 <?php if (!empty($meta['type']) && $meta['type'] === 'article'): ?>
@@ -61,6 +63,8 @@ $tgLink = safe_link((string) setting('social_telegram'));
 <?= setting('head_code') ?>
 </head>
 <body class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
+<script>try{if(sessionStorage.getItem('nx_warp'))document.documentElement.classList.add('warp-in')}catch(e){}</script>
+<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-core"><span class="nx-warp-ring"></span><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></div></div>
 
 <?php if (setting_on('anim_preloader')): ?>
 <div class="preloader" id="preloader" aria-hidden="true">
@@ -128,6 +132,13 @@ $tgLink = safe_link((string) setting('social_telegram'));
             <div class="header-actions">
                 <button class="icon-btn" id="searchOpen" aria-label="جستجو"><?= icon('search') ?></button>
                 <?php if ($tgLink): ?><a class="btn-tg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?><span>عضویت در کانال</span></a><?php endif; ?>
+                <?php if ($me): ?>
+                    <a class="btn-account is-in" href="<?= e(url('account')) ?>" data-warp title="حساب کاربری">
+                        <span class="ba-avatar"><?= e(mb_substr($me['first_name'], 0, 1)) ?></span><span class="ba-text"><small>حساب کاربری</small><b><?= e($me['first_name']) ?></b></span>
+                    </a>
+                <?php else: ?>
+                    <a class="btn-account" href="<?= e(url('auth')) ?>" data-warp title="ورود / ثبت‌نام"><?= icon('user', 18) ?><span>ورود | ثبت‌نام</span></a>
+                <?php endif; ?>
                 <button class="icon-btn burger" id="menuOpen" aria-label="منو"><?= icon('menu') ?></button>
             </div>
         </div>
@@ -228,6 +239,8 @@ $tgLink = safe_link((string) setting('social_telegram'));
         <div class="drawer-cats">
             <?php foreach ($cats as $c): ?><a href="<?= e(cat_url($c)) ?>" style="--c:<?= e($c['color']) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a><?php endforeach; ?>
         </div>
+        <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
+        <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> ورود | ثبت‌نام</a><?php endif; ?>
         <?php if ($tgLink): ?><a class="btn btn-primary btn-block" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> عضویت در کانال تلگرام</a><?php endif; ?>
     </aside>
 </div>

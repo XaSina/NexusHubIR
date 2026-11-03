@@ -49,6 +49,7 @@ switch ($seg[1] ?? '') {
         $email = mb_substr(trim((string) ($_POST['email'] ?? '')), 0, 190);
         $body = mb_substr(trim((string) ($_POST['body'] ?? '')), 0, 2000);
         if ($user) $name = $user['display_name'] ?: $user['username'];
+        elseif ($member = current_member()) { $name = member_full_name($member); $email = $member['email']; }
         if (mb_strlen($name) < 2) json_out(['ok' => false, 'error' => 'نام خود را وارد کنید.'], 422);
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['ok' => false, 'error' => 'ایمیل معتبر نیست.'], 422);
         if (mb_strlen($body) < 3) json_out(['ok' => false, 'error' => 'متن نظر خیلی کوتاه است.'], 422);
@@ -70,6 +71,68 @@ switch ($seg[1] ?? '') {
             'approved' => $status === 'approved',
             'message' => $status === 'approved' ? 'نظر شما منتشر شد 🎉' : 'نظر شما ثبت شد و پس از تایید نمایش داده می‌شود ✅',
         ]);
+
+    /* ---------------- ورود و ثبت‌نام اعضا ---------------- */
+
+    case 'auth-check':
+        $id = mb_substr(trim((string) ($_POST['identifier'] ?? '')), 0, 190);
+        $type = identifier_type($id);
+        if (!$type) json_out(['ok' => false, 'error' => 'یک شماره موبایل، ایمیل یا نام کاربری معتبر وارد کنید.'], 422);
+        // جلوگیری از بررسی انبوه شناسه‌ها
+        $_SESSION['auth_checks'] = array_values(array_filter($_SESSION['auth_checks'] ?? [], fn($t) => $t > time() - 600));
+        if (count($_SESSION['auth_checks']) >= 30) json_out(['ok' => false, 'error' => 'تعداد درخواست‌ها زیاد است؛ چند دقیقه دیگر تلاش کنید.'], 429);
+        $_SESSION['auth_checks'][] = time();
+        $m = find_member($id);
+        if ($m && $m['status'] !== 'active') json_out(['ok' => false, 'error' => 'این حساب مسدود شده است. با پشتیبانی تماس بگیرید.'], 403);
+        if (!$m && !setting_on('members_register')) json_out(['ok' => false, 'error' => 'حسابی با این مشخصات پیدا نشد و ثبت‌نام در حال حاضر غیرفعال است.'], 403);
+        json_out([
+            'ok' => true,
+            'exists' => (bool) $m,
+            'type' => $type,
+            'value' => $type === 'phone' ? normalize_phone($id) : $id,
+            'first_name' => $m['first_name'] ?? null,
+        ]);
+
+    case 'auth-login':
+        if ($wait = member_login_blocked()) json_out(['ok' => false, 'error' => 'به دلیل تلاش‌های ناموفق، ' . fa_num((string) ceil($wait / 60)) . ' دقیقه دیگر تلاش کنید.'], 429);
+        $m = find_member((string) ($_POST['identifier'] ?? ''));
+        if (!$m || !password_verify((string) ($_POST['password'] ?? ''), $m['password'])) {
+            member_login_failed();
+            json_out(['ok' => false, 'error' => 'رمز عبور اشتباه است.', 'field' => 'password'], 422);
+        }
+        if ($m['status'] !== 'active') json_out(['ok' => false, 'error' => 'این حساب مسدود شده است.'], 403);
+        q('DELETE FROM login_attempts WHERE ip = ?', ['m:' . client_ip()]);
+        member_login($m);
+        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => url('account'), 'csrf' => csrf_token()]);
+
+    case 'auth-register':
+        if (!setting_on('members_register')) json_out(['ok' => false, 'error' => 'ثبت‌نام در حال حاضر غیرفعال است.'], 403);
+        if (!empty($_POST['website'])) json_out(['ok' => false, 'error' => 'درخواست نامعتبر.'], 422); // honeypot
+        if (time() - (int) ($_SESSION['last_register'] ?? 0) < 60) json_out(['ok' => false, 'error' => 'لطفاً یک دقیقه بعد دوباره تلاش کنید.'], 429);
+        [$d, $err] = validate_member_input($_POST);
+        if ($err) json_out(['ok' => false, 'errors' => $err, 'error' => reset($err)], 422);
+        $code = new_member_code();
+        $mid = insert('members', [
+            'member_code' => $code, 'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'phone' => $d['phone'],
+            'email' => $d['email'], 'username' => $d['username'], 'password' => password_hash($d['password'], PASSWORD_DEFAULT),
+            'status' => 'active', 'last_ip' => client_ip(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $_SESSION['last_register'] = time();
+        // دکمه «ورود» بعد از ثبت‌نام بدون وارد کردن دوباره رمز وارد می‌کند (تا ۱۰ دقیقه)
+        $_SESSION['pending_mid'] = ['id' => $mid, 'until' => time() + 600];
+        json_out(['ok' => true, 'code' => $code, 'name' => $d['first_name'], 'full_name' => $d['first_name'] . ' ' . $d['last_name'], 'username' => $d['username'], 'date' => jdate('j F Y')]);
+
+    case 'auth-finish':
+        $p = $_SESSION['pending_mid'] ?? null;
+        if (!$p || $p['until'] < time()) json_out(['ok' => false, 'error' => 'زمان ورود خودکار گذشته است؛ لطفاً با رمز عبور وارد شوید.'], 403);
+        $m = row("SELECT * FROM members WHERE id = ? AND status = 'active'", [(int) $p['id']]);
+        if (!$m) json_out(['ok' => false, 'error' => 'حساب یافت نشد.'], 404);
+        member_login($m);
+        json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => url('account'), 'csrf' => csrf_token()]);
+
+    case 'auth-logout':
+        member_logout();
+        json_out(['ok' => true, 'redirect' => url('')]);
 
     default:
         json_out(['ok' => false, 'error' => 'not found'], 404);

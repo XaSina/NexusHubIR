@@ -3,7 +3,7 @@ require __DIR__ . '/inc/boot.php';
 require_cap('*');
 
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'trending_days',
-    'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
+    'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
     'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code'];
 
@@ -59,6 +59,9 @@ adm_head('تنظیمات', 'settings');
 <div data-pane="comments">
     <div class="grid g2">
         <div class="card">
+            <div class="card-head"><h3>👥 اعضای سایت</h3></div>
+            <?= f_switch('members_register', 'ثبت‌نام کاربران جدید در سایت فعال باشد', setting_on('members_register'), 'اگر خاموش باشد، فقط اعضای قبلی می‌توانند وارد شوند') ?>
+            <hr style="border:0;border-top:1px solid var(--a-line);margin:14px 0">
             <div class="card-head"><h3>💬 نظرات</h3></div>
             <?= f_switch('comments_enabled', 'امکان ثبت نظر در سایت', setting_on('comments_enabled')) ?>
             <?= f_switch('comments_moderation', 'نظرات پس از تایید مدیر نمایش داده شوند', setting_on('comments_moderation'), 'پیشنهاد می‌شود روشن باشد تا جلوی اسپم گرفته شود') ?>

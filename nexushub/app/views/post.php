@@ -140,7 +140,9 @@ $commentsOn = setting_on('comments_enabled') && $post['allow_comments'];
                     <input type="hidden" name="post_id" value="<?= (int) $post['id'] ?>">
                     <input type="hidden" name="parent_id" value="0">
                     <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-                    <?php if (!current_user()): ?>
+                    <?php if (!current_user() && ($cm = current_member())): ?>
+                    <div class="reply-to">✍️ نظر شما با نام <b><?= e(member_full_name($cm)) ?></b> ثبت می‌شود.</div>
+                    <?php elseif (!current_user()): ?>
                     <div class="form-row">
                         <label class="field"><span>نام *</span><input name="name" required maxlength="60" placeholder="نام شما"></label>
                         <label class="field"><span>ایمیل (نمایش داده نمی‌شود)</span><input name="email" type="email" maxlength="190" placeholder="email@example.com" dir="ltr"></label>

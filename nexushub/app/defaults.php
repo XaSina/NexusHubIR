@@ -73,6 +73,7 @@ function default_settings(): array
         'footer_code' => '',
 
         // نظرات و واکنش‌ها
+        'members_register' => '1',
         'comments_enabled' => '1',
         'comments_moderation' => '1',
         'reactions_enabled' => '1',
