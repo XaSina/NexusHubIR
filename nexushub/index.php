@@ -58,7 +58,7 @@ switch ($seg[0] ?? '') {
         page_out('post', ['post' => $post], [
             'title' => ($post['meta_title'] ?: $post['title']),
             'description' => $post['meta_desc'] ?: ($post['excerpt'] ?: str_excerpt((string) $post['content'])),
-            'image' => $post['cover'] ? site_url($post['cover']) : '',
+            'image' => $post['cover'] && !str_ends_with(strtolower((string) $post['cover']), '.svg') ? site_url($post['cover']) : '',   // SVG covers can't be link-preview images
             'url' => site_url('post/' . rawurlencode($post['slug'])),
             'type' => 'article',
             'published' => $post['published_at'],
@@ -230,7 +230,7 @@ switch ($seg[0] ?? '') {
         }
         page_out('product', ['product' => $product, 'formErr' => $formErr, 'formMsg' => $formMsg, 'old' => $_POST, 'bodyClass' => 'page-shop page-product'], [
             'title' => $product['title'] . ' | ' . setting('shop_title'), 'description' => $product['subtitle'] ?: str_excerpt((string) $product['description']),
-            'image' => $product['image'] ? site_url($product['image']) : '',
+            'image' => $product['image'] && !str_ends_with(strtolower((string) $product['image']), '.svg') ? site_url($product['image']) : '',
         ]);
         break;
 

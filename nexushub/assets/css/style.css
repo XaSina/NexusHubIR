@@ -1020,3 +1020,5 @@ button.story { background: none; border: 0; padding: 0; cursor: pointer; font: i
     .home-latest > .sidebar > .sb-inner::-webkit-scrollbar { width: 5px; }
     .home-latest > .sidebar > .sb-inner::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), .45); border: 0; border-radius: 5px; }
 }
+/* widgets must keep their own height inside the scrollable sidebar (they were shrinking and overlapping) */
+.sb-inner > * { flex-shrink: 0; }

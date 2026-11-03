@@ -133,7 +133,7 @@ adm_head($p['id'] ? 'ویرایش خبر' : 'افزودن خبر جدید', $p['
             </div>
             <div class="card">
                 <div class="card-head"><h3><?= adm_icon('image', 18) ?> تصویر شاخص</h3></div>
-                <?= f_image('cover', '', $p['cover'], 'پیشنهاد: ۱۲۰۰×۷۵۰ پیکسل') ?>
+                <?= f_image('cover', '', $p['cover'], 'پیشنهاد: ۱۲۰۰×۷۵۰ پیکسل', preset_images('cover')) ?>
             </div>
             <div class="card">
                 <div class="card-head"><h3><?= adm_icon('folder', 18) ?> دسته‌بندی و برچسب</h3></div>

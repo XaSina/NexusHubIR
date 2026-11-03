@@ -242,6 +242,12 @@ function f_image(string $name, string $label, ?string $value, string $hint = '',
 /** Ready-made images that ship with the site (assets/img/presets) */
 function preset_images(string $set = 'product'): array
 {
+    if ($set === 'cover') return [
+        'assets/img/covers/gaming-news.svg' => 'Gaming News', 'assets/img/covers/breaking.svg' => 'Breaking (فوری)', 'assets/img/covers/esports.svg' => 'Esports',
+        'assets/img/covers/trailer.svg' => 'تریلر جدید', 'assets/img/covers/update.svg' => 'آپدیت / پچ', 'assets/img/covers/review.svg' => 'نقد و بررسی',
+        'assets/img/covers/tech.svg' => 'تکنولوژی', 'assets/img/covers/rumor.svg' => 'شایعه / لیک', 'assets/img/covers/live-event.svg' => 'رویداد زنده',
+        'assets/img/covers/free-games.svg' => 'بازی رایگان',
+    ];
     return [
         'assets/img/presets/premium.svg' => 'پریمیوم تلگرام', 'assets/img/presets/stars.svg' => 'استارز', 'assets/img/presets/ton.svg' => 'تون / کریپتو',
         'assets/img/presets/gift.svg' => 'گیفت کارت', 'assets/img/presets/game.svg' => 'بازی', 'assets/img/presets/account.svg' => 'اکانت / اشتراک',
