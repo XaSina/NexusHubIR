@@ -30,7 +30,7 @@ $commentsOn = setting_on('comments_enabled') && $post['allow_comments'];
                 <?php if ($post['is_breaking']): ?><span class="chip chip-hot"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?>
             </div>
             <h1 class="post-title"><?= e($post['title']) ?></h1>
-            <?php if ($post['excerpt']): ?><p class="post-lead"><?= e($post['excerpt']) ?></p><?php endif; ?>
+            <?php $lead = trim(strip_shortcodes((string) $post['excerpt'])); if ($lead !== ''): ?><p class="post-lead"><?= e($lead) ?></p><?php endif; ?>
             <div class="post-meta">
                 <a class="pm-author" href="<?= e(url('author/' . rawurlencode((string) $post['author_username']))) ?>">
                     <?= user_avatar(['avatar' => $post['author_avatar'], 'display_name' => $post['author_name'], 'username' => $post['author_username']], 34) ?>

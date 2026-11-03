@@ -20,7 +20,7 @@ if (is_post()) {
     $do = $_POST['do'] ?? 'draft';
     $p['title'] = mb_substr(trim((string) ($_POST['title'] ?? '')), 0, 250);
     $p['slug'] = slugify(trim((string) ($_POST['slug'] ?? '')) ?: $p['title']);
-    $p['excerpt'] = mb_substr(trim((string) ($_POST['excerpt'] ?? '')), 0, 600);
+    $p['excerpt'] = mb_substr(trim(preg_replace('~\s+~u', ' ', strip_shortcodes((string) ($_POST['excerpt'] ?? '')))), 0, 600);
     $p['content'] = content_to_store(sanitize_html((string) ($_POST['content'] ?? '')));
     $p['cover'] = trim((string) ($_POST['cover'] ?? '')) ?: null;
     $p['category_id'] = (int) ($_POST['category_id'] ?? 0) ?: null;

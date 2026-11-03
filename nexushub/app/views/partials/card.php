@@ -4,7 +4,7 @@ $variant = $variant ?? 'card';
 $i = $i ?? 0;
 $href = post_url($p);
 $catChip = !empty($p['cat_name']) ? '<a class="chip" href="' . e(url('category/' . rawurlencode($p['cat_slug']))) . '" style="--c:' . e($p['cat_color']) . '">' . e($p['cat_icon']) . ' ' . e($p['cat_name']) . '</a>' : '';
-$excerpt = $p['excerpt'] ?: str_excerpt((string) $p['content'], 140);
+$excerpt = trim(strip_shortcodes((string) $p['excerpt'])) ?: str_excerpt((string) $p['content'], 140);
 ?>
 <?php if ($variant === 'big'): ?>
 <article class="pcard pcard-big" data-reveal style="--d:<?= $i ?>">

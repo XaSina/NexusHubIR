@@ -162,8 +162,15 @@ function unique_slug(string $table, string $slug, int $exceptId = 0): string
     return $slug;
 }
 
+/** Remove embed shortcodes such as [video src="…" title="…"] so they never show up as text in summaries */
+function strip_shortcodes(string $s): string
+{
+    return (string) preg_replace('~\[\s*(?:video|audio|embed|gallery)\b[^\]]*\]~iu', ' ', $s);
+}
+
 function str_excerpt(string $html, int $len = 160): string
 {
+    $html = strip_shortcodes(html_entity_decode($html, ENT_QUOTES, 'UTF-8'));
     $t = trim(preg_replace('~\s+~u', ' ', html_entity_decode(strip_tags(preg_replace('~<(br|/p|/h\d|/li)>~i', ' ', $html)), ENT_QUOTES, 'UTF-8')));
     if (mb_strlen($t) <= $len) return $t;
     $cut = mb_substr($t, 0, $len);
@@ -174,7 +181,7 @@ function str_excerpt(string $html, int $len = 160): string
 
 function reading_time(string $html): int
 {
-    $words = count(preg_split('~\s+~u', trim(strip_tags($html)), -1, PREG_SPLIT_NO_EMPTY));
+    $words = count(preg_split('~\s+~u', trim(strip_tags(strip_shortcodes($html))), -1, PREG_SPLIT_NO_EMPTY));
     return max(1, (int) ceil($words / 200));
 }
 

@@ -31,7 +31,7 @@ function telegram_send_post(array $post): array
     if ($chat === '') return ['ok' => false, 'description' => 'شناسه کانال تنظیم نشده است.'];
 
     $tpl = (string) setting('tg_template', "<b>{title}</b>\n\n{excerpt}\n\n🔗 {link}");
-    $excerpt = $post['excerpt'] ?: str_excerpt((string) $post['content'], 300);
+    $excerpt = trim(strip_shortcodes((string) $post['excerpt'])) ?: str_excerpt((string) $post['content'], 300);
     $text = strtr($tpl, [
         '{title}' => htmlspecialchars($post['title'], ENT_NOQUOTES),
         '{excerpt}' => htmlspecialchars($excerpt, ENT_NOQUOTES),

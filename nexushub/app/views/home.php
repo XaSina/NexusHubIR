@@ -59,7 +59,7 @@ case 'hero': if (!$featured) break; ?>
                     <div class="slide-content">
                         <span class="slide-chips"><?php if ($p['cat_name']): ?><a class="chip" href="<?= e(url('category/' . rawurlencode($p['cat_slug']))) ?>" style="--c:<?= e($p['cat_color']) ?>"><?= e($p['cat_icon']) ?> <?= e($p['cat_name']) ?></a><?php endif; ?><?php if (!empty($p['is_featured'])): ?> <span class="chip chip-feat">⭐ ویژه</span><?php endif; ?></span>
                         <h2><a href="<?= e(post_url($p)) ?>"><?= e($p['title']) ?></a></h2>
-                        <p><?= e($p['excerpt'] ?: str_excerpt((string) $p['content'], 180)) ?></p>
+                        <p><?= e(trim(strip_shortcodes((string) $p['excerpt'])) ?: str_excerpt((string) $p['content'], 180)) ?></p>
                         <div class="pc-meta"><span><?= icon('calendar', 14) ?> <?= jdate('j F Y', $p['published_at']) ?></span><span><?= icon('eye', 14) ?> <?= fa_short_num((int) $p['views']) ?></span></div>
                         <a class="btn btn-primary" href="<?= e(post_url($p)) ?>">ادامه خبر <?= icon('arrow-left', 16) ?></a>
                     </div>

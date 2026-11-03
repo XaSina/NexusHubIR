@@ -57,7 +57,7 @@ switch ($seg[0] ?? '') {
         count_post_view($post);
         page_out('post', ['post' => $post], [
             'title' => ($post['meta_title'] ?: $post['title']),
-            'description' => $post['meta_desc'] ?: ($post['excerpt'] ?: str_excerpt((string) $post['content'])),
+            'description' => $post['meta_desc'] ?: (trim(strip_shortcodes((string) $post['excerpt'])) ?: str_excerpt((string) $post['content'])),
             'image' => $post['cover'] && !str_ends_with(strtolower((string) $post['cover']), '.svg') ? site_url($post['cover']) : '',   // SVG covers can't be link-preview images
             'url' => site_url('post/' . rawurlencode($post['slug'])),
             'type' => 'article',
