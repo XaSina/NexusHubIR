@@ -32,7 +32,7 @@ function ad_slot(string $position): string
 
     $ids = array_map(fn($a) => (int) $a['id'], $ads);
     try {
-        q('UPDATE ads SET impressions = impressions + 1 WHERE id IN (' . implode(',', $ids) . ')');
+        if (!current_user()) q('UPDATE ads SET impressions = impressions + 1 WHERE id IN (' . implode(',', $ids) . ')'); // panel users aren't counted
     } catch (Throwable $e) {
     }
 

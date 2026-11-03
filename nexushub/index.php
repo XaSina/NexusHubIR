@@ -200,8 +200,10 @@ switch ($seg[0] ?? '') {
         $ad = row('SELECT * FROM ads WHERE id = ?', [(int) ($seg[1] ?? 0)]);
         $link = $ad ? safe_link($ad['link']) : '';
         if (!$ad || $link === '') redirect('');
-        q('UPDATE ads SET clicks = clicks + 1 WHERE id = ?', [$ad['id']]);
-        q('INSERT INTO stats_daily (day, ad_clicks) VALUES (?, 1) ON DUPLICATE KEY UPDATE ad_clicks = ad_clicks + 1', [date('Y-m-d')]);
+        if (!current_user()) { // panel users testing their own ads aren't counted
+            q('UPDATE ads SET clicks = clicks + 1 WHERE id = ?', [$ad['id']]);
+            q('INSERT INTO stats_daily (day, ad_clicks) VALUES (?, 1) ON DUPLICATE KEY UPDATE ad_clicks = ad_clicks + 1', [date('Y-m-d')]);
+        }
         header('Location: ' . $link, true, 302);
         exit;
 

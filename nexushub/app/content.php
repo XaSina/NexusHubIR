@@ -166,6 +166,7 @@ function render_content(string $html, bool $withAds = true): string
 function track_visit(bool $isPost = false): void
 {
     if (preg_match('~bot|crawl|spider|slurp|facebookexternalhit|preview~i', $_SERVER['HTTP_USER_AGENT'] ?? '')) return;
+    if (current_user()) return; // the site's own admins/editors don't inflate the stats
     $today = date('Y-m-d');
     $newVisitor = ($_COOKIE['nx_v'] ?? '') !== $today;
     if ($newVisitor) {
@@ -181,6 +182,8 @@ function track_visit(bool $isPost = false): void
 
 function count_post_view(array $post): void
 {
+    if (current_user()) return; // panel users checking their own posts aren't counted
+    if (preg_match('~bot|crawl|spider|slurp|facebookexternalhit|preview~i', $_SERVER['HTTP_USER_AGENT'] ?? '')) return;
     $seen = $_SESSION['seen'] ?? [];
     if (!in_array((int) $post['id'], $seen, true)) {
         q('UPDATE posts SET views = views + 1 WHERE id = ?', [$post['id']]);

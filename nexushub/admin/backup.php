@@ -29,6 +29,13 @@ if (is_post()) {
         exit;
     }
     if ($act === 'clear_stats') { q('DELETE FROM stats_daily'); flash('آمار بازدید روزانه پاک شد.'); }
+    if ($act === 'reset_all_stats') {
+        // start real stats from zero: visits chart, per-post views, ad impressions/clicks (content is kept)
+        q('DELETE FROM stats_daily');
+        q('UPDATE posts SET views = 0');
+        q('UPDATE ads SET impressions = 0, clicks = 0');
+        flash('همه آمارها صفر شد ✅ از این لحظه فقط بازدیدهای واقعی شمرده می‌شوند.');
+    }
     if ($act === 'clear_reactions_log') { q('DELETE FROM reaction_log WHERE created_at < ?', [date('Y-m-d H:i:s', strtotime('-90 days'))]); flash('لاگ واکنش‌های قدیمی پاک شد.'); }
     if ($act === 'clear_unused_tags') { q('DELETE FROM tags WHERE id NOT IN (SELECT tag_id FROM post_tags)'); flash('برچسب‌های بدون استفاده حذف شدند.'); }
     redirect('admin/backup.php');
@@ -48,6 +55,16 @@ adm_head('پشتیبان‌گیری و ابزارها', 'backup');
             ۲. در cPanel یک دیتابیس و کاربر بسازید و از phpMyAdmin فایل SQL را Import کنید.<br>
             ۳. همه فایل‌ها (به همراه پوشه uploads) را آپلود کنید و اطلاعات دیتابیس را در <span class="ltr">app/config.php</span> ویرایش کنید.
         </div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h3>🚀 شروع آمار واقعی</h3></div>
+        <p class="muted small">اگر سایت را با «محتوای نمونه» نصب کرده‌اید، آمارهای داشبورد ساختگی هستند. با این دکمه همه‌ی آمارها صفر می‌شوند و از این لحظه فقط بازدیدهای واقعی شمرده می‌شود.</p>
+        <ul class="muted small" style="margin:0 0 14px;padding-right:18px;line-height:2">
+            <li>صفر می‌شود: نمودار و آمار بازدید روزانه، تعداد بازدید هر خبر، نمایش و کلیک تبلیغات</li>
+            <li>دست نمی‌خورد: اخبار، دسته‌ها، تبلیغات، اعضا، نظرات و تنظیمات</li>
+            <li>بازدیدهای خود شما (وقتی وارد پنل هستید) هیچ‌وقت شمرده نمی‌شود</li>
+        </ul>
+        <form method="post"><?= csrf_field() ?><button class="abtn abtn-primary" name="act" value="reset_all_stats" data-confirm="همه آمارها (بازدیدها، بازدید اخبار، نمایش و کلیک تبلیغات) صفر شود؟ این کار قابل بازگشت نیست."><?= icon('check', 17) ?> شروع آمار از صفر</button></form>
     </div>
     <div class="card">
         <div class="card-head"><h3>🧹 ابزارهای پاکسازی</h3></div>
