@@ -189,5 +189,6 @@ input{padding:12px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.1)
     </form>
 <?php endif; ?>
 </div>
+<script src="<?= e($base) ?>/assets/js/pw.js"></script>
 </body>
 </html>

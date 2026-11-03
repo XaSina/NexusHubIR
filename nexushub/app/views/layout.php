@@ -254,7 +254,7 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
     </form>
 </div>
 
-<div class="drawer" id="drawer" hidden>
+<div class="drawer" id="drawer" aria-hidden="true" inert>
     <div class="drawer-backdrop" data-close></div>
     <aside class="drawer-panel glass">
         <div class="drawer-head">
@@ -283,6 +283,7 @@ array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
 
 <script>window.NX = <?= json_encode($jsCfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
+<?php if (str_contains((string) ($bodyClass ?? ''), 'page-account')): ?><script src="<?= e(asset('js/pw.js')) ?>" defer></script><?php endif; ?>
 <?= setting('footer_code') ?>
 </body>
 </html>

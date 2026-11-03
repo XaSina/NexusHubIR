@@ -36,12 +36,13 @@ if (is_post()) {
             <?php if ($error): ?><div class="login-err"><?= e($error) ?></div><?php endif; ?>
             <?= f_text('username', 'نام کاربری یا ایمیل', (string) ($_POST['username'] ?? ''), ['required' => true, 'ltr' => true, 'attrs' => 'autofocus autocomplete="username"']) ?>
             <label class="af"><span class="af-label">رمز عبور</span>
-                <span class="pass-wrap"><input type="password" name="password" required dir="ltr" autocomplete="current-password" id="pw"><button type="button" onclick="var p=document.getElementById('pw');p.type=p.type==='password'?'text':'password'"><?= icon('eye', 18) ?></button></span>
+                <span class="pass-wrap"><input type="password" name="password" required dir="ltr" autocomplete="current-password" id="pw"></span>
             </label>
             <button class="abtn abtn-primary abtn-block" type="submit" style="margin-top:6px;padding:13px">ورود <?= icon('arrow-left', 18) ?></button>
         </form>
         <p style="margin:18px 0 0"><a href="<?= e(url('')) ?>" class="muted small">← بازگشت به سایت</a></p>
     </div>
 </div>
+<script src="<?= e(asset('js/pw.js')) ?>"></script>
 </body>
 </html>

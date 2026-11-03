@@ -112,7 +112,6 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
                 <label class="au-field">
                     <input type="password" name="password" id="auPassword" dir="ltr" autocomplete="current-password" placeholder=" " required>
                     <span class="au-flabel">رمز عبور</span>
-                    <button class="au-eye" type="button" aria-label="نمایش رمز"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </label>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ورود</span><i class="au-spin"></i></button>
@@ -132,7 +131,6 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
                     <label class="au-field">
                         <input type="password" name="password" dir="ltr" autocomplete="new-password" placeholder=" " required>
                         <span class="au-flabel">رمز عبور</span>
-                        <button class="au-eye" type="button" aria-label="نمایش رمز"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         <em class="au-ferr"></em>
                     </label>
                 </div>
@@ -177,5 +175,6 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 
 <script>window.NXAU = <?= json_encode($cfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= e(asset('js/auth.js')) ?>" defer></script>
+<script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 </body>
 </html>

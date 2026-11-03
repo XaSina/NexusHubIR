@@ -350,15 +350,6 @@
         enterSequence(j);
     });
 
-    /* eye toggles */
-    $$('.au-eye').forEach(function (b) {
-        b.addEventListener('click', function () {
-            var inp = b.parentNode.querySelector('input');
-            inp.type = inp.type === 'password' ? 'text' : 'password';
-            b.classList.toggle('on', inp.type === 'text');
-        });
-    });
-
     /* ==========================================================================
        Access granted sequence
        ========================================================================== */

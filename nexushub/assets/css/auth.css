@@ -214,9 +214,6 @@ button { cursor: pointer; border: 0; background: none; }
 .au-field.err input { border-color: rgba(255,90,110,.85); box-shadow: 0 0 0 4px rgba(255,90,110,.14); }
 .au-ferr { display: block; font-style: normal; font-size: .74rem; color: #ff7a8a; margin-top: 5px; min-height: 0; }
 .au-ferr:empty { display: none; }
-.au-eye { position: absolute; left: 10px; top: 10px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: rgba(255,255,255,.55); }
-.au-eye:hover, .au-eye.on { color: var(--primary); }
-.au-field input[type=password], .au-field .au-eye ~ input { padding-left: 50px; }
 .au-id-field input { height: 62px; padding: 8px 58px 8px 100px; font-size: 1.05rem; letter-spacing: .3px; }
 .au-id-icon { position: absolute; right: 12px; top: 12px; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 8px 20px -6px rgba(var(--primary-rgb), .9); transition: transform .4s cubic-bezier(.16,1.4,.3,1); }
 .au-id-icon.pop { animation: idPop .45s cubic-bezier(.16,1.4,.3,1); }

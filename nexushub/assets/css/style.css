@@ -40,6 +40,13 @@ input, textarea, select { font: inherit; color: inherit; }
 h1, h2, h3, h4 { line-height: 1.5; margin: 0 0 .5em; font-weight: 800; }
 p { margin: 0 0 1em; }
 ::selection { background: rgba(var(--primary-rgb), .45); color: #fff; }
+/* no blue tap flash / accidental selection on the site's controls (phones) */
+html { -webkit-tap-highlight-color: transparent; }
+a, button, [role="button"], label, summary { -webkit-tap-highlight-color: transparent; }
+.site-header, .topbar, .drawer, .ticker, .btn, button, .icon-btn, .chip, .main-nav, .brand, .pg-num, .pg-btn, .story, .trend-num, .sec-title, .tb-online, .to-top, .nx-player, .share, .reactions {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.brand img, .btn img, .icon-btn img { -webkit-user-drag: none; pointer-events: none; }
+:focus:not(:focus-visible) { outline: none; }
 ::-webkit-scrollbar { width: 10px; height: 8px; }
 ::-webkit-scrollbar-track { background: rgba(var(--bg-rgb), 1); }
 ::-webkit-scrollbar-thumb { background: linear-gradient(var(--primary), var(--secondary)); border-radius: 10px; border: 2px solid var(--bg); }
@@ -388,8 +395,12 @@ body.has-noise::after {
 .trend-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .trend-item { display: flex; flex-direction: column; overflow: hidden; padding: 8px; transition: transform .5s var(--ease); }
 .trend-item:hover { color: var(--text); }
-.trend-num { position: absolute; z-index: 3; top: 6px; right: 14px; font-size: 4.4rem; font-weight: 900; line-height: 1; color: transparent; -webkit-text-stroke: 2px rgba(var(--primary-rgb), .9); text-shadow: 0 0 30px rgba(var(--primary-rgb), .5); transition: .4s; }
-.trend-item:hover .trend-num { color: var(--primary); }
+.trend-item { position: relative; }
+.trend-num { position: absolute; z-index: 3; top: 16px; right: 16px; min-width: 38px; height: 38px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; border-radius: 13px;
+    font-size: 1.05rem; font-weight: 900; line-height: 1; color: #fff; background: rgba(8,8,12,.62); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 8px 20px -8px rgba(0,0,0,.8); transition: transform .35s var(--ease), background .35s; }
+.trend-num::before { content: "#"; font-size: .72em; opacity: .7; }
+.trend-item:first-child .trend-num { background: var(--grad); border-color: rgba(255,255,255,.3); box-shadow: 0 8px 22px -6px rgba(var(--primary-rgb), .85); }
+.trend-item:hover .trend-num { transform: scale(1.08) rotate(-4deg); background: var(--grad); }
 .trend-media { display: block; aspect-ratio: 4/3; border-radius: calc(var(--radius) - 6px); overflow: hidden; }
 .trend-item:hover .cover { transform: scale(1.07); }
 .trend-body { padding: 14px 8px 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -603,18 +614,27 @@ body.has-noise::after {
 .so-field .ic { color: var(--primary); }
 .so-field input { flex: 1; background: none; border: 0; outline: 0; font-size: 1.1rem; padding: 10px 0; min-width: 0; }
 .so-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.drawer { position: fixed; inset: 0; z-index: 210; }
-.drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: fadeIn .3s; }
-.drawer-panel { position: absolute; top: 10px; bottom: 10px; right: 10px; width: min(340px, calc(100% - 20px)); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; animation: drawerIn .45s var(--ease); background: rgba(var(--surface-rgb), .92); }
-@keyframes drawerIn { from { transform: translateX(110%); } }
+/* The drawer stays rendered (pre-composited layers) and only slides/fades. Switching it from display:none straight into an
+   animation made phones paint one stray frame of the page over the menu. */
+.drawer { position: fixed; inset: 0; z-index: 210; visibility: hidden; pointer-events: none; isolation: isolate; transition: visibility 0s linear .45s; }
+.drawer.open { visibility: visible; pointer-events: auto; transition: visibility 0s; }
+.drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); opacity: 0; transition: opacity .35s ease; will-change: opacity; }
+.drawer.open .drawer-backdrop { opacity: 1; }
+.drawer-panel { position: absolute; top: 10px; bottom: 10px; right: 10px; width: min(340px, calc(100% - 20px)); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; overscroll-behavior: contain; background: rgba(var(--surface-rgb), .96);
+    transform: translate3d(calc(100% + 24px), 0, 0); transition: transform .45s var(--ease); will-change: transform; -webkit-backface-visibility: hidden; backface-visibility: hidden; contain: layout paint; }
+.drawer.open .drawer-panel { transform: translate3d(0, 0, 0); }
+.drawer-panel::before { display: none; }
+.drawer-panel { border-color: rgba(var(--primary-rgb), .22); }
+html.nx-lock, html.nx-lock body { overflow: hidden; }
+.drawer.no-anim, .drawer.no-anim * { transition: none !important; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; }
 .drawer-nav { display: flex; flex-direction: column; gap: 4px; }
-.drawer-nav a { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; font-weight: 600; animation: fadeUp .5s var(--ease) both; animation-delay: calc(var(--i) * 50ms + .1s); }
+.drawer-nav a { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; font-weight: 600; opacity: 0; transform: translate3d(22px, 0, 0); transition: opacity .3s ease, transform .45s var(--ease), background .25s; }
+.drawer.open .drawer-nav a { opacity: 1; transform: none; transition-delay: calc(var(--i) * 40ms + .12s), calc(var(--i) * 40ms + .12s), 0s; }
+.drawer-nav a:active { background: rgba(var(--primary-rgb), .16); }
 .drawer-nav a:hover { background: rgba(var(--primary-rgb), .12); }
 .drawer-nav a > span { display: inline-flex; align-items: center; gap: 10px; }
 .drawer-nav .dn-ic { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; font-style: normal; font-size: .95rem; background: color-mix(in srgb, var(--c) 16%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
-.drawer-cats { display: flex; flex-wrap: wrap; gap: 8px; }
-.drawer-cats a { padding: 6px 12px; border-radius: 30px; font-size: .84rem; border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
 .drawer-panel .btn { margin-top: auto; }
 
 .to-top { position: fixed; bottom: 24px; left: 24px; z-index: 60; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--surface-rgb), .8); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); opacity: 0; visibility: hidden; transform: translateY(20px); transition: .4s var(--ease); }
@@ -684,7 +704,7 @@ body.has-noise::after {
     .grid-cards, .grid-cards.cols-2 { grid-template-columns: 1fr; }
     .h-scroll { grid-auto-columns: 82%; }
     .trend-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .trend-num { font-size: 3rem; }
+    .trend-num { top: 12px; right: 12px; min-width: 32px; height: 32px; font-size: .92rem; border-radius: 11px; }
     .trend-body b { font-size: .85rem; }
     .sec-head { margin: 34px 0 16px; }
     .sec-title { font-size: 1.12rem; }

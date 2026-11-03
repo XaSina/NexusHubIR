@@ -233,19 +233,36 @@
     }
 
     /* ---------- Search overlay & drawer ---------- */
-    var so = $('#searchOverlay');
-    function openSearch() { if (!so) return; so.hidden = false; setTimeout(function () { $('input', so).focus(); }, 50); document.body.style.overflow = 'hidden'; }
-    function closeSearch() { if (!so) return; so.hidden = true; document.body.style.overflow = ''; }
+    var so = $('#searchOverlay'), drawer = $('#drawer'), root = document.documentElement;
+    var lock = function () { root.classList.toggle('nx-lock', !!((so && !so.hidden) || (drawer && drawer.classList.contains('open')))); };
+    function openSearch() { if (!so) return; so.hidden = false; lock(); setTimeout(function () { $('input', so).focus(); }, 50); }
+    function closeSearch() { if (!so) return; so.hidden = true; lock(); }
     if ($('#searchOpen')) $('#searchOpen').addEventListener('click', openSearch);
     if ($('#searchClose')) $('#searchClose').addEventListener('click', closeSearch);
     if (so) so.addEventListener('click', function (e) { if (e.target === so) closeSearch(); });
-    var drawer = $('#drawer');
+    function openDrawer() {
+        if (!drawer) return;
+        drawer.removeAttribute('inert'); drawer.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(function () { drawer.classList.add('open'); lock(); });
+    }
+    function closeDrawer() {
+        if (!drawer || !drawer.classList.contains('open')) return;
+        drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true'); drawer.setAttribute('inert', '');
+        if (drawer.contains(document.activeElement)) document.activeElement.blur();
+        lock();
+    }
     if ($('#menuOpen') && drawer) {
-        $('#menuOpen').addEventListener('click', function () { drawer.hidden = false; document.body.style.overflow = 'hidden'; });
-        $$('[data-close]', drawer).forEach(function (b) { b.addEventListener('click', function () { drawer.hidden = true; document.body.style.overflow = ''; }); });
+        $('#menuOpen').addEventListener('click', openDrawer);
+        $$('[data-close]', drawer).forEach(function (b) { b.addEventListener('click', closeDrawer); });
+        // back/forward cache: never come back to a page with the menu stuck open
+        window.addEventListener('pageshow', function (e) {
+            if (!e.persisted) return;
+            drawer.classList.add('no-anim'); closeDrawer();
+            setTimeout(function () { drawer.classList.remove('no-anim'); }, 60);
+        });
     }
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeSearch(); if (drawer) { drawer.hidden = true; document.body.style.overflow = ''; } }
+        if (e.key === 'Escape') { closeSearch(); closeDrawer(); }
         if (e.key === '/' && !/input|textarea/i.test(document.activeElement.tagName) && !document.activeElement.isContentEditable) { e.preventDefault(); openSearch(); }
     });
 

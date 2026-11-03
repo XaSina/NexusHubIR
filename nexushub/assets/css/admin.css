@@ -267,7 +267,6 @@ h2, h3, h4 { margin: 0 0 .6em; line-height: 1.5; }
 .login-box form { text-align: right; }
 .login-err { background: rgba(255,90,110,.12); border: 1px solid rgba(255,90,110,.4); color: #ff8a98; padding: 10px 14px; border-radius: 12px; font-size: .86rem; margin-bottom: 14px; }
 .pass-wrap { position: relative; }
-.pass-wrap button { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--a-muted); padding: 6px; }
 
 /* Theme picker / option cards */
 .opt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
