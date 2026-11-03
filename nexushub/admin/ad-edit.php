@@ -108,7 +108,7 @@ adm_head($a['id'] ? 'ویرایش تبلیغ' : 'تبلیغ جدید', 'ads');
                 <?= f_text('title', 'نام تبلیغ (داخلی)', (string) $a['title'], ['required' => true, 'placeholder' => 'مثلاً: بنر قرعه‌کشی آبان']) ?>
                 <label class="af"><span class="af-label">جایگاه نمایش</span>
                     <select name="position" id="adPos">
-                        <?php foreach ($positions as $k => $p): ?><option value="<?= e($k) ?>" <?= $a['position'] === $k ? 'selected' : '' ?>><?= e($p['name']) ?> — <?= e($p['size']) ?></option><?php endforeach; ?>
+                        <?php foreach ($positions as $k => $p): ?><option value="<?= e($k) ?>" <?= $a['position'] === $k ? 'selected' : '' ?>><?= e($p['name']) ?> — <?= "\u{2066}" . e($p['size']) . "\u{2069}" ?></option><?php endforeach; ?>
                     </select>
                     <small class="af-hint" id="posHint"></small>
                 </label>
@@ -144,7 +144,7 @@ adm_head($a['id'] ? 'ویرایش تبلیغ' : 'تبلیغ جدید', 'ads');
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('adForm'), prev = document.getElementById('adPreview'), pos = document.getElementById('adPos');
-    var hints = <?= json_encode(array_map(fn($p) => $p['hint'] . ' · سایز پیشنهادی ' . $p['size'], $positions), JSON_UNESCAPED_UNICODE) ?>;
+    var hints = <?= json_encode(array_map(fn($p) => $p['hint'] . ' · سایز پیشنهادی ' . "\u{2066}" . $p['size'] . "\u{2069}", $positions), JSON_UNESCAPED_UNICODE) ?>;
     var t;
     function fmt() {
         var f = form.querySelector('[name=format]:checked').value;

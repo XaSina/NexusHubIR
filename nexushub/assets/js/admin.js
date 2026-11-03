@@ -374,13 +374,19 @@
             }
         };
         var place = function () {
-            var r = btn.getBoundingClientRect(), mh = Math.min(320, menu.scrollHeight + 2);
-            var below = window.innerHeight - r.bottom - 10, up = below < mh && r.top > below;
-            menu.style.minWidth = r.width + 'px';
-            menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
-            menu.style.maxHeight = Math.max(140, Math.min(320, (up ? r.top : below) - 10)) + 'px';
-            menu.style.top = up ? '' : (r.bottom + 6) + 'px';
-            menu.style.bottom = up ? (window.innerHeight - r.top + 6) + 'px' : '';
+            // clientWidth/Height = viewport without the page scrollbar (same box position:fixed uses)
+            var r = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight, gap = 6;
+            // same width as the button, flush with its right edge (RTL); narrow buttons get a minimum width
+            var w = Math.min(Math.max(r.width, 140), vw - 16);
+            var left = Math.max(8, Math.min(r.right - w, vw - w - 8));
+            menu.style.width = w + 'px';
+            menu.style.left = left + 'px';
+            menu.style.maxHeight = 'none';
+            var full = menu.offsetHeight, below = vh - r.bottom - gap - 10, above = r.top - gap - 10;
+            var up = full > below && above > below;
+            menu.style.maxHeight = Math.min(full, up ? above : below) + 'px';
+            menu.style.top = up ? '' : (r.bottom + gap) + 'px';
+            menu.style.bottom = up ? (vh - r.top + gap) + 'px' : '';
             menu.classList.toggle('up', up);
         };
         var open = function () {
