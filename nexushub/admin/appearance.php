@@ -131,7 +131,7 @@ adm_head('ظاهر سایت', 'appearance');
         <div class="card-head"><h3>🌌 افکت پس‌زمینه</h3></div>
         <div class="opt-grid">
             <?php foreach (bg_effects() as $k => [$n, $d]): ?>
-                <label class="opt"><input type="radio" name="bg_effect" value="<?= $k ?>" <?= $s['bg_effect'] === $k ? 'checked' : '' ?>><b><?= $n ?></b><small><?= $d ?></small></label>
+                <label class="opt"><input type="radio" name="bg_effect" value="<?= $k ?>" <?= $s['bg_effect'] === $k ? 'checked' : '' ?>><span class="fx-thumb fx-<?= $k ?>"><b></b><b></b><b></b><b></b><b></b><b></b></span><b><?= $n ?></b><small><?= $d ?></small></label>
             <?php endforeach; ?>
         </div>
     </div>

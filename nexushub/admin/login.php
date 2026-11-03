@@ -15,7 +15,7 @@ if (is_post()) {
     }
 }
 ?><!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" class="<?= theme_colors()['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -24,7 +24,7 @@ if (is_post()) {
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 <style><?= theme_css_vars() ?></style>
 </head>
-<body class="adm-body">
+<body class="adm-body cards-<?= e(isset(card_styles()[(string) setting('card_style', 'glass')]) ? (string) setting('card_style', 'glass') : 'glass') ?>">
 <div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
 <div class="login-wrap">
     <div class="login-box glass">

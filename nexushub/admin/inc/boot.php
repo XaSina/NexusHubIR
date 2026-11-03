@@ -81,7 +81,7 @@ function adm_head(string $title, string $active = ''): void
     $u = current_user();
     $colors = theme_colors();
     ?><!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" class="<?= theme_colors()['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -93,7 +93,7 @@ function adm_head(string $title, string $active = ''): void
 <?php $decorHtml = decor_html('admin'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 </head>
-<body class="adm-body">
+<body class="adm-body cards-<?= e(isset(card_styles()[(string) setting('card_style', 'glass')]) ? (string) setting('card_style', 'glass') : 'glass') ?>">
 <div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
 <?= $decorHtml ?>
 <div class="adm">
