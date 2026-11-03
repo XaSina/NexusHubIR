@@ -497,3 +497,5 @@ select option, select optgroup { background: #15151c; color: #f2f2f6; }
 .up-head b { font-size: .86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .up-box .progress { height: 8px; margin: 10px 0 6px; }
 .up-box small { font-variant-numeric: tabular-nums; }
+/* masked secret (bot token) without a password field, so the browser never autofills the admin login into the settings form */
+.secret-input:not(:focus) { -webkit-text-security: disc; text-security: disc; }

@@ -22,7 +22,6 @@ $jsCfg = [
 $menu = setting_json('menu');
 $reqPath = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 $ticker = setting_on('show_ticker') ? get_posts(['breaking' => 1, 'limit' => 10]) : [];
-if (setting_on('show_ticker') && !$ticker) $ticker = get_posts(['limit' => 8]);
 $pages = rows("SELECT title, slug, show_in_menu, show_in_footer FROM pages WHERE status = 'published' ORDER BY sort_order, id");
 $cats = get_categories();
 $tgLink = safe_link((string) setting('social_telegram'));
@@ -36,21 +35,29 @@ $menuCat = function (array $m) use ($catBySlug): ?array {
     if (preg_match('~(?:^|/)category/([^/?#]+)/?$~u', (string) parse_url($u, PHP_URL_PATH), $mm)) return $catBySlug[mb_strtolower($mm[1])] ?? null;
     return null;
 };
-$navItems = [];      // desktop header
-$drawerItems = [];   // mobile menu list (categories are shown as chips below it, so they're not repeated here)
-$navCatIds = [];
+$navItems = [];      // desktop header  (switch: show_in_header)
+$drawerItems = [];   // mobile ☰ menu   (switch: show_in_mobile)
+$navCatIds = []; $drawerCatIds = []; $drawerAt = null;
 foreach ($menu as $m) {
     $c = $menuCat($m);
     if ($c) {
-        if (!empty($c['show_in_header']) && !in_array((int) $c['id'], $navCatIds, true)) { $navItems[] = $m; $navCatIds[] = (int) $c['id']; }
+        $id = (int) $c['id'];
+        if (!empty($c['show_in_header']) && !in_array($id, $navCatIds, true)) { $navItems[] = $m; $navCatIds[] = $id; }
+        if (!empty($c['show_in_mobile']) && !in_array($id, $drawerCatIds, true)) { $drawerItems[] = $m + ['cat' => $c]; $drawerCatIds[] = $id; }
+        $drawerAt = count($drawerItems);   // other switched-on categories go right after the menu's own categories
         continue;
     }
     $navItems[] = $m;
     $drawerItems[] = $m;
+    if ($drawerAt === null && preg_match('~(?:^|/)archive/?$~', (string) ($m['url'] ?? ''))) $drawerAt = count($drawerItems);
 }
-foreach ($cats as $c) {   // switched-on categories that aren't in the manual menu are added at the end
-    if (!empty($c['show_in_header']) && !in_array((int) $c['id'], $navCatIds, true)) $navItems[] = ['title' => $c['name'], 'url' => '/category/' . $c['slug']];
+$extraDrawer = [];
+foreach ($cats as $c) {   // switched-on categories that aren't in the manual menu
+    $item = ['title' => $c['name'], 'url' => '/category/' . $c['slug'], 'cat' => $c];
+    if (!empty($c['show_in_header']) && !in_array((int) $c['id'], $navCatIds, true)) $navItems[] = $item;
+    if (!empty($c['show_in_mobile']) && !in_array((int) $c['id'], $drawerCatIds, true)) $extraDrawer[] = $item;
 }
+array_splice($drawerItems, $drawerAt ?? count($drawerItems), 0, $extraDrawer);
 ?><!doctype html>
 <html lang="fa" dir="rtl" class="<?= $colors['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
@@ -70,7 +77,6 @@ foreach ($cats as $c) {   // switched-on categories that aren't in the manual me
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
 <link rel="apple-touch-icon" href="<?= e(url('assets/img/icon-192.png')) ?>">
-<link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(url('feed')) ?>">
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
@@ -218,7 +224,6 @@ foreach ($cats as $c) {   // switched-on categories that aren't in the manual me
                 <li><a href="<?= e(url('archive')) ?>">همه اخبار</a></li>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
-                <?php if (setting_on('show_rss_link')): ?><li><a href="<?= e(url('feed')) ?>">خوراک RSS</a></li><?php endif; ?>
             </ul>
         </div>
         <div class="f-cta glass">
@@ -257,13 +262,10 @@ foreach ($cats as $c) {   // switched-on categories that aren't in the manual me
             <button class="icon-btn" data-close aria-label="بستن"><?= icon('close') ?></button>
         </div>
         <nav class="drawer-nav">
-            <?php foreach ($drawerItems as $i => $m): ?>
-                <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?>"><?= e($m['title'] ?? '') ?> <?= icon('chevron-left', 16) ?></a>
+            <?php foreach ($drawerItems as $i => $m): $dc = $m['cat'] ?? null; ?>
+                <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?><?= $dc ? ';--c:' . e($dc['color']) : '' ?>"<?= $dc ? ' class="dn-cat"' : '' ?>><span><?php if ($dc): ?><i class="dn-ic"><?= e($dc['icon']) ?></i><?php endif; ?><?= e($m['title'] ?? '') ?></span> <?= icon('chevron-left', 16) ?></a>
             <?php endforeach; ?>
         </nav>
-        <div class="drawer-cats">
-            <?php foreach ($cats as $c): if (empty($c['show_in_mobile'])) continue; ?><a href="<?= e(cat_url($c)) ?>" style="--c:<?= e($c['color']) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a><?php endforeach; ?>
-        </div>
         <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
         <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> ورود | ثبت‌نام</a><?php endif; ?>
         <?php if ($tgLink): ?><a class="btn btn-primary btn-block" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> عضویت در کانال تلگرام</a><?php endif; ?>

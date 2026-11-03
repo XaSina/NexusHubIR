@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 4;
+const NX_DB_VERSION = 5;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -33,6 +33,8 @@ function nx_migrate(): void
             }
         }
     }
+    // v5: the RSS feed was removed entirely
+    if ($v < 5) q("DELETE FROM settings WHERE skey = 'show_rss_link'");
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
 

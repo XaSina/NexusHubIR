@@ -122,6 +122,23 @@
         show(saved && btns.some(function (b) { return b.dataset.tab === saved; }) ? saved : btns[0].dataset.tab);
     });
 
+    /* ---------- A field that fails browser validation inside a hidden tab would block "Save" silently:
+       open its tab, focus it and say what is wrong ---------- */
+    var lastInvalid = 0;
+    document.addEventListener('invalid', function (e) {
+        var el = e.target, pane = el.closest && el.closest('[data-pane]');
+        if (pane && pane.hidden) {
+            var btn = document.querySelector('[data-tab="' + pane.dataset.pane + '"]');
+            if (btn) btn.click();
+        }
+        if (Date.now() - lastInvalid > 1500) {
+            lastInvalid = Date.now();
+            var lab = el.closest('.af') && el.closest('.af').querySelector('.af-label');
+            A.toast('«' + (lab ? lab.textContent.trim() : (el.name || 'فیلد')) + '»: ' + (el.validationMessage || 'مقدار نامعتبر است.'), 'error');
+            setTimeout(function () { try { el.focus(); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {} }, 30);
+        }
+    }, true);
+
     /* ---------- Colors / ranges ---------- */
     $$('input[type=color][data-sync]').forEach(function (c) {
         var t = c.parentNode.querySelector('input[name="' + c.dataset.sync + '"]');

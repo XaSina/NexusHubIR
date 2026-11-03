@@ -212,11 +212,6 @@ switch ($seg[0] ?? '') {
         require NX_APP . '/api.php';
         break;
 
-    case 'feed':
-        header('Content-Type: application/rss+xml; charset=utf-8');
-        echo view('feed', ['posts' => get_posts(['limit' => 30])]);
-        break;
-
     case 'sitemap.xml':
         header('Content-Type: application/xml; charset=utf-8');
         echo view('sitemap');

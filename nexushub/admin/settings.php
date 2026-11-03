@@ -18,6 +18,15 @@ if (is_post()) {
         $list = array_slice(array_unique(array_filter(array_map('trim', preg_split('~[,،\s]+~u', $save['reactions_list'])))), 0, 10);
         $save['reactions_list'] = implode(',', array_map(fn($x) => mb_substr($x, 0, 4), $list));
     }
+    // a browser's saved-login autofill can drop the admin username/password into these fields: never store that
+    if (isset($save['contact_email']) && $save['contact_email'] !== '' && !filter_var($save['contact_email'], FILTER_VALIDATE_EMAIL)) {
+        unset($save['contact_email']);
+        flash('ایمیل تماس معتبر نبود و تغییر نکرد؛ بقیه تنظیمات ذخیره شد.', 'warn');
+    }
+    if (isset($save['tg_bot_token']) && $save['tg_bot_token'] !== '' && !preg_match('~^\d{5,}:[\w-]{20,}$~', $save['tg_bot_token'])) {
+        unset($save['tg_bot_token']);
+        flash('توکن ربات تلگرام معتبر نبود و تغییر نکرد (شکل درست: 123456789:ABC...).', 'warn');
+    }
     save_settings($save);
     flash('تنظیمات ذخیره شد ✅');
     redirect('admin/settings.php');
@@ -41,7 +50,7 @@ adm_head('تنظیمات', 'settings');
             <div class="card-head"><h3>🌐 اطلاعات سایت</h3></div>
             <?= f_text('site_title', 'عنوان سایت', $s['site_title'], ['required' => true]) ?>
             <?= f_text('site_tagline', 'شعار سایت', $s['site_tagline']) ?>
-            <?= f_text('contact_email', 'ایمیل تماس', $s['contact_email'], ['type' => 'email', 'ltr' => true]) ?>
+            <?= f_text('contact_email', 'ایمیل تماس', $s['contact_email'], ['ltr' => true, 'placeholder' => 'info@example.com', 'attrs' => 'inputmode="email" autocomplete="off" data-lpignore="true"']) ?>
             <div class="grid g2">
                 <?= f_text('posts_per_page', 'تعداد خبر در هر صفحه', $s['posts_per_page'], ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
                 <?= f_text('trending_days', 'بازه «داغ‌ترین‌ها» (روز)', $s['trending_days'], ['type' => 'number', 'min' => 1, 'max' => 365]) ?>
@@ -51,7 +60,7 @@ adm_head('تنظیمات', 'settings');
             <div class="card-head"><h3>🔎 سئو</h3></div>
             <?= f_textarea('site_description', 'توضیحات متا (Meta Description)', $s['site_description'], ['rows' => 4, 'maxlength' => 320]) ?>
             <?= f_text('meta_keywords', 'کلمات کلیدی (با ویرگول)', $s['meta_keywords']) ?>
-            <div class="alert alert-info small">نقشه سایت: <a class="ltr" href="<?= e(url('sitemap.xml')) ?>" target="_blank"><?= e(site_url('sitemap.xml')) ?></a><br>خوراک RSS: <a class="ltr" href="<?= e(url('feed')) ?>" target="_blank"><?= e(site_url('feed')) ?></a></div>
+            <div class="alert alert-info small">نقشه سایت: <a class="ltr" href="<?= e(url('sitemap.xml')) ?>" target="_blank"><?= e(site_url('sitemap.xml')) ?></a></div>
         </div>
     </div>
 </div>
@@ -84,7 +93,7 @@ adm_head('تنظیمات', 'settings');
             ⚠️ اگر هاست شما در ایران است، ممکن است به API تلگرام دسترسی نداشته باشد.
         </div>
         <div class="grid g2">
-            <?= f_text('tg_bot_token', 'توکن ربات', $s['tg_bot_token'], ['ltr' => true, 'placeholder' => '123456:ABC-DEF...', 'type' => 'password', 'attrs' => 'autocomplete="off"']) ?>
+            <?= f_text('tg_bot_token', 'توکن ربات', $s['tg_bot_token'], ['ltr' => true, 'placeholder' => '123456:ABC-DEF...', 'attrs' => 'class="secret-input" autocomplete="off" spellcheck="false" data-lpignore="true"']) ?>
             <?= f_text('tg_chat_id', 'آیدی کانال', $s['tg_chat_id'], ['ltr' => true, 'placeholder' => '@NexusHubIR']) ?>
         </div>
         <?= f_switch('tg_autopost', 'به صورت پیش‌فرض تیک «ارسال به تلگرام» در خبر جدید فعال باشد', setting_on('tg_autopost')) ?>
