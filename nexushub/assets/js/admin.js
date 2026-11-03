@@ -557,7 +557,7 @@
 
     /* ---------- Countdown (ad previews) ---------- */
     setInterval(function () {
-        $$('.ad-countdown').forEach(function (c) {
+        $$('.nxp-countdown').forEach(function (c) {
             var diff = Math.max(0, Math.floor((new Date(c.dataset.end).getTime() - Date.now()) / 1000));
             var v = { d: Math.floor(diff / 86400), h: Math.floor(diff % 86400 / 3600), m: Math.floor(diff % 3600 / 60), s: diff % 60 };
             $$('b', c).forEach(function (b) { b.textContent = fa(v[b.dataset.u]); });

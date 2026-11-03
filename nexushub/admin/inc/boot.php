@@ -89,7 +89,7 @@ function adm_head(string $title, string $active = ''): void
 <title><?= e($title) ?> | پنل مدیریت <?= e(setting('site_title')) ?></title>
 <link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
-<link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">
 <style><?= theme_css_vars() ?></style>
 </head>
 <body class="adm-body">

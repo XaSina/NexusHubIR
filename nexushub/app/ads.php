@@ -42,16 +42,16 @@ function ad_slot(string $position): string
 
     if ($position === 'popup') {
         $a = $ads[0];
-        return '<div class="ad-popup" data-id="' . (int) $a['id'] . '" data-delay="' . (int) $a['popup_delay'] . '" data-freq="' . (int) $a['popup_freq'] . '" hidden>'
-            . '<div class="ad-popup-backdrop" data-close></div><div class="ad-popup-box"><button class="ad-close" data-close aria-label="بستن">' . icon('close', 18) . '</button>' . $inner . '</div></div>';
+        return '<div class="nxp-popup" data-id="' . (int) $a['id'] . '" data-delay="' . (int) $a['popup_delay'] . '" data-freq="' . (int) $a['popup_freq'] . '" hidden>'
+            . '<div class="nxp-popup-backdrop" data-close></div><div class="nxp-popup-box"><button class="nxp-close" data-close aria-label="بستن">' . icon('close', 18) . '</button>' . $inner . '</div></div>';
     }
     if ($position === 'floating') {
         $a = $ads[0];
-        return '<div class="ad-floating" data-id="' . (int) $a['id'] . '" hidden><button class="ad-close" data-close aria-label="بستن">' . icon('close', 16) . '</button>' . $inner . '</div>';
+        return '<div class="nxp-floating" data-id="' . (int) $a['id'] . '" hidden><button class="nxp-close" data-close aria-label="بستن">' . icon('close', 16) . '</button>' . $inner . '</div>';
     }
     $stack = in_array($position, ['sidebar'], true);
     $rotate = !$stack && count($ads) > 1;
-    return $shop . '<div class="ad-slot ad-pos-' . e($position) . ($rotate ? ' ad-rotate' : '') . '" data-reveal>' . $inner . '</div>';
+    return $shop . '<div class="nxp-slot nxp-pos-' . e($position) . ($rotate ? ' nxp-rotate' : '') . '" data-reveal>' . $inner . '</div>';
 }
 
 function render_ad(array $a, bool $preview = false): string
@@ -68,43 +68,43 @@ function render_ad(array $a, bool $preview = false): string
     $label = !empty($a['no_label']) ? '' : (string) setting('ad_label', 'تبلیغ');
 
     $deco = match ($theme) {
-        'fire' => '<span class="ad-embers" aria-hidden="true">' . str_repeat('<i></i>', 10) . '</span>',
-        'aurora' => '<span class="ad-aurora" aria-hidden="true"><i></i><i></i><i></i></span>',
-        'glitch' => '<span class="ad-scan" aria-hidden="true"></span>',
-        'holo' => '<span class="ad-holo" aria-hidden="true"></span>',
-        'glass' => '<span class="ad-shine" aria-hidden="true"></span>',
-        'spotlight' => '<span class="ad-spot" aria-hidden="true"></span>',
+        'fire' => '<span class="nxp-embers" aria-hidden="true">' . str_repeat('<i></i>', 10) . '</span>',
+        'aurora' => '<span class="nxp-aurora" aria-hidden="true"><i></i><i></i><i></i></span>',
+        'glitch' => '<span class="nxp-scan" aria-hidden="true"></span>',
+        'holo' => '<span class="nxp-holo" aria-hidden="true"></span>',
+        'glass' => '<span class="nxp-shine" aria-hidden="true"></span>',
+        'spotlight' => '<span class="nxp-spot" aria-hidden="true"></span>',
         default => '',
     };
-    $ribbon = ($theme === 'ribbon' || !empty($a['badge'])) ? '<span class="ad-ribbon">' . e($a['badge'] ?: 'ویژه') . '</span>' : '';
+    $ribbon = ($theme === 'ribbon' || !empty($a['badge'])) ? '<span class="nxp-ribbon">' . e($a['badge'] ?: 'ویژه') . '</span>' : '';
     $device = $a['device'] ?? 'all';
-    $cls = 'ad ad-theme-' . $theme . ' ad-fmt-' . $format . ($device !== 'all' ? ' only-' . $device : '');
-    $out = '<div class="' . $cls . '" style="--ad:' . $accent . ';--ad-rgb:' . hex_to_rgb($accent) . '" data-ad="' . $id . '">';
+    $cls = 'nxp nxp-theme-' . $theme . ' nxp-fmt-' . $format . ($device !== 'all' ? ' only-' . $device : '');
+    $out = '<div class="' . $cls . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '" data-nxp="' . $id . '">';
     $out .= $deco . $ribbon;
-    if ($label !== '') $out .= '<span class="ad-label">' . e($label) . '</span>';
+    if ($label !== '') $out .= '<span class="nxp-label">' . e($label) . '</span>';
 
     if ($format === 'html') {
-        $out .= '<div class="ad-html">' . ($a['html'] ?? '') . '</div>';
+        $out .= '<div class="nxp-html">' . ($a['html'] ?? '') . '</div>';
     } elseif ($format === 'image') {
         $img = media_url($a['image'] ?? '');
-        $out .= '<a class="ad-inner" href="' . e($href) . '"' . $target . ' rel="sponsored noopener">'
-            . ($img ? '<img class="ad-banner" src="' . e($img) . '" alt="' . e($a['heading'] ?: $a['title']) . '" loading="lazy">' : '<span class="ad-noimg">تصویر بنر را انتخاب کنید</span>')
+        $out .= '<a class="nxp-inner" href="' . e($href) . '"' . $target . ' rel="nofollow noopener">'
+            . ($img ? '<img class="nxp-banner" src="' . e($img) . '" alt="' . e($a['heading'] ?: $a['title']) . '" loading="lazy">' : '<span class="nxp-noimg">تصویر بنر را انتخاب کنید</span>')
             . '</a>';
     } else {
         $img = media_url($a['image'] ?? '');
         $heading = $a['heading'] ?: $a['title'];
-        $out .= '<a class="ad-inner" href="' . e($href) . '"' . $target . ' rel="sponsored noopener">';
-        if ($img) $out .= '<span class="ad-thumb"><img src="' . e($img) . '" alt="" loading="lazy"></span>';
-        $out .= '<span class="ad-content">';
-        $out .= '<span class="ad-head">' . (!empty($a['emoji']) ? '<span class="ad-emoji">' . e($a['emoji']) . '</span>' : '')
-            . '<strong class="ad-title"' . ($theme === 'glitch' ? ' data-text="' . e($heading) . '"' : '') . '>' . e($heading) . '</strong></span>';
-        if (!empty($a['body'])) $out .= '<span class="ad-text">' . nl2br(e($a['body'])) . '</span>';
+        $out .= '<a class="nxp-inner" href="' . e($href) . '"' . $target . ' rel="nofollow noopener">';
+        if ($img) $out .= '<span class="nxp-thumb"><img src="' . e($img) . '" alt="" loading="lazy"></span>';
+        $out .= '<span class="nxp-content">';
+        $out .= '<span class="nxp-head">' . (!empty($a['emoji']) ? '<span class="nxp-emoji">' . e($a['emoji']) . '</span>' : '')
+            . '<strong class="nxp-title"' . ($theme === 'glitch' ? ' data-text="' . e($heading) . '"' : '') . '>' . e($heading) . '</strong></span>';
+        if (!empty($a['body'])) $out .= '<span class="nxp-text">' . nl2br(e($a['body'])) . '</span>';
         if (!empty($a['countdown']) && !empty($a['end_at'])) {
-            $out .= '<span class="ad-countdown" data-end="' . e(date('c', strtotime($a['end_at']))) . '">'
+            $out .= '<span class="nxp-countdown" data-end="' . e(date('c', strtotime($a['end_at']))) . '">'
                 . '<b data-u="d">۰</b><small>روز</small><b data-u="h">۰</b><small>ساعت</small><b data-u="m">۰</b><small>دقیقه</small><b data-u="s">۰</b><small>ثانیه</small></span>';
         }
         $out .= '</span>';
-        if (!empty($a['button_text'])) $out .= '<span class="ad-btn">' . e($a['button_text']) . ' ' . icon('arrow-left', 16) . '</span>';
+        if (!empty($a['button_text'])) $out .= '<span class="nxp-btn">' . e($a['button_text']) . ' ' . icon('arrow-left', 16) . '</span>';
         $out .= '</a>';
     }
     return $out . '</div>';
@@ -135,5 +135,5 @@ function shop_banner_slot(string $position): string
     if (!shop_on() || !setting_on('shop_banner_on') || !isset(shop_banner_places()[$position])) return '';
     $places ??= array_filter(array_map('trim', explode(',', (string) setting('shop_banner_places'))));
     if (!in_array($position, $places, true)) return '';
-    return '<div class="ad-slot ad-pos-' . e($position) . ' shop-promo" data-reveal>' . render_ad(shop_banner_ad(), true) . '</div>';
+    return '<div class="nxp-slot nxp-pos-' . e($position) . ' shop-promo" data-reveal>' . render_ad(shop_banner_ad(), true) . '</div>';
 }

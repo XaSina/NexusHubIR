@@ -3,7 +3,8 @@
 $r = shop_rates();
 $member = current_member();
 ?>
-<section class="container shop-hero glass">
+<section class="container shop-top">
+<div class="shop-hero glass">
     <div class="sh-orbs" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="sh-grid" aria-hidden="true"></div>
     <div class="sh-text">
@@ -35,6 +36,7 @@ $member = current_member();
             <span><?= icon('support', 17) ?> پشتیبانی واقعی</span>
         </div>
     </div>
+</div>
 </section>
 
 <?php if ($scats): ?>

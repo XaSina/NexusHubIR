@@ -41,13 +41,13 @@ adm_head('مدیریت تبلیغات', 'ads');
         <a class="abtn abtn-primary" href="ad-edit.php<?= $pos ? '?pos=' . e($pos) : '' ?>"><?= adm_icon('plus', 18) ?> تبلیغ جدید</a>
     </div>
     <?php if (!$list): ?><div class="empty-state"><span>📢</span>تبلیغی در این بخش وجود ندارد.</div><?php endif; ?>
-    <div class="ad-cards">
+    <div class="nxp-cards">
         <?php foreach ($list as $a):
             $live = $a['is_active'] && (!$a['start_at'] || $a['start_at'] <= now()) && (!$a['end_at'] || $a['end_at'] >= now());
             $ctr = $a['impressions'] ? $a['clicks'] / $a['impressions'] * 100 : 0; ?>
-            <div class="ad-card" style="<?= $a['is_active'] ? '' : 'opacity:.6' ?>">
-                <div class="ad-prev"><?= render_ad($a, true) ?></div>
-                <div class="ad-meta">
+            <div class="nxp-card" style="<?= $a['is_active'] ? '' : 'opacity:.6' ?>">
+                <div class="nxp-prev"><?= render_ad($a, true) ?></div>
+                <div class="nxp-meta">
                     <div class="row-flex" style="justify-content:space-between">
                         <h4><?= e($a['title']) ?></h4>
                         <?= $live ? '<span class="badge b-ok">● در حال نمایش</span>' : ($a['is_active'] ? '<span class="badge b-warn">خارج از بازه زمانی</span>' : '<span class="badge b-muted">غیرفعال</span>') ?>
@@ -57,7 +57,7 @@ adm_head('مدیریت تبلیغات', 'ads');
                         <span class="badge b-info"><?= e(ad_themes()[$a['theme']]['name'] ?? $a['theme']) ?></span>
                         <?php if ($a['device'] !== 'all'): ?><span class="badge"><?= $a['device'] === 'mobile' ? '📱 موبایل' : '🖥 دسکتاپ' ?></span><?php endif; ?>
                     </div>
-                    <div class="ad-stats">
+                    <div class="nxp-stats">
                         <span>نمایش: <b><?= fa_num(number_format((int) $a['impressions'])) ?></b></span>
                         <span>کلیک: <b><?= fa_num(number_format((int) $a['clicks'])) ?></b></span>
                         <span>CTR: <b class="ctr"><?= fa_num(number_format($ctr, 2)) ?>٪</b></span>
@@ -65,7 +65,7 @@ adm_head('مدیریت تبلیغات', 'ads');
                     <?php if ($a['start_at'] || $a['end_at']): ?>
                         <div class="small muted"><?= icon('calendar', 13) ?> <?= $a['start_at'] ? jdate('j F H:i', $a['start_at']) : 'از الان' ?> ← <?= $a['end_at'] ? jdate('j F Y H:i', $a['end_at']) : 'نامحدود' ?></div>
                     <?php endif; ?>
-                    <form method="post" class="ad-actions">
+                    <form method="post" class="nxp-actions">
                         <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
                         <a class="abtn abtn-primary abtn-xs" href="ad-edit.php?id=<?= (int) $a['id'] ?>"><?= adm_icon('edit', 14) ?> ویرایش</a>
                         <button class="abtn <?= $a['is_active'] ? 'abtn-ghost' : 'abtn-ok' ?> abtn-xs" name="act" value="toggle"><?= $a['is_active'] ? 'غیرفعال' : 'فعال' ?> کن</button>

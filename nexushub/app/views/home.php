@@ -178,7 +178,7 @@ case 'shop':
     $shopItems = array_slice($shopItems, 0, 4);
     if (!$shopItems && !setting_on('shop_banner_on')) break; ?>
 <section class="container home-shop">
-    <?php if (setting_on('shop_banner_on')): ?><div class="ad-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
+    <?php if (setting_on('shop_banner_on')): ?><div class="nxp-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
     <?php if ($shopItems): ?>
     <div class="sec-head" data-reveal>
         <h2 class="sec-title"><span class="sec-icon"><?= icon('bag', 20) ?></span> <?= e(setting('shop_title')) ?></h2>

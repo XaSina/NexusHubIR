@@ -52,10 +52,10 @@ adm_head('دسته‌های فروشگاه', 'products');
                     <td class="ltr"><?= e($x['slug']) ?></td>
                     <td><?= fa_num((string) $x['n']) ?></td>
                     <td><form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $x['id'] ?>"><button class="badge <?= $x['is_active'] ? 'b-ok' : 'b-muted' ?>" name="act" value="toggle" style="cursor:pointer"><?= $x['is_active'] ? '● نمایش' : 'مخفی' ?></button></form></td>
-                    <td class="actions">
+                    <td><div class="actions">
                         <a class="adm-ib" href="?edit=<?= (int) $x['id'] ?>" title="ویرایش"><?= adm_icon('edit', 16) ?></a>
                         <form method="post" onsubmit="return confirm('دسته حذف شود؟')" style="display:inline"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $x['id'] ?>"><button class="adm-ib danger" name="act" value="delete" title="حذف"><?= adm_icon('trash', 16) ?></button></form>
-                    </td>
+                    </div></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

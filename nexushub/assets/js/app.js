@@ -183,7 +183,7 @@
             el.addEventListener('mouseleave', function () { el.style.transform = ''; });
         });
     }
-    $$('.ad-theme-spotlight').forEach(function (el) {
+    $$('.nxp-theme-spotlight').forEach(function (el) {
         el.addEventListener('mousemove', function (e) {
             var r = el.getBoundingClientRect();
             el.style.setProperty('--mx', (e.clientX - r.left) + 'px'); el.style.setProperty('--my', (e.clientY - r.top) + 'px');
@@ -626,13 +626,13 @@
     })();
 
     /* ---------- Ads ---------- */
-    $$('.ad-rotate').forEach(function (slot) {
-        var ads = $$(':scope > .ad', slot), i = 0;
+    $$('.nxp-rotate').forEach(function (slot) {
+        var ads = $$(':scope > .nxp', slot), i = 0;
         if (ads.length < 2) return;
         ads[0].classList.add('on');
         setInterval(function () { ads[i].classList.remove('on'); i = (i + 1) % ads.length; ads[i].classList.add('on'); }, 6500);
     });
-    var popup = $('.ad-popup');
+    var popup = $('.nxp-popup');
     if (popup) {
         var pk = 'nx_pop_' + popup.dataset.id, lastShown = parseInt(store.get(pk) || '0', 10), freq = parseInt(popup.dataset.freq, 10) * 3600000;
         if (Date.now() - lastShown > freq) {
@@ -640,13 +640,13 @@
         }
         $$('[data-close]', popup).forEach(function (b) { b.addEventListener('click', function () { popup.hidden = true; }); });
     }
-    var fl = $('.ad-floating');
+    var fl = $('.nxp-floating');
     if (fl) {
         var fk = 'nx_float_' + fl.dataset.id;
         if (!store.sget(fk)) setTimeout(function () { fl.hidden = false; }, 2500);
         $('[data-close]', fl).addEventListener('click', function () { fl.hidden = true; store.sset(fk, 1); });
     }
-    var cds = $$('.ad-countdown');
+    var cds = $$('.nxp-countdown');
     if (cds.length) {
         var tick = function () {
             cds.forEach(function (c) {

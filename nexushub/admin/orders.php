@@ -60,7 +60,7 @@ adm_head('سفارش‌ها', 'orders');
                     <td><b><?= money((int) $o['total']) ?></b></td>
                     <td><?= order_badge($o['status']) ?><?= $o['receipt'] && $o['status'] === 'reviewing' ? ' <span class="badge b-info">🧾 فیش</span>' : '' ?></td>
                     <td class="hide-m"><small><?= jago($o['updated_at']) ?></small></td>
-                    <td class="actions"><a class="abtn abtn-<?= $o['status'] === 'reviewing' ? 'primary' : 'ghost' ?> abtn-xs" href="order-view.php?id=<?= (int) $o['id'] ?>"><?= $o['status'] === 'reviewing' ? 'بررسی فیش' : 'مشاهده' ?></a></td>
+                    <td><div class="actions"><a class="abtn abtn-<?= $o['status'] === 'reviewing' ? 'primary' : 'ghost' ?> abtn-xs" href="order-view.php?id=<?= (int) $o['id'] ?>"><?= $o['status'] === 'reviewing' ? 'بررسی فیش' : 'مشاهده' ?></a></div></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

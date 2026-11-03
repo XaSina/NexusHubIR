@@ -55,7 +55,7 @@ switch ($_POST['action'] ?? '') {
             'end_at' => jalali_to_datetime((string) input('end_at')) ?: date('Y-m-d H:i:s', strtotime('+3 days')),
         ];
         $html = render_ad($a, true);
-        if (input('position') === 'popup') $html = '<div class="ad-popup-box">' . $html . '</div>';
+        if (input('position') === 'popup') $html = '<div class="nxp-popup-box">' . $html . '</div>';
         json_out(['ok' => true, 'html' => $html]);
 
     case 'telegram_test':

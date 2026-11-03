@@ -86,7 +86,7 @@ $jsCfg['cart'] = $cartN;
 <link rel="apple-touch-icon" href="<?= e(url('assets/img/icon-192.png')) ?>">
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
-<link rel="stylesheet" href="<?= e(asset('css/ads.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">
 <?php if ($shopOn || $me): ?><link rel="stylesheet" href="<?= e(asset('css/shop.css')) ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <style><?= theme_css_vars() ?></style>
