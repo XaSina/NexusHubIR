@@ -4,7 +4,7 @@ require_cap('*');
 
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
     'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
-    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright',
+    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_rss_link',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu'];
 
 if (is_post()) {
@@ -207,6 +207,7 @@ adm_head('ظاهر سایت', 'appearance');
             <div class="card-head"><h3>📝 فوتر</h3></div>
             <?= f_textarea('footer_text', 'متن درباره در فوتر', $s['footer_text'], ['rows' => 4]) ?>
             <?= f_text('copyright', 'متن کپی‌رایت', $s['copyright']) ?>
+            <?= f_switch('show_rss_link', 'نمایش لینک «خوراک RSS» در فوتر', setting_on('show_rss_link'), 'فقط لینک فوتر را پنهان می‌کند؛ خوراک در آدرس /feed برای ربات‌ها و اپ‌های خبرخوان فعال می‌ماند') ?>
         </div>
     </div>
 </div>

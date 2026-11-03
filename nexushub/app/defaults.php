@@ -17,6 +17,7 @@ function default_settings(): array
         'posts_per_page' => '12',
         'footer_text' => 'NEXUS | HUB — محتوای روزانه، کاربردی و متفاوت 🔥 به کامیونیتی NEXUS بپیوندید.',
         'copyright' => 'تمامی حقوق برای NEXUS | HUB محفوظ است.',
+        'show_rss_link' => '1',
 
         // شبکه‌های اجتماعی
         'social_telegram' => 'https://t.me/NexusHubIR',

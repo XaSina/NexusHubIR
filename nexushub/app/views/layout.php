@@ -193,7 +193,7 @@ $me = current_member();
                 <li><a href="<?= e(url('archive')) ?>">همه اخبار</a></li>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
-                <li><a href="<?= e(url('feed')) ?>">خوراک RSS</a></li>
+                <?php if (setting_on('show_rss_link')): ?><li><a href="<?= e(url('feed')) ?>">خوراک RSS</a></li><?php endif; ?>
             </ul>
         </div>
         <div class="f-cta glass">
