@@ -97,7 +97,9 @@
     var cv = $('#bgCanvas');
     if (cv && !reduce) {
         var ctx = cv.getContext('2d');
-        var W, H, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [], cols = [], running = true;
+        // phones/tablets: low-res canvas, fewer particles, 30fps, paused while scrolling
+        var lite = window.matchMedia('(hover: none), (max-width: 900px)').matches;
+        var W, H, dpr = lite ? 1 : Math.min(window.devicePixelRatio || 1, 2), parts = [], cols = [], running = true, scrolling = false, scrollT;
         var hexToRgb = function (h) { h = h.replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
         var pc = hexToRgb(NX.primary || '#ff1f3d'), sc = hexToRgb(NX.secondary || '#ff7a3d');
         var mouse = { x: -999, y: -999 };
@@ -107,7 +109,7 @@
             if (NX.bg === 'matrix') {
                 cols = []; for (var i = 0; i < Math.ceil(W / 18); i++) cols.push(Math.random() * -H);
             } else {
-                var n = Math.min(90, Math.floor(W * H / 16000));
+                var n = Math.min(lite ? 34 : 90, Math.floor(W * H / (lite ? 20000 : 16000)));
                 parts = [];
                 for (var j = 0; j < n; j++) parts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, r: Math.random() * 1.8 + .6, c: Math.random() > .7 ? sc : pc });
             }
@@ -148,13 +150,15 @@
         function loop(t) {
             if (!running) return;
             requestAnimationFrame(loop);
+            if (scrolling) return;                       // free the GPU while the user scrolls
             if (NX.bg === 'matrix') { if (t - last < 55) return; last = t; drawMatrix(); }
-            else drawParticles();
+            else { if (lite && t - last < 33) return; last = t; drawParticles(); }
         }
         size();
         window.addEventListener('resize', function () { clearTimeout(cv._t); cv._t = setTimeout(size, 200); });
         window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
         document.addEventListener('visibilitychange', function () { running = !document.hidden; if (running) requestAnimationFrame(loop); });
+        if (lite) window.addEventListener('scroll', function () { scrolling = true; clearTimeout(scrollT); scrollT = setTimeout(function () { scrolling = false; }, 160); }, { passive: true });
         requestAnimationFrame(loop);
     }
 
@@ -201,7 +205,13 @@
         if (toTop) { toTop.classList.toggle('show', y > 500); if (ring) ring.style.setProperty('--off', 132 - 132 * (h > 0 ? y / h : 0)); }
         if (par && !reduce && y < 900) par.style.transform = 'translateY(' + (y * .18) + 'px) scale(1.05)';
     }
-    window.addEventListener('scroll', function () { requestAnimationFrame(onScroll); }, { passive: true });
+    // at most one scroll update per frame (was queuing a callback on every scroll event)
+    var scrollTicking = false;
+    window.addEventListener('scroll', function () {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(function () { scrollTicking = false; onScroll(); });
+    }, { passive: true });
     onScroll();
     if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 

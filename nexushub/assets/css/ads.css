@@ -141,3 +141,17 @@
     .ad-floating .ad-inner { flex-wrap: nowrap; }
     .ad-floating .ad-thumb, .ad-floating .ad-text { display: none; }
 }
+
+
+/* Phones & tablets: no backdrop blur / blur filters / blend modes / box-shadow pulses (scroll performance) */
+@media (hover: none), (max-width: 900px) {
+    .ad, .ad-label, .ad-popup-backdrop, .ad-theme-neon, .ad-theme-glass { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    .ad-theme-neon { animation: none; box-shadow: 0 0 18px rgba(var(--ad-rgb), .5), inset 0 0 14px rgba(var(--ad-rgb), .2); background: rgba(var(--surface-rgb), .95); }
+    .ad-theme-glass { background: linear-gradient(135deg, rgba(var(--ad-rgb), .2), rgba(var(--surface-rgb), .95)); }
+    .ad-aurora { filter: none; }
+    .ad-aurora i { mix-blend-mode: normal; background: radial-gradient(circle, rgba(var(--ad-rgb), .45), transparent 65%) !important; }
+    .ad-aurora i:nth-child(2) { background: radial-gradient(circle, rgba(0,225,255,.3), transparent 65%) !important; }
+    .ad-aurora i:nth-child(3) { background: radial-gradient(circle, rgba(177,77,255,.32), transparent 65%) !important; }
+    .ad-holo { mix-blend-mode: normal; opacity: .25; animation: none; }
+    .ad-theme-flow .ad-title { animation: none; }
+}

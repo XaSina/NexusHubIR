@@ -769,8 +769,8 @@ body.has-noise::after {
     box-shadow: 0 30px 70px -20px rgba(var(--primary-rgb), .55), 0 0 0 1px rgba(255,255,255,.12) inset;
     animation: mcardIn .9s var(--ease) .55s both; /* starts after the page warp has revealed */
 }
-/* 2D only: a 3D rotation with preserve-3d broke child clipping on mobile and tore the card apart */
-@keyframes mcardIn { from { opacity: 0; transform: translateY(26px) scale(.94); } }
+/* fade + rise only: 3D rotation (preserve-3d) and scale() both left phones painting a torn / partial card */
+@keyframes mcardIn { from { opacity: 0; transform: translateY(22px); } }
 .mcard::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .35; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask: linear-gradient(135deg, #000, transparent 70%); mask: linear-gradient(135deg, #000, transparent 70%); }
 .mcard-holo { position: absolute; top: 0; bottom: 0; left: -100%; width: 300%; z-index: 1; pointer-events: none; opacity: .2; will-change: transform; background: linear-gradient(115deg, transparent 38%, rgba(255,0,170,.65) 44%, rgba(0,255,255,.6) 50%, rgba(255,255,0,.55) 55%, transparent 61%); animation: holoMove 7s ease-in-out infinite alternate; }
 @keyframes holoMove { from { transform: translateX(-28%); } to { transform: translateX(28%); } }
@@ -824,4 +824,33 @@ body.has-noise::after {
     .acc-stat b { font-size: 1.1rem; }
     .mcard { padding: 18px 20px; border-radius: 18px; }
     .mcard-chip { margin-top: 10px; width: 38px; height: 28px; }
+}
+
+
+/* ==========================================================================
+   Phones & tablets: smooth scrolling
+   backdrop-filter re-blurs the animated background behind every glass card on every
+   frame, and blurred/animated full-screen layers are expensive on mobile GPUs. Desktop
+   keeps every effect; touch devices get the same look with near-opaque glass.
+   ========================================================================== */
+@media (hover: none), (max-width: 900px) {
+    .glass, .chip, .pg-num, .pg-btn, .pg-dots, .to-top, .drawer-backdrop, .search-overlay, .ph-search, .so-field, .btn-account {
+        -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    }
+    .glass { background: linear-gradient(160deg, rgba(var(--surface-rgb), .95), rgba(var(--surface-rgb), .9)); }
+    .theme-light .glass { background: linear-gradient(160deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .93)); }
+    .site-header .header-inner { background: rgba(var(--surface-rgb), .96); }
+    .search-overlay { background: rgba(var(--bg-rgb), .97); }
+    .drawer-panel { background: rgb(var(--surface-rgb)); }
+    .to-top, .pg-num, .pg-btn { background: rgb(var(--surface-rgb)); }
+    /* background: static soft glows instead of huge blurred moving blobs */
+    .bg-blob { filter: none; animation: none; opacity: .35; will-change: auto; }
+    .bg-aurora { filter: none; animation: none; opacity: .6; }
+    .bg-grid { animation: none; }
+    body.has-noise::after { display: none; }
+    /* repaint-every-frame pulses */
+    .chip-hot { animation: none; box-shadow: 0 0 12px rgba(255,31,61,.45); }
+    .mcard-holo { animation: none; transform: translateX(10%); }
+    .pcard-card, .trend-item { will-change: auto; }
+    .card-shine { display: none; }
 }
