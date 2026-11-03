@@ -707,3 +707,10 @@ body.has-noise::after {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     .ticker-move { animation: ticker 60s linear infinite !important; animation-iteration-count: infinite !important; animation-duration: 60s !important; }
 }
+
+/* فاصله محتوای صفحات لیست (دسته، برچسب، آرشیو، جستجو، صفحات) از کادر بالایی */
+.page-hero + .layout-2col { margin-top: 30px; }
+.page-hero + .layout-2col .sidebar { margin-top: 0; }
+.pagination + *, .grid-cards + .pagination { margin-top: 36px; }
+@media (max-width: 1020px) { .page-hero + .layout-2col .sidebar { margin-top: 30px; } }
+@media (max-width: 760px) { .page-hero + .layout-2col { margin-top: 22px; } }
