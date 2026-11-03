@@ -88,9 +88,17 @@ case 'hero': if (!$featured) break; ?>
 <?php break;
 
 case 'latest':
-    $latest = get_posts(['limit' => (int) setting('posts_per_page', 12), 'exclude' => $heroIds]);
+    $lmode = (string) setting('latest_mode', 'count');
+    $lmax = max(3, min(60, (int) setting('latest_count', setting('posts_per_page', 12))));
+    $lsince = match ($lmode) {
+        'hours' => date('Y-m-d H:i:s', time() - 3600 * max(1, (int) setting('latest_hours', 72))),
+        'since' => (string) setting('latest_since') ?: null,
+        default => null,
+    };
+    $latest = get_posts(['limit' => $lmax, 'exclude' => $heroIds] + ($lsince ? ['since' => $lsince] : []));
+    if (!$latest) $latest = get_posts(['limit' => $lmax, 'exclude' => $heroIds]);
     if (!$latest) $latest = get_posts(['limit' => 9]); ?>
-<section class="container layout-2col">
+<section class="container layout-2col home-latest">
     <div class="col-main">
         <div class="sec-head" data-reveal>
             <h2 class="sec-title"><span class="sec-icon"><?= icon('bolt', 20) ?></span> آخرین اخبار</h2>
@@ -178,7 +186,7 @@ case 'shop':
     $shopItems = array_slice($shopItems, 0, 4);
     if (!$shopItems && !setting_on('shop_banner_on')) break; ?>
 <section class="container home-shop">
-    <?php if (setting_on('shop_banner_on')): ?><div class="nxp-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
+    <?php if (setting_on('shop_banner_on') && in_array('home_shop', array_map('trim', explode(',', (string) setting('shop_banner_places'))), true)): ?><div class="nxp-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
     <?php if ($shopItems): ?>
     <div class="sec-head" data-reveal>
         <h2 class="sec-title"><span class="sec-icon"><?= icon('bag', 20) ?></span> <?= e(setting('shop_title')) ?></h2>

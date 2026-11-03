@@ -160,7 +160,7 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
             <select name="places[]" multiple data-multi data-placeholder="هیچ جایگاهی انتخاب نشده">
                 <?php foreach (shop_banner_places() as $k => $n): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($n) ?></option><?php endforeach; ?>
             </select></label>
-        <div class="alert alert-info small mt">🏠 بخش «فروشگاه» صفحه اصلی (بنر + محصولات ویژه) <?= $homeOn ? '<b>روشن</b> است' : '<b>خاموش</b> است' ?> — روشن/خاموش و ترتیبش از <a href="appearance.php">ظاهر سایت ← چیدمان صفحه اصلی</a>.</div>
+        <div class="alert alert-info small place-note">🏠 بخش «فروشگاه» صفحه اصلی (عنوان + محصولات ویژه) <?= $homeOn ? '<b>روشن</b> است' : '<b>خاموش</b> است' ?>؛ بنر فقط وقتی بالای آن می‌آید که «صفحه اصلی — بخش فروشگاه» را در لیست بالا انتخاب کنید. روشن/خاموش و ترتیب بخش از <a href="appearance.php">ظاهر سایت ← چیدمان صفحه اصلی</a>.</div>
         <input type="hidden" name="places[]" value="">
     </div>
     <div class="card mt">

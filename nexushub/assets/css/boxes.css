@@ -155,3 +155,19 @@
     .nxp-holo { mix-blend-mode: normal; opacity: .25; animation: none; }
     .nxp-theme-flow .nxp-title { animation: none; }
 }
+
+/* ---------- boxes adapt to the space they get (sidebar, narrow columns, phones) ---------- */
+.nxp-slot, .nxp-prev, .preview-stage, .theme-opt { container-type: inline-size; }
+@container (max-width: 560px) {
+    .nxp-inner { flex-direction: column; align-items: stretch; gap: 14px; padding: 20px; text-align: right; }
+    .nxp-content { width: 100%; }
+    .nxp-head { align-items: center; }
+    .nxp-title { font-size: 1.05rem; line-height: 1.7; }
+    .nxp-text { font-size: .86rem; }
+    .nxp-btn { width: 100%; justify-content: center; padding: 12px 18px; }
+    .nxp-thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .nxp-countdown { justify-content: flex-start; }
+}
+/* the corner ribbon never sits on top of the icon / title */
+.nxp:has(.nxp-ribbon) .nxp-head { padding-right: 46px; }
+.nxp:has(.nxp-ribbon) .nxp-fmt-image .nxp-inner, .nxp-fmt-image:has(.nxp-ribbon) .nxp-head { padding-right: 0; }

@@ -5,7 +5,8 @@ require_cap('*');
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
     'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_online',
-    'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu'];
+    'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
+    'latest_mode', 'latest_count', 'latest_hours', 'latest_since'];
 
 if (is_post()) {
     csrf_check();
@@ -21,6 +22,13 @@ if (is_post()) {
     foreach (['color_primary', 'color_secondary', 'color_bg'] as $ck) if (isset($save[$ck])) $save[$ck] = valid_hex($save[$ck], default_settings()[$ck]);
     if (!array_key_exists($save['theme_preset'] ?? '', theme_presets())) $save['theme_preset'] = 'nexus';
     foreach (['social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'announce_link'] as $lk) if (isset($save[$lk])) $save[$lk] = safe_link($save[$lk]);
+    // «آخرین اخبار» صفحه اصلی: تعداد ثابت، چند ساعت اخیر، یا از یک تاریخ
+    if (isset($save['latest_mode'])) {
+        $save['latest_mode'] = in_array($save['latest_mode'], ['count', 'hours', 'since'], true) ? $save['latest_mode'] : 'count';
+        $save['latest_count'] = (string) max(3, min(60, (int) en_num($save['latest_count'] ?? '12')));
+        $save['latest_hours'] = (string) max(1, min(24 * 90, (int) en_num($save['latest_hours'] ?? '72')));
+        $save['latest_since'] = ($save['latest_since'] ?? '') !== '' ? (string) (jalali_to_datetime((string) $save['latest_since']) ?: '') : '';
+    }
     foreach (['home_sections', 'menu'] as $jk) {
         if (isset($save[$jk])) {
             $j = json_decode($save[$jk], true);
@@ -110,6 +118,22 @@ adm_head('ظاهر سایت', 'appearance');
                 <label class="opt"><input type="radio" name="bg_effect" value="<?= $k ?>" <?= $s['bg_effect'] === $k ? 'checked' : '' ?>><b><?= $n ?></b><small><?= $d ?></small></label>
             <?php endforeach; ?>
         </div>
+    </div>
+    <div class="card mt">
+        <div class="card-head"><h3>📰 «آخرین اخبار» صفحه اصلی</h3><span class="muted small">چه خبرهایی در بخش آخرین اخبار بیایند</span></div>
+        <?php $lm = $s['latest_mode'] ?? 'count'; ?>
+        <div class="opt-grid">
+            <label class="opt"><input type="radio" name="latest_mode" value="count" <?= $lm === 'count' ? 'checked' : '' ?>><b>تعداد ثابت</b><small>همیشه چند خبر آخر</small></label>
+            <label class="opt"><input type="radio" name="latest_mode" value="hours" <?= $lm === 'hours' ? 'checked' : '' ?>><b>چند ساعت اخیر</b><small>مثلاً خبرهای ۷۲ ساعت گذشته</small></label>
+            <label class="opt"><input type="radio" name="latest_mode" value="since" <?= $lm === 'since' ? 'checked' : '' ?>><b>از یک تاریخ</b><small>خبرهای منتشرشده بعد از تاریخ دلخواه</small></label>
+        </div>
+        <div class="grid g3">
+            <?= f_text('latest_count', 'حداکثر تعداد خبر', (string) ($s['latest_count'] ?? '12'), ['type' => 'number', 'ltr' => true, 'min' => 3, 'max' => 60, 'hint' => 'در حالت «تعداد ثابت» دقیقاً همین تعداد؛ در دو حالت دیگر سقف تعداد']) ?>
+            <div class="af"><?= f_text('latest_hours', 'چند ساعت اخیر', (string) ($s['latest_hours'] ?? '72'), ['type' => 'number', 'ltr' => true, 'min' => 1, 'attrs' => 'id="latestHours"']) ?>
+                <div class="row-flex" style="gap:6px;margin-top:-6px"><?php foreach ([24 => '۲۴ ساعت', 48 => '۴۸ ساعت', 72 => '۷۲ ساعت', 168 => '۱ هفته'] as $h => $hl): ?><button type="button" class="abtn abtn-ghost abtn-xs" onclick="document.getElementById('latestHours').value=<?= $h ?>"><?= $hl ?></button><?php endforeach; ?></div></div>
+            <?= f_jdate('latest_since', 'از تاریخ (شمسی)', ($s['latest_since'] ?? '') ?: null, 'در حالت «از یک تاریخ»') ?>
+        </div>
+        <p class="muted small">اگر در بازه انتخابی هیچ خبری نباشد، برای خالی نماندن صفحه، آخرین خبرها نمایش داده می‌شوند.</p>
     </div>
     <div class="grid g2 mt">
         <div class="card">

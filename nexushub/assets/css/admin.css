@@ -674,3 +674,5 @@ select option, select optgroup { background: #15151c; color: #f2f2f6; }
 /* option cards are followed by their fields: keep some air between them */
 .opt-grid + .af, .opt-grid + label, .card .opt-grid { margin-bottom: 16px; }
 .rate-live + .abtn { margin-top: 4px; }
+.nsel-multi + .place-note, .place-note { margin-top: 16px; line-height: 2; padding: 12px 16px; }
+.af .nsel-multi { margin-top: 2px; }

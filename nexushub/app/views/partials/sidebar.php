@@ -5,7 +5,7 @@ if (count($trend) < 3) $trend = get_posts(['order' => 'views', 'limit' => 5]);
 $tags = popular_tags(16);
 $tgLink = safe_link((string) setting('social_telegram'));
 ?>
-<aside class="sidebar">
+<aside class="sidebar"><div class="sb-inner">
     <section class="widget glass" data-reveal>
         <h3 class="w-title"><?= icon('fire', 18) ?> داغ‌ترین‌ها</h3>
         <div class="rank-list">
@@ -34,4 +34,4 @@ $tgLink = safe_link((string) setting('social_telegram'));
         </div>
     </section>
     <?php endif; ?>
-</aside>
+</div></aside>
