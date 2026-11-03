@@ -284,7 +284,7 @@ body.has-noise::after {
 .pc-meta span { display: inline-flex; align-items: center; gap: 5px; }
 .pc-excerpt { color: var(--muted); font-size: .88rem; line-height: 1.9; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-.pcard-card { display: flex; flex-direction: column; overflow: hidden; transform-style: preserve-3d; transition: transform .5s var(--ease), box-shadow .5s; }
+.pcard-card { display: flex; flex-direction: column; overflow: hidden; transition: transform .5s var(--ease), box-shadow .5s; }
 .pcard-card:hover { box-shadow: 0 30px 70px -20px rgba(var(--primary-rgb), .45), var(--shadow); }
 .pcard-card .pc-media { position: relative; display: block; aspect-ratio: 16/10; overflow: hidden; margin: 8px 8px 0; border-radius: calc(var(--radius) - 6px); }
 .pcard-card .pc-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.45), transparent 50%); }
@@ -764,12 +764,13 @@ body.has-noise::after {
 .acc-hero > .mcard { width: 100%; height: auto; align-self: center; }
 .mcard {
     position: relative; aspect-ratio: 1.586; border-radius: 22px; padding: 24px 26px; overflow: hidden; isolation: isolate;
-    display: flex; flex-direction: column; color: #fff; transform-style: preserve-3d; transition: transform .5s var(--ease);
+    display: flex; flex-direction: column; color: #fff; transition: transform .5s var(--ease);
     background: radial-gradient(circle at 85% 10%, rgba(var(--primary-rgb), .75), transparent 45%), radial-gradient(circle at 5% 100%, rgba(var(--secondary-rgb), .45), transparent 45%), linear-gradient(135deg, #16040a, #050507 60%, #0c0206);
     box-shadow: 0 30px 70px -20px rgba(var(--primary-rgb), .55), 0 0 0 1px rgba(255,255,255,.12) inset;
-    animation: mcardIn 1s var(--ease) both;
+    animation: mcardIn .9s var(--ease) .55s both; /* starts after the page warp has revealed */
 }
-@keyframes mcardIn { from { opacity: 0; transform: perspective(900px) rotateY(-25deg) translateY(30px) scale(.9); } }
+/* 2D only: a 3D rotation with preserve-3d broke child clipping on mobile and tore the card apart */
+@keyframes mcardIn { from { opacity: 0; transform: translateY(26px) scale(.94); } }
 .mcard::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .35; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask: linear-gradient(135deg, #000, transparent 70%); mask: linear-gradient(135deg, #000, transparent 70%); }
 .mcard-holo { position: absolute; top: 0; bottom: 0; left: -100%; width: 300%; z-index: 1; pointer-events: none; opacity: .2; will-change: transform; background: linear-gradient(115deg, transparent 38%, rgba(255,0,170,.65) 44%, rgba(0,255,255,.6) 50%, rgba(255,255,0,.55) 55%, transparent 61%); animation: holoMove 7s ease-in-out infinite alternate; }
 @keyframes holoMove { from { transform: translateX(-28%); } to { transform: translateX(28%); } }
