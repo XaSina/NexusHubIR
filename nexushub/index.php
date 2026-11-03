@@ -16,6 +16,7 @@ function route_path(): string
 
 function page_out(string $tpl, array $data = [], array $meta = []): void
 {
+    track_online();
     $content = view($tpl, $data);
     echo view('layout', ['content' => $content, 'meta' => $meta, 'bodyClass' => $data['bodyClass'] ?? 'page-' . $tpl]);
 }

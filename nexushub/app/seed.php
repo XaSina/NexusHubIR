@@ -17,7 +17,7 @@ function seed_demo(int $authorId): void
     foreach ($cats as $i => [$name, $slug, $icon, $color, $desc]) {
         $catIds[$slug] = insert('categories', [
             'name' => $name, 'slug' => $slug, 'icon' => $icon, 'color' => $color, 'description' => $desc,
-            'sort_order' => $i, 'show_on_home' => 1, 'created_at' => now(),
+            'sort_order' => $i, 'show_on_home' => 1, 'show_in_header' => in_array($slug, ['game', 'tech', 'fun'], true) ? 1 : 0, 'created_at' => now(),
         ]);
     }
 

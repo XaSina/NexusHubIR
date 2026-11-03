@@ -26,6 +26,7 @@ $commentsOn = setting_on('comments_enabled') && $post['allow_comments'];
         <div class="post-head glass" data-reveal>
             <div class="post-chips">
                 <?php if ($post['cat_name']): ?><a class="chip" href="<?= e(url('category/' . rawurlencode($post['cat_slug']))) ?>" style="--c:<?= e($post['cat_color']) ?>"><?= e($post['cat_icon']) ?> <?= e($post['cat_name']) ?></a><?php endif; ?>
+                <?php if ($post['is_featured']): ?><span class="chip chip-feat">⭐ ویژه</span><?php endif; ?>
                 <?php if ($post['is_breaking']): ?><span class="chip chip-hot"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?>
             </div>
             <h1 class="post-title"><?= e($post['title']) ?></h1>

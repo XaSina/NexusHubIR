@@ -11,6 +11,7 @@ $excerpt = $p['excerpt'] ?: str_excerpt((string) $p['content'], 140);
     <a class="pc-media" href="<?= e($href) ?>" tabindex="-1"><?= cover_html($p, '', $i === 0) ?></a>
     <div class="pc-overlay">
         <?= $catChip ?>
+        <?php if (!empty($p['is_featured'])): ?><span class="chip chip-feat">⭐ ویژه</span><?php endif; ?>
         <?php if (!empty($p['is_breaking'])): ?><span class="chip chip-hot"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?>
         <h3 class="pc-title"><a href="<?= e($href) ?>"><?= e($p['title']) ?></a></h3>
         <p class="pc-excerpt"><?= e($excerpt) ?></p>

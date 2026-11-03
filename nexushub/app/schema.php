@@ -248,6 +248,14 @@ return [
   KEY `k_si_story` (`story_id`, `sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
+"CREATE TABLE IF NOT EXISTS `online` (
+  `sid` CHAR(40) NOT NULL,
+  `last_seen` INT UNSIGNED NOT NULL,
+  `is_member` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`sid`),
+  KEY `k_online_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
 "CREATE TABLE IF NOT EXISTS `login_attempts` (
   `ip` VARCHAR(45) NOT NULL,
   `attempts` INT NOT NULL DEFAULT 0,

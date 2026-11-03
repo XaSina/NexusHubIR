@@ -39,6 +39,61 @@
         return A.post('upload', fd, onProgress);
     };
 
+    /* ---------- Chunked upload (large videos) ---------- */
+    // piece size fits under the host's upload limit, so 500 MB works even on a 2 MB limit
+    A.chunkSize = function () {
+        var lim = +A.uploadLimit || 0, size = 8 * 1048576;
+        if (lim) size = Math.min(size, Math.floor(lim * 0.8));
+        return Math.max(256 * 1024, size);
+    };
+    A.uploadChunked = function (file, kind, onProgress, isCancelled) {
+        var size = A.chunkSize(), total = Math.max(1, Math.ceil(file.size / size)), uid = '';
+        var bytes = new Uint8Array(16); (window.crypto || window.msCrypto).getRandomValues(bytes);
+        bytes.forEach(function (b) { uid += ('0' + b.toString(16)).slice(-2); });
+        return new Promise(function (resolve) {
+            (function send(i, tries) {
+                if (isCancelled && isCancelled()) return resolve({ ok: false, error: 'آپلود لغو شد.', cancelled: true });
+                var fd = new FormData();
+                fd.append('chunk', file.slice(i * size, Math.min(file.size, (i + 1) * size)), 'chunk');
+                fd.append('uid', uid); fd.append('index', i); fd.append('total', total); fd.append('name', file.name); fd.append('kind', kind || 'post');
+                A.post('upload_chunk', fd, function (p) { onProgress && onProgress((i + p) / total); }).then(function (j) {
+                    if (!j.ok) return resolve(j);
+                    if (j.done) { onProgress && onProgress(1); return resolve(j); }
+                    send(i + 1, 0);
+                }, function () {
+                    if (tries < 3) return setTimeout(function () { send(i, tries + 1); }, 1500 * (tries + 1));   // flaky connection: retry the same piece
+                    resolve({ ok: false, error: 'ارتباط با سرور قطع شد؛ دوباره تلاش کنید.' });
+                });
+            })(0, 0);
+        });
+    };
+    // floating progress panel
+    A.progressBox = function (title) {
+        var box = document.createElement('div'); box.className = 'up-box';
+        box.innerHTML = '<div class="up-head"><b></b><button type="button" class="adm-ib" aria-label="لغو">✕</button></div><div class="progress"><i></i></div><small class="muted"></small>';
+        box.querySelector('b').textContent = title;
+        document.body.appendChild(box);
+        var cancelled = false;
+        box.querySelector('button').addEventListener('click', function () { cancelled = true; box.remove(); });
+        return {
+            set: function (p, mbDone, mbTotal) { box.querySelector('i').style.width = (p * 100) + '%'; box.querySelector('small').textContent = fa(Math.round(p * 100)) + '٪ · ' + fa(mbDone.toFixed(1)) + ' از ' + fa(mbTotal.toFixed(1)) + ' مگابایت'; },
+            done: function () { box.remove(); },
+            cancelled: function () { return cancelled; }
+        };
+    };
+    A.uploadVideo = function (file, kind) {
+        var mb = file.size / 1048576, max = kind === 'story' ? 100 : 500;
+        if (!/^video\/(mp4|webm|x-m4v)$/.test(file.type) && !/\.(mp4|webm|m4v)$/i.test(file.name)) { A.toast('فقط ویدیوهای MP4 یا WebM مجاز هستند.', 'error'); return Promise.resolve({ ok: false }); }
+        if (mb > max) { A.toast('حداکثر حجم ویدیو ' + fa(max) + ' مگابایت است (این فایل ' + fa(Math.round(mb)) + ' مگابایت است).', 'error'); return Promise.resolve({ ok: false }); }
+        var pb = A.progressBox('در حال آپلود: ' + file.name);
+        return A.uploadChunked(file, kind, function (p) { pb.set(p, mb * p, mb); }, pb.cancelled).then(function (j) {
+            pb.done();
+            if (!j.ok && !j.cancelled) A.toast(j.error || 'آپلود ناموفق بود.', 'error');
+            if (j.ok) A.toast('ویدیو آپلود شد ✅');
+            return j;
+        });
+    };
+
     /* ---------- Sidebar ---------- */
     var side = $('#admSide'), ov = $('#admOverlay');
     if ($('#admBurger')) $('#admBurger').addEventListener('click', function () { side.classList.add('open'); ov.classList.add('open'); });

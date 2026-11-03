@@ -224,11 +224,14 @@ body.has-noise::after {
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0 rgba(255,255,255,.8); animation: live 1.5s infinite; }
 @keyframes live { 70% { box-shadow: 0 0 0 9px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
 .ticker-track { flex: 1; overflow: hidden; -webkit-mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
-.ticker-move { display: inline-flex; white-space: nowrap; animation: ticker var(--speed, 40s) linear infinite; will-change: transform; }
-.ticker-move a { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 500; margin-left: 46px; }
+/* one copy that enters from the left edge and fully leaves at the right (no repeated headlines);
+   --tk-from / --tk-to are measured by app.js so a pass always starts and ends off-screen */
+.ticker-move { display: inline-flex; white-space: nowrap; animation: tickerRun var(--speed, 40s) linear infinite; will-change: transform; }
+.ticker-move a { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 500; }
+.ticker-move a + a { margin-right: 46px; }
 .ticker-move a .ic { color: var(--primary); }
 .ticker:hover .ticker-move { animation-play-state: paused; }
-@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(50%); } }
+@keyframes tickerRun { from { transform: translateX(var(--tk-from, -100%)); } to { transform: translateX(var(--tk-to, 100%)); } }
 
 /* ---------- Stories ---------- */
 .stories { margin-top: 22px; }
@@ -711,7 +714,7 @@ body.has-noise::after {
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
-    .ticker-move { animation: ticker 60s linear infinite !important; animation-iteration-count: infinite !important; animation-duration: 60s !important; }
+    .ticker-move { animation: tickerRun 60s linear infinite !important; animation-iteration-count: infinite !important; animation-duration: 60s !important; }
 }
 
 /* فاصله محتوای صفحات لیست (دسته، برچسب، آرشیو، جستجو، صفحات) از کادر بالایی */
@@ -907,3 +910,65 @@ button.story { background: none; border: 0; padding: 0; cursor: pointer; font: i
     .sv-frame { width: 100vw; height: 100dvh; border-radius: 0; }
     .sv-side { display: none; }
 }
+
+/* live online counter (top bar) */
+.tb-online { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; padding: 2px 10px; border-radius: 20px; background: rgba(61,220,132,.1); border: 1px solid rgba(61,220,132,.3); color: var(--text); }
+.tb-online i { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 8px #3ddc84; animation: rec 1.6s ease-in-out infinite; }
+.tb-online b { color: #3ddc84; font-variant-numeric: tabular-nums; }
+@keyframes rec { 50% { opacity: .35; } }
+@media (max-width: 760px) { .topbar-inner { justify-content: space-between; } }
+
+/* ==========================================================================
+   News video player
+   ========================================================================== */
+.nx-player { margin: 1.8em 0; border-radius: calc(var(--radius) - 2px); overflow: hidden; background: #000; border: 1px solid rgba(var(--primary-rgb), .3); box-shadow: var(--shadow), 0 0 40px -12px rgba(var(--primary-rgb), .5); }
+.np-stage { position: relative; aspect-ratio: 16 / 9; background: #000; outline: 0; }
+.np-stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; margin: 0; border-radius: 0; box-shadow: none; }
+.np-stage:fullscreen, .np-stage:-webkit-full-screen { aspect-ratio: auto; width: 100%; height: 100%; }
+.np-ui { position: absolute; inset: 0; pointer-events: none; }
+.np-ui > * { pointer-events: auto; }
+.np-big { position: absolute; left: 50%; top: 50%; width: 78px; height: 78px; margin: -39px 0 0 -39px; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 0; cursor: pointer;
+    background: var(--grad); box-shadow: 0 0 0 8px rgba(var(--primary-rgb), .25), 0 14px 40px rgba(0,0,0,.5); transition: transform .3s var(--ease), opacity .3s; }
+.np-big svg { width: 34px; height: 34px; margin-left: 4px; }
+.np-big:hover { transform: scale(1.08); }
+.np-playing .np-big { opacity: 0; transform: scale(.6); pointer-events: none; }
+.np-spin { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff; animation: spin .8s linear infinite; display: none; pointer-events: none !important; }
+.np-wait .np-spin { display: block; }
+.np-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 8px; background: linear-gradient(transparent, rgba(0,0,0,.85)); color: #fff; opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s; }
+.np-active .np-bar, .nx-player:not(.np-playing) .np-bar { opacity: 1; transform: none; }
+.np-playing:not(.np-active) .np-stage { cursor: none; }
+.np-progress { position: relative; height: 16px; cursor: pointer; display: flex; align-items: center; touch-action: none; outline: 0; }
+.np-progress::before { content: ""; position: absolute; left: 0; right: 0; height: 4px; border-radius: 4px; background: rgba(255,255,255,.25); transition: height .2s; }
+.np-progress:hover::before, .np-progress:hover .np-buf, .np-progress:hover .np-played { height: 6px; }
+.np-buf, .np-played { position: absolute; left: 0; height: 4px; border-radius: 4px; width: 0; transition: height .2s; }
+.np-buf { background: rgba(255,255,255,.35); }
+.np-played { background: var(--grad); box-shadow: 0 0 10px rgba(var(--primary-rgb), .8); }
+.np-thumb { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .5); transform: scale(0); transition: transform .2s; }
+.np-progress:hover .np-thumb, .np-progress:focus .np-thumb { transform: scale(1); }
+.np-tip { position: absolute; bottom: 20px; transform: translateX(-50%); padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.85); font-size: .72rem; opacity: 0; transition: opacity .15s; pointer-events: none; white-space: nowrap; }
+.np-progress:hover .np-tip { opacity: 1; }
+.np-row { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.np-btn { height: 36px; min-width: 36px; padding: 0 8px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: none; border: 0; cursor: pointer; font-weight: 800; font-size: .82rem; transition: background .2s; }
+.np-btn:hover { background: rgba(255,255,255,.14); }
+.np-time { font-size: .8rem; font-variant-numeric: tabular-nums; opacity: .9; margin: 0 6px; white-space: nowrap; }
+.np-time b { font-weight: 700; }
+.np-grow { flex: 1; }
+.np-vol { width: 80px; accent-color: var(--primary); }
+.np-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; background: rgba(var(--surface-rgb), .95); border-top: 1px solid var(--line); margin: 0 !important; text-align: right !important; }
+.np-info { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--text); font-size: .92rem; }
+.np-info .ic { color: var(--primary); }
+.np-info b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
+.np-info small { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+.prose .np-dl, .np-dl { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 12px; font-weight: 800; font-size: .88rem; color: #fff !important; border: 0 !important; background: var(--grad); box-shadow: 0 8px 22px -8px rgba(var(--primary-rgb), .9); transition: transform .25s var(--ease); }
+.np-dl .ic { transform: rotate(180deg); }
+.np-dl:hover { transform: translateY(-2px); }
+@media (max-width: 640px) {
+    .np-vol, .np-pip { display: none; }
+    .np-big { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+    .np-big svg { width: 28px; height: 28px; }
+    .np-foot { padding: 10px 12px; }
+    .np-dl { width: 100%; justify-content: center; }
+}
+.chip-feat { --c: #ffb800; color: #fff; }
+.theme-light .chip-feat { color: #6b4b00; }
+.slide-chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }

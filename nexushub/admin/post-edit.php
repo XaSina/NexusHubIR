@@ -149,7 +149,7 @@ adm_head($p['id'] ? 'ویرایش خبر' : 'افزودن خبر جدید', $p['
             <div class="card">
                 <div class="card-head"><h3><?= icon('sparkle', 18) ?> شورت‌کدها</h3></div>
                 <p class="small muted" style="margin:0">در متن خبر می‌توانید از این کدها استفاده کنید:</p>
-                <p class="small ltr" style="margin:6px 0 0;line-height:2.2">[telegram post="NexusHubIR/123"]<br>[aparat id="abc12"]<br>[youtube id="dQw4w9WgXcQ"]</p>
+                <p class="small ltr" style="margin:6px 0 0;line-height:2.2">[video src="uploads/…" title="…"]<br><small class="muted" style="font-family:Vazirmatn">↑ با دکمه‌ی «آپلود ویدیو» در نوار ابزار ساخته می‌شود (تا ۵۰۰ مگابایت)</small><br>[telegram post="NexusHubIR/123"]<br>[aparat id="abc12"]<br>[youtube id="dQw4w9WgXcQ"]</p>
             </div>
         </div>
     </div>

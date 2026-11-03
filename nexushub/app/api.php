@@ -72,6 +72,11 @@ switch ($seg[1] ?? '') {
             'message' => $status === 'approved' ? 'نظر شما منتشر شد 🎉' : 'نظر شما ثبت شد و پس از تایید نمایش داده می‌شود ✅',
         ]);
 
+    case 'ping':   // heartbeat from open pages: keeps the visitor "online" and returns the live count
+        track_online();
+        [$tot, $mem] = online_count();
+        json_out(['ok' => true, 'online' => max(1, $tot), 'online_fa' => fa_num((string) max(1, $tot))]);
+
     case 'story-view':
         $sid = (int) ($_POST['story_id'] ?? 0);
         $seen = $_SESSION['story_seen'] ?? [];

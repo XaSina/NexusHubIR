@@ -2,8 +2,12 @@
 $sections = setting_json('home_sections');
 if (!$sections) $sections = json_decode(default_settings()['home_sections'], true);
 $heroStyle = (string) setting('hero_style', 'magazine');
-$featured = get_posts(['featured' => 1, 'limit' => $heroStyle === 'grid' ? 3 : 5]);
-if (count($featured) < 3) $featured = get_posts(['limit' => 5]);
+// featured posts always come first in the top section; remaining slots are filled with the latest news
+$heroNeed = $heroStyle === 'grid' ? 3 : 5;
+$featured = get_posts(['featured' => 1, 'limit' => $heroNeed]);
+if (count($featured) < $heroNeed) {
+    $featured = array_merge($featured, get_posts(['limit' => $heroNeed - count($featured), 'exclude' => array_column($featured, 'id') ?: [0]]));
+}
 $heroIds = array_column($featured, 'id');
 $cats = get_categories(true);
 $tgLink = safe_link((string) setting('social_telegram'));
@@ -53,7 +57,7 @@ case 'hero': if (!$featured) break; ?>
                 <div class="slide<?= $i === 0 ? ' active' : '' ?>">
                     <?= cover_html($p, 'slide-img', $i === 0) ?>
                     <div class="slide-content">
-                        <?php if ($p['cat_name']): ?><a class="chip" href="<?= e(url('category/' . rawurlencode($p['cat_slug']))) ?>" style="--c:<?= e($p['cat_color']) ?>"><?= e($p['cat_icon']) ?> <?= e($p['cat_name']) ?></a><?php endif; ?>
+                        <span class="slide-chips"><?php if ($p['cat_name']): ?><a class="chip" href="<?= e(url('category/' . rawurlencode($p['cat_slug']))) ?>" style="--c:<?= e($p['cat_color']) ?>"><?= e($p['cat_icon']) ?> <?= e($p['cat_name']) ?></a><?php endif; ?><?php if (!empty($p['is_featured'])): ?> <span class="chip chip-feat">⭐ ویژه</span><?php endif; ?></span>
                         <h2><a href="<?= e(post_url($p)) ?>"><?= e($p['title']) ?></a></h2>
                         <p><?= e($p['excerpt'] ?: str_excerpt((string) $p['content'], 180)) ?></p>
                         <div class="pc-meta"><span><?= icon('calendar', 14) ?> <?= jdate('j F Y', $p['published_at']) ?></span><span><?= icon('eye', 14) ?> <?= fa_short_num((int) $p['views']) ?></span></div>

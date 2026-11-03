@@ -50,6 +50,8 @@ adm_head('دسته‌بندی‌ها', 'categories');
 <div class="split">
     <div class="card">
         <div class="card-head"><h3><?= adm_icon('folder', 20) ?> لیست دسته‌ها</h3><span class="muted small">برای تغییر ترتیب بکشید و رها کنید</span></div>
+        <div class="alert alert-info small">با کلیک روی هر آیکون، نمایش دسته در آن بخش روشن (رنگی) یا خاموش (خاکستری) می‌شود:
+            &nbsp;<b>🖥️</b> منوی بالای سایت در کامپیوتر &nbsp;·&nbsp; <b>📱</b> منوی موبایل (☰) &nbsp;·&nbsp; <b>⬇️</b> فوتر &nbsp;·&nbsp; <b>🏠</b> ردیف اخبار در صفحه اصلی</div>
         <form method="post" id="orderForm"><?= csrf_field() ?><input type="hidden" name="order" id="orderInput"></form>
         <div class="sortable" id="catList">
             <?php foreach ($cats as $k): ?>

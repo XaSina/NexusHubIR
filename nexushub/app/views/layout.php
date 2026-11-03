@@ -27,13 +27,29 @@ $pages = rows("SELECT title, slug, show_in_menu, show_in_footer FROM pages WHERE
 $cats = get_categories();
 $tgLink = safe_link((string) setting('social_telegram'));
 $me = current_member();
-$navItems = $menu;
-$navPaths = array_map(fn($m) => rtrim((string) parse_url(menu_link((string) ($m['url'] ?? '/')), PHP_URL_PATH), '/'), $menu);
-foreach ($cats as $c) {
-    if (empty($c['show_in_header'])) continue;
-    $u = '/category/' . $c['slug'];
-    if (in_array(rtrim((string) parse_url(menu_link($u), PHP_URL_PATH), '/'), $navPaths, true)) continue;
-    $navItems[] = ['title' => $c['name'], 'url' => $u];
+// The per-category switches are authoritative everywhere: a manual menu link that points to a
+// category is shown only if that category's switch is on (before, manual links ignored the switch).
+$catBySlug = [];
+foreach ($cats as $c) $catBySlug[mb_strtolower($c['slug'])] = $c;
+$menuCat = function (array $m) use ($catBySlug): ?array {
+    $u = rawurldecode((string) ($m['url'] ?? ''));
+    if (preg_match('~(?:^|/)category/([^/?#]+)/?$~u', (string) parse_url($u, PHP_URL_PATH), $mm)) return $catBySlug[mb_strtolower($mm[1])] ?? null;
+    return null;
+};
+$navItems = [];      // desktop header
+$drawerItems = [];   // mobile menu list (categories are shown as chips below it, so they're not repeated here)
+$navCatIds = [];
+foreach ($menu as $m) {
+    $c = $menuCat($m);
+    if ($c) {
+        if (!empty($c['show_in_header']) && !in_array((int) $c['id'], $navCatIds, true)) { $navItems[] = $m; $navCatIds[] = (int) $c['id']; }
+        continue;
+    }
+    $navItems[] = $m;
+    $drawerItems[] = $m;
+}
+foreach ($cats as $c) {   // switched-on categories that aren't in the manual menu are added at the end
+    if (!empty($c['show_in_header']) && !in_array((int) $c['id'], $navCatIds, true)) $navItems[] = ['title' => $c['name'], 'url' => '/category/' . $c['slug']];
 }
 ?><!doctype html>
 <html lang="fa" dir="rtl" class="<?= $colors['light'] ? 'theme-light' : 'theme-dark' ?>">
@@ -111,6 +127,7 @@ foreach ($cats as $c) {
 <div class="topbar">
     <div class="container topbar-inner">
         <span class="tb-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?> <b class="tb-clock" id="liveClock"><?= jdate('H:i') ?></b></span>
+        <?php if (setting_on('show_online')): [$onl] = online_count(); ?><span class="tb-online" title="کاربران آنلاین در ۵ دقیقه اخیر"><i></i><b id="nxOnline"><?= fa_num((string) max(1, $onl)) ?></b> نفر آنلاین</span><?php endif; ?>
         <span class="tb-social">
             <?php foreach (social_links() as $s): ?>
                 <a href="<?= e($s['url']) ?>" target="_blank" rel="noopener" title="<?= e($s['label']) ?>"><?= icon($s['icon'], 15) ?></a>
@@ -154,14 +171,14 @@ foreach ($cats as $c) {
 </header>
 
 <?php if ($ticker): ?>
-<div class="ticker container" style="--speed:<?= max(10, (int) setting('ticker_speed', 40)) ?>s">
+<div class="ticker container" style="--speed:<?= max(5, min(300, (int) setting('ticker_speed', 40))) ?>s">
     <div class="ticker-inner glass">
         <span class="ticker-label"><span class="live-dot"></span><?= e(setting('ticker_label', 'فوری')) ?></span>
         <div class="ticker-track">
             <div class="ticker-move">
-                <?php for ($r = 0; $r < 2; $r++): foreach ($ticker as $t): ?>
-                    <a href="<?= e(post_url($t)) ?>"<?= $r ? ' aria-hidden="true" tabindex="-1"' : '' ?>><?= icon('bolt', 14) ?> <?= e($t['title']) ?></a>
-                <?php endforeach; endfor; ?>
+                <?php foreach ($ticker as $t): ?>
+                    <a href="<?= e(post_url($t)) ?>"><?= icon('bolt', 14) ?> <?= e($t['title']) ?></a>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
@@ -240,7 +257,7 @@ foreach ($cats as $c) {
             <button class="icon-btn" data-close aria-label="بستن"><?= icon('close') ?></button>
         </div>
         <nav class="drawer-nav">
-            <?php foreach ($menu as $i => $m): ?>
+            <?php foreach ($drawerItems as $i => $m): ?>
                 <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?>"><?= e($m['title'] ?? '') ?> <?= icon('chevron-left', 16) ?></a>
             <?php endforeach; ?>
         </nav>

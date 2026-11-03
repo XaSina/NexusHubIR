@@ -18,6 +18,7 @@ function default_settings(): array
         'footer_text' => 'NEXUS | HUB — محتوای روزانه، کاربردی و متفاوت 🔥 به کامیونیتی NEXUS بپیوندید.',
         'copyright' => 'تمامی حقوق برای NEXUS | HUB محفوظ است.',
         'show_rss_link' => '1',
+        'show_online' => '1',
 
         // شبکه‌های اجتماعی
         'social_telegram' => 'https://t.me/NexusHubIR',

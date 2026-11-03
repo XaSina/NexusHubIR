@@ -69,7 +69,7 @@ adm_head($st['id'] ? 'ویرایش استوری' : 'استوری جدید', 'sto
                     <button type="button" class="abtn abtn-ghost abtn-sm" id="slidePick"><?= adm_icon('image', 16) ?> از کتابخانه</button>
                 </div>
             </div>
-            <p class="af-hint">بهترین اندازه: عمودی ۱۰۸۰×۱۹۲۰ (۹:۱۶). ویدیو فقط MP4 یا WebM، حداکثر ۶۰ مگابایت<?= $limitMb ? ' — حداکثر آپلود سرور شما: <b>' . fa_num((string) $limitMb) . ' مگابایت</b>' : '' ?>. اسلایدها را بکشید تا ترتیبشان عوض شود.</p>
+            <p class="af-hint">بهترین اندازه: عمودی ۱۰۸۰×۱۹۲۰ (۹:۱۶). ویدیو فقط MP4 یا WebM، حداکثر ۱۰۰ مگابایت (به‌صورت تکه‌تکه آپلود می‌شود، پس محدودیت آپلود هاست مهم نیست). اسلایدها را بکشید تا ترتیبشان عوض شود.</p>
             <div class="progress" id="slideProg" hidden><i></i></div>
             <div class="sortable slides" id="slides">
                 <?php foreach ($items as $it): ?>
@@ -198,6 +198,10 @@ document.addEventListener('DOMContentLoaded', function () {
         (function next() {
             var f = files.shift();
             if (!f) { input.value = ''; setTimeout(function () { prog.hidden = true; bar.style.width = 0; }, 500); return; }
+            if (/^video\//.test(f.type) || /\.(mp4|webm|m4v)$/i.test(f.name)) {   // videos: chunked upload (not limited by the host's upload size)
+                NXA.uploadVideo(f, 'story').then(function (j) { done++; if (j.ok) addSlide(j); next(); });
+                return;
+            }
             var fd = new FormData(); fd.append('file', f);
             NXA.post('upload_story', fd, function (p) { bar.style.width = ((done + p) / total * 100) + '%'; }).then(function (j) {
                 done++;

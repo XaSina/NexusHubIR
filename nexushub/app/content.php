@@ -125,6 +125,24 @@ function cover_html(array $p, string $class = '', bool $eager = false): string
 /** رندر متن خبر: شورت‌کدها + تبلیغ میانی */
 function render_content(string $html, bool $withAds = true): string
 {
+    // [video src="uploads/…/x.mp4" title="…"] → professional player + download button
+    $html = preg_replace_callback('~(?:<p>\s*)?\[video\s+src="(?:[^"\s]*?/)?(uploads/[A-Za-z0-9_./-]+\.(?:mp4|webm))"(?:\s+title="([^"\]]{0,120})")?\s*\](?:\s*</p>)?~u', function ($m) {
+        if (str_contains($m[1], '..')) return '';
+        $file = NX_ROOT . '/' . $m[1];
+        $src = media_url($m[1]);
+        $title = trim($m[2] ?? '');
+        $size = is_file($file) ? filesize($file) : 0;
+        $sizeTxt = $size ? fa_num(number_format($size / 1048576, $size > 104857600 ? 0 : 1)) . ' مگابایت' : '';
+        $ext = strtoupper(pathinfo($m[1], PATHINFO_EXTENSION));
+        $dlName = ($title !== '' ? preg_replace('~[\\/:*?"<>|]+~u', '', $title) : 'nexus-video') . '.' . strtolower($ext);
+        return '<figure class="nx-player">'
+            . '<div class="np-stage"><video src="' . e($src) . '#t=0.1" preload="metadata" playsinline controls controlslist="nodownload"></video></div>'
+            . '<figcaption class="np-foot"><span class="np-info">' . icon('youtube', 16) . ' <b>' . e($title !== '' ? $title : 'ویدیو') . '</b>'
+            . ($sizeTxt ? '<small>' . e($ext) . ' · ' . $sizeTxt . '</small>' : '') . '</span>'
+            . '<a class="np-dl" href="' . e($src) . '" download="' . e($dlName) . '">' . icon('arrow-up', 16) . ' دانلود ویدیو</a></figcaption>'
+            . '</figure>';
+    }, $html);
+    // uploads/… paths → full URLs (after [video]: its src must still be the stored relative path)
     $html = content_for_display($html);
     // [telegram post="Channel/123"]
     $html = preg_replace_callback('~\[telegram\s+post="([A-Za-z0-9_]{3,64}/\d{1,9})"\]~', function ($m) {
@@ -167,6 +185,12 @@ function track_visit(bool $isPost = false): void
 {
     if (preg_match('~bot|crawl|spider|slurp|facebookexternalhit|preview~i', $_SERVER['HTTP_USER_AGENT'] ?? '')) return;
     if (current_user()) return; // the site's own admins/editors don't inflate the stats
+    // the same page opened again by the same visitor within 30 min (Back button, refresh) is not a new view
+    $path = substr((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), 0, 190);
+    $pv = array_filter($_SESSION['pv'] ?? [], fn($t) => $t > time() - 1800);
+    if (isset($pv[$path])) { $_SESSION['pv'] = $pv; return; }
+    $pv[$path] = time();
+    $_SESSION['pv'] = array_slice($pv, -80, null, true);
     $today = date('Y-m-d');
     $newVisitor = ($_COOKIE['nx_v'] ?? '') !== $today;
     if ($newVisitor) {
@@ -289,4 +313,32 @@ function get_active_stories(): array
         ];
     }
     return $out;
+}
+
+
+/* ---------------- آنلاین‌ها ---------------- */
+const NX_ONLINE_WINDOW = 300;   // active in the last 5 minutes = online
+
+/** ثبت حضور بازدیدکننده (در هر صفحه و با ضربان هر ۶۰ ثانیه) */
+function track_online(): void
+{
+    if (preg_match('~bot|crawl|spider|slurp|facebookexternalhit|preview|curl|wget|python~i', $_SERVER['HTTP_USER_AGENT'] ?? '')) return;
+    if (session_status() !== PHP_SESSION_ACTIVE || session_id() === '') return;
+    try {
+        q('INSERT INTO online (sid, last_seen, is_member) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE last_seen = VALUES(last_seen), is_member = VALUES(is_member)',
+            [sha1(session_id() . (config('secret') ?? '')), time(), current_member() ? 1 : 0]);
+        if (random_int(1, 50) === 1) q('DELETE FROM online WHERE last_seen < ?', [time() - 3600]);
+    } catch (Throwable $e) {
+    }
+}
+
+/** تعداد آنلاین‌ها: [کل, اعضای واردشده] */
+function online_count(): array
+{
+    try {
+        $r = row('SELECT COUNT(*) total, COALESCE(SUM(is_member), 0) members FROM online WHERE last_seen >= ?', [time() - NX_ONLINE_WINDOW]);
+        return [(int) $r['total'], (int) $r['members']];
+    } catch (Throwable $e) {
+        return [0, 0];
+    }
 }

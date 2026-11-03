@@ -15,6 +15,7 @@
         unlink: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.8 13.2 20 12a5 5 0 0 0-7-7l-1.2 1.2M5.2 10.8 4 12a5 5 0 0 0 7 7l1.2-1.2M3 3l18 18"/></svg>',
         image: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>',
         video: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3Z"/></svg>',
+        upvideo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/><path d="M9 9v6M6 12l3-3 3 3"/></svg>',
         tg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 4.5 2.8 11.7c-.9.4-.9 1.5.1 1.8l4.7 1.5 1.8 5.6c.3.8 1.2 1 1.8.4l2.6-2.4 4.9 3.6c.7.5 1.6.1 1.8-.7l3.2-15.3c.2-1-.8-1.8-1.7-1.4Z"/></svg>',
         quote: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7H6a2 2 0 0 0-2 2v4h4v4l2-4V7Zm10 0h-4a2 2 0 0 0-2 2v4h4v4l2-4V7Z"/></svg>',
         hr: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/></svg>',
@@ -44,7 +45,7 @@
             ['sep'], ['bold', 'ضخیم (Ctrl+B)'], ['italic', 'مورب'], ['underline', 'زیرخط'], ['strike', 'خط خورده'],
             ['sep'], ['ul', 'لیست نقطه‌ای'], ['ol', 'لیست شماره‌دار'], ['quote', 'نقل قول'],
             ['sep'], ['right', 'راست‌چین'], ['center', 'وسط‌چین'], ['left', 'چپ‌چین'],
-            ['sep'], ['link', 'لینک'], ['unlink', 'حذف لینک'], ['image', 'تصویر'], ['video', 'ویدیو (آپارات/یوتیوب)'], ['tg', 'پست تلگرام'],
+            ['sep'], ['link', 'لینک'], ['unlink', 'حذف لینک'], ['image', 'تصویر'], ['upvideo', 'آپلود ویدیو از کامپیوتر (MP4/WebM تا ۵۰۰ مگابایت)'], ['video', 'ویدیو از آپارات/یوتیوب'], ['tg', 'پست تلگرام'],
             ['sep'], ['color', 'رنگ متن'], ['mark', 'هایلایت'], ['hr', 'خط جداکننده'], ['table', 'جدول'],
             ['sep'], ['clear', 'پاک کردن فرمت'], ['undo', 'واگرد'], ['redo', 'ازنو'], ['code', 'ویرایش HTML']
         ];
@@ -205,6 +206,20 @@
                     var alt = prompt('متن جایگزین تصویر (اختیاری):', '') || '';
                     self.insertHTML('<p><img src="' + m.url + '" alt="' + alt.replace(/"/g, '&quot;') + '"></p>');
                 });
+                break;
+            case 'upvideo':
+                this.save();
+                var fi = document.createElement('input');
+                fi.type = 'file'; fi.accept = 'video/mp4,video/webm,.mp4,.webm,.m4v';
+                fi.addEventListener('change', function () {
+                    var f = fi.files[0]; if (!f) return;
+                    A.uploadVideo(f, 'post').then(function (j) {
+                        if (!j.ok) return;
+                        var t = (j.name || '').replace(/["\[\]<>]/g, '');
+                        self.insertHTML('<p>[video src="' + j.path + '" title="' + t + '"]</p><p><br></p>');
+                    });
+                });
+                fi.click();
                 break;
             case 'video':
                 this.save();

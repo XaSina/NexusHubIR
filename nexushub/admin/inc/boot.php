@@ -147,6 +147,7 @@ window.NXA = <?= json_encode([
     'csrf' => csrf_token(),
     'ajax' => url('admin/ajax.php'),
     'flashes' => $fl,
+    'uploadLimit' => server_upload_limit(),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="<?= e(asset('js/admin.js')) ?>"></script>

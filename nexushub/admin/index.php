@@ -51,6 +51,12 @@ $u = current_user();
     </div>
 </div>
 
+<?php [$onl, $onlM] = online_count(); ?>
+<div class="online-live card mb" id="onlineLive">
+    <span class="ol-dot"></span>
+    <div><b><span id="olTotal"><?= fa_num((string) $onl) ?></span> نفر الان در سایت آنلاین هستند</b>
+        <small class="muted"><span id="olMembers"><?= fa_num((string) $onlM) ?></span> نفر از آن‌ها عضو واردشده · فعال در ۵ دقیقه اخیر · بروزرسانی خودکار</small></div>
+</div>
 <div class="grid g4 stats-grid">
     <div class="stat"><span class="stat-ic"><?= icon('eye', 24) ?></span><div><b data-count="<?= (int) $st['views'] ?>"><?= fa_num(number_format((int) $st['views'])) ?></b><small>بازدید امروز</small></div></div>
     <div class="stat" style="--g:linear-gradient(135deg,#3dbbff,#7c4dff);--sh:rgba(61,187,255,.7);--c:rgba(61,187,255,.3)"><span class="stat-ic"><?= icon('user', 24) ?></span><div><b><?= fa_num(number_format((int) $st['visitors'])) ?></b><small>بازدیدکننده امروز</small></div></div>
@@ -118,4 +124,12 @@ $u = current_user();
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    setInterval(function () {
+        if (document.hidden) return;
+        NXA.post('online', {}).then(function (j) { if (!j.ok) return; document.getElementById('olTotal').textContent = NXA.fa(j.total); document.getElementById('olMembers').textContent = NXA.fa(j.members); });
+    }, 15000);
+});
+</script>
 <?php adm_foot();

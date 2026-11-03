@@ -18,6 +18,19 @@ switch ($_POST['action'] ?? '') {
         if (empty($_FILES['file'])) json_out(['ok' => false, 'error' => 'فایلی ارسال نشد (شاید حجم فایل از حد مجاز سرور بیشتر است).'], 422);
         json_out(upload_story_media($_FILES['file']));
 
+    case 'online':
+        [$t, $m] = online_count();
+        json_out(['ok' => true, 'total' => $t, 'members' => $m]);
+
+    case 'upload_chunk':
+        // kind: post (news video, 500 MB) | story (story video, 100 MB)
+        $kind = (string) ($_POST['kind'] ?? 'post');
+        if ($kind === 'story' ? !can('*') : !(can('posts') || can('media'))) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
+        if (empty($_FILES['chunk'])) json_out(['ok' => false, 'error' => 'قطعه‌ای دریافت نشد.'], 422);
+        @set_time_limit(120);
+        json_out(upload_chunk($_FILES['chunk'], (string) ($_POST['uid'] ?? ''), (int) ($_POST['index'] ?? -1), (int) ($_POST['total'] ?? 0),
+            (string) ($_POST['name'] ?? 'video'), $kind === 'story' ? 100 * 1048576 : 500 * 1048576));
+
     case 'media_list':
         $page = max(1, (int) ($_POST['page'] ?? 1));
         $per = 40;

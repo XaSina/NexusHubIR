@@ -348,6 +348,118 @@
         b.addEventListener('click', function () { navigator.share({ title: b.dataset.title, url: b.dataset.url }).catch(function () {}); });
     });
 
+    /* ---------- Breaking-news ticker: measure so each pass starts and ends fully off-screen ---------- */
+    var tk = $('.ticker-move');
+    if (tk) {
+        var setTk = function () {
+            var W = tk.parentNode.clientWidth, C = tk.scrollWidth;       // RTL: the text sits at the right edge
+            tk.style.setProperty('--tk-from', (-W) + 'px');              // its right edge just past the left side
+            tk.style.setProperty('--tk-to', C + 'px');                   // its left edge just past the right side
+        };
+        setTk();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(setTk);
+        window.addEventListener('resize', function () { clearTimeout(tk._t); tk._t = setTimeout(setTk, 200); });
+    }
+
+    /* ---------- News video player (custom controls over a native <video>) ---------- */
+    var players = [];
+    $$('.nx-player').forEach(function (fig) {
+        var v = $('video', fig), stage = $('.np-stage', fig);
+        if (!v) return;
+        v.removeAttribute('controls');
+        var fmt = function (t) { t = Math.max(0, Math.floor(t || 0)); var h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return (h ? h + ':' + ('0' + m).slice(-2) : m) + ':' + ('0' + s).slice(-2); };
+        var I = {
+            play: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+            pause: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
+            vol: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>',
+            mute: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="m17 9 5 6M22 9l-5 6"/></svg>',
+            fs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+            pip: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"/><rect x="12" y="11" width="8" height="6" rx="1.5" fill="currentColor"/></svg>'
+        };
+        var ui = document.createElement('div');
+        ui.className = 'np-ui';
+        ui.innerHTML = '<button type="button" class="np-big" aria-label="پخش">' + I.play + '</button><span class="np-spin"></span>'
+            + '<div class="np-bar" dir="ltr">'
+            + '<div class="np-progress" role="slider" aria-label="زمان" tabindex="0"><i class="np-buf"></i><i class="np-played"></i><b class="np-thumb"></b><span class="np-tip"></span></div>'
+            + '<div class="np-row"><button type="button" class="np-btn np-pp" aria-label="پخش/توقف">' + I.play + '</button>'
+            + '<span class="np-time"><b class="np-cur">0:00</b> / <span class="np-dur">0:00</span></span>'
+            + '<span class="np-grow"></span>'
+            + '<button type="button" class="np-btn np-mute" aria-label="صدا">' + I.vol + '</button><input type="range" class="np-vol" min="0" max="1" step="0.05" value="1" aria-label="بلندی صدا">'
+            + '<button type="button" class="np-btn np-speed" aria-label="سرعت">1×</button>'
+            + (document.pictureInPictureEnabled ? '<button type="button" class="np-btn np-pip" aria-label="تصویر در تصویر">' + I.pip + '</button>' : '')
+            + '<button type="button" class="np-btn np-fs" aria-label="تمام‌صفحه">' + I.fs + '</button></div></div>';
+        stage.appendChild(ui);
+        var big = $('.np-big', ui), pp = $('.np-pp', ui), prog = $('.np-progress', ui), played = $('.np-played', ui), buf = $('.np-buf', ui), thumb = $('.np-thumb', ui),
+            cur = $('.np-cur', ui), dur = $('.np-dur', ui), tip = $('.np-tip', ui), muteB = $('.np-mute', ui), vol = $('.np-vol', ui), speed = $('.np-speed', ui), hideT;
+        players.push(v);
+        var toggle = function () { if (v.paused) { players.forEach(function (o) { if (o !== v) o.pause(); }); v.play().catch(function () {}); } else v.pause(); };
+        var showUi = function () { fig.classList.add('np-active'); clearTimeout(hideT); if (!v.paused) hideT = setTimeout(function () { fig.classList.remove('np-active'); }, 2600); };
+        var upd = function () {
+            var d = v.duration || 0, p = d ? v.currentTime / d : 0;
+            played.style.width = (p * 100) + '%'; thumb.style.left = (p * 100) + '%'; cur.textContent = fmt(v.currentTime);
+            if (v.buffered.length && d) buf.style.width = (v.buffered.end(v.buffered.length - 1) / d * 100) + '%';
+        };
+        v.addEventListener('loadedmetadata', function () { dur.textContent = fmt(v.duration); upd(); });
+        v.addEventListener('timeupdate', upd); v.addEventListener('progress', upd);
+        v.addEventListener('play', function () { fig.classList.add('np-playing'); pp.innerHTML = I.pause; showUi(); });
+        v.addEventListener('pause', function () { fig.classList.remove('np-playing'); pp.innerHTML = I.play; fig.classList.add('np-active'); clearTimeout(hideT); });
+        v.addEventListener('ended', function () { fig.classList.remove('np-playing'); pp.innerHTML = I.play; fig.classList.add('np-active'); });
+        v.addEventListener('waiting', function () { fig.classList.add('np-wait'); });
+        ['playing', 'canplay', 'seeked'].forEach(function (ev) { v.addEventListener(ev, function () { fig.classList.remove('np-wait'); }); });
+        big.addEventListener('click', toggle); pp.addEventListener('click', toggle);
+        v.addEventListener('click', toggle);
+        v.addEventListener('dblclick', function () { fsToggle(); });
+        stage.addEventListener('mousemove', showUi); stage.addEventListener('touchstart', showUi, { passive: true });
+        // seek (click / drag, LTR bar)
+        var seekAt = function (x) { var r = prog.getBoundingClientRect(), p = Math.max(0, Math.min(1, (x - r.left) / r.width)); if (v.duration) v.currentTime = p * v.duration; upd(); };
+        var dragging = false;
+        prog.addEventListener('pointerdown', function (e) { dragging = true; prog.setPointerCapture(e.pointerId); seekAt(e.clientX); });
+        prog.addEventListener('pointermove', function (e) {
+            var r = prog.getBoundingClientRect(), p = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+            tip.textContent = fmt(p * (v.duration || 0)); tip.style.left = (p * 100) + '%';
+            if (dragging) seekAt(e.clientX);
+        });
+        prog.addEventListener('pointerup', function () { dragging = false; });
+        prog.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight') v.currentTime += 5; if (e.key === 'ArrowLeft') v.currentTime -= 5; });
+        muteB.addEventListener('click', function () { v.muted = !v.muted; });
+        vol.addEventListener('input', function () { v.volume = +vol.value; v.muted = +vol.value === 0; });
+        v.addEventListener('volumechange', function () { muteB.innerHTML = v.muted || v.volume === 0 ? I.mute : I.vol; vol.value = v.muted ? 0 : v.volume; });
+        var rates = [1, 1.25, 1.5, 2, 0.5];
+        speed.addEventListener('click', function () { var i = (rates.indexOf(v.playbackRate) + 1) % rates.length; v.playbackRate = rates[i]; speed.textContent = rates[i] + '×'; });
+        var pip = $('.np-pip', ui);
+        if (pip) pip.addEventListener('click', function () { (document.pictureInPictureElement ? document.exitPictureInPicture() : v.requestPictureInPicture()).catch(function () {}); });
+        var fsToggle = function () {
+            var el = stage, d = document;
+            if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+            else if (el.requestFullscreen) el.requestFullscreen().catch(function () {});
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();   // iPhone
+        };
+        $('.np-fs', ui).addEventListener('click', fsToggle);
+        stage.tabIndex = 0;
+        stage.addEventListener('keydown', function (e) {
+            if (e.target !== stage) return;
+            if (e.key === ' ' || e.key === 'k') { e.preventDefault(); toggle(); }
+            else if (e.key === 'm') v.muted = !v.muted;
+            else if (e.key === 'f') fsToggle();
+            else if (e.key === 'ArrowRight') v.currentTime += 5;
+            else if (e.key === 'ArrowLeft') v.currentTime -= 5;
+        });
+        fig.classList.add('np-ready', 'np-active');
+    });
+
+    /* ---------- Online heartbeat: keeps this visitor "online", refreshes the live counter ---------- */
+    (function () {
+        var out = $('#nxOnline'), lastPing = Date.now();
+        function ping() {
+            if (document.hidden) return;
+            lastPing = Date.now();
+            api('api/ping', {}).then(function (j) { if (j && j.ok && out) out.textContent = j.online_fa; }).catch(function () {});
+        }
+        setInterval(ping, 60000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - lastPing > 55000) ping(); });
+    })();
+
     /* ==========================================================================
        Stories viewer (Instagram-style). RTL: bars fill right→left, so the
        left side = next, right side = previous.

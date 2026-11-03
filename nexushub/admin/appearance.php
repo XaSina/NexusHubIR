@@ -4,7 +4,7 @@ require_cap('*');
 
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
     'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
-    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_rss_link',
+    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_rss_link', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu'];
 
 if (is_post()) {
@@ -130,7 +130,7 @@ adm_head('ظاهر سایت', 'appearance');
             <?= f_switch('show_stories', 'استوری‌ها (بالای صفحه اصلی)', setting_on('show_stories'), 'استوری‌ها از بخش «استوری‌ها» در منوی پنل ساخته می‌شوند') ?>
             <?= f_switch('show_ticker', 'نوار اخبار فوری متحرک', setting_on('show_ticker'), 'اخبار با تیک «فوری» نمایش داده می‌شوند') ?>
             <?= f_text('ticker_label', 'برچسب نوار', $s['ticker_label']) ?>
-            <?= f_range('ticker_speed', 'مدت یک دور حرکت (هرچه بیشتر، کندتر)', $s['ticker_speed'], 10, 120, ' ثانیه') ?>
+            <?= f_range('ticker_speed', '⏱️ سرعت نوار فوری: هر دور عبور چند ثانیه طول بکشد (عدد بیشتر = آرام‌تر)', $s['ticker_speed'], 5, 180, ' ثانیه') ?>
         </div>
     </div>
 </div>
@@ -167,6 +167,7 @@ adm_head('ظاهر سایت', 'appearance');
             <?= f_switch('announce_on', 'نمایش نوار اعلان', setting_on('announce_on')) ?>
             <?= f_text('announce_text', 'متن اعلان', $s['announce_text']) ?>
             <?= f_text('announce_link', 'لینک اعلان', $s['announce_link'], ['ltr' => true]) ?>
+            <?= f_switch('show_online', '🟢 نمایش تعداد کاربران آنلاین در بالای سایت', setting_on('show_online'), 'به همه بازدیدکننده‌ها نشان داده می‌شود؛ در داشبورد پنل همیشه نمایش داده می‌شود') ?>
             <?= f_select('announce_style', 'سبک نوار', ['pinned' => 'سنجاق (شبیه تلگرام)', 'gradient' => 'گرادیان متحرک', 'glitch' => 'سایبری چشمک‌زن'], $s['announce_style']) ?>
         </div>
     </div>

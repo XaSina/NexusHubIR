@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 3;
+const NX_DB_VERSION = 4;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -21,6 +21,17 @@ function nx_migrate(): void
     $cols = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories'"), 'COLUMN_NAME');
     foreach (['show_in_header' => 0, 'show_in_mobile' => 1, 'show_in_footer' => 1] as $col => $def) {
         if (!in_array($col, $cols, true)) db()->exec("ALTER TABLE `categories` ADD COLUMN `$col` TINYINT(1) NOT NULL DEFAULT $def");
+    }
+    // v4: categories already linked in the manual menu start with the desktop-header switch ON, so the
+    // switch reflects what is visible (the switch now also controls those manual links)
+    if ($v < 4) {
+        $menu = json_decode((string) val("SELECT svalue FROM settings WHERE skey = 'menu'"), true);
+        if (!is_array($menu)) $menu = json_decode(default_settings()['menu'], true) ?: [];
+        foreach ($menu as $m) {
+            if (preg_match('~(?:^|/)category/([^/?#]+)/?$~u', (string) parse_url(rawurldecode((string) ($m['url'] ?? '')), PHP_URL_PATH), $mm)) {
+                q('UPDATE categories SET show_in_header = 1 WHERE slug = ?', [$mm[1]]);
+            }
+        }
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
