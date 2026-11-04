@@ -1265,3 +1265,10 @@ html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .tren
 
 /* sideways rows: start exactly at the first card (no snap correction on load), stay put */
 .h-scroll { scroll-padding-inline: 4px; overscroll-behavior-x: contain; }
+
+/* tilt cards: the JS drives the motion (eased) — no CSS transition on transform and no extra hover lift */
+.tilt.tilting, .pcard-card.tilt.tilting { transition: border-color .4s ease; translate: none !important; will-change: transform; }
+.tilt .cover { transition: transform 1s var(--ease), translate 0s; }
+.tilt.tilting .cover { transform: scale(1.1); }
+.tilt .card-shine { transition: opacity .4s ease; }
+.tilt.tilting .card-shine { opacity: 1; }

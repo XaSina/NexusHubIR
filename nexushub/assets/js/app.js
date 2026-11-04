@@ -282,17 +282,40 @@
         (function follow() { gx += (tx - gx) * .12; gy += (ty - gy) * .12; glow.style.transform = 'translate(' + (gx - 210) + 'px,' + (gy - 210) + 'px)'; requestAnimationFrame(follow); })();
     }
 
-    /* ---------- Tilt + shine ---------- */
+    /* ---------- Tilt + shine: the card leans toward the mouse with eased motion, its picture drifts inside for depth.
+       Delegated (works for cards added later, e.g. page 2), one rAF loop only while a card is moving. ---------- */
     if (finePointer && !reduce) {
-        $$('.tilt').forEach(function (el) {
-            if (el.closest('.h-scroll')) return;   // inside snapping rows a moving card makes the row re-snap (sideways jumps)
-            el.addEventListener('mousemove', function (e) {
-                var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-                el.style.setProperty('--mx', (x * 100) + '%'); el.style.setProperty('--my', (y * 100) + '%');
-                if (NX.tilt) el.style.transform = 'perspective(900px) rotateX(' + ((.5 - y) * 7) + 'deg) rotateY(' + ((x - .5) * 7) + 'deg) translateY(-6px)';
+        var TILT = 8, active = [], tiltRaf = 0;
+        var stateOf = function (el) { if (!el._tl) el._tl = { el: el, rx: 0, ry: 0, tx: 0, ty: 0, l: 0, tl: 0, px: 0, py: 0, tpx: 0, tpy: 0, img: el.querySelector('.cover') }; return el._tl; };
+        var step = function () {
+            tiltRaf = 0;
+            active = active.filter(function (st) {
+                var k = .14;
+                st.rx += (st.tx - st.rx) * k; st.ry += (st.ty - st.ry) * k; st.l += (st.tl - st.l) * k;
+                st.px += (st.tpx - st.px) * k; st.py += (st.tpy - st.py) * k;
+                var moving = Math.abs(st.tx - st.rx) + Math.abs(st.ty - st.ry) + Math.abs(st.tl - st.l) > .02;
+                if (!moving && !st.tl) { st.el.style.transform = ''; if (st.img) st.img.style.translate = ''; st.el.classList.remove('tilting'); return false; }
+                st.el.style.transform = 'perspective(900px) rotateX(' + st.rx.toFixed(2) + 'deg) rotateY(' + st.ry.toFixed(2) + 'deg) translate3d(0,' + (-7 * st.l).toFixed(2) + 'px,0) scale(' + (1 + .015 * st.l).toFixed(4) + ')';
+                if (st.img) st.img.style.translate = st.px.toFixed(2) + 'px ' + st.py.toFixed(2) + 'px';
+                return moving || st.tl > 0;
             });
-            el.addEventListener('mouseleave', function () { el.style.transform = ''; });
-        });
+            if (active.length) tiltRaf = requestAnimationFrame(step);
+        };
+        var kickTilt = function (st) { if (active.indexOf(st) < 0) active.push(st); if (!tiltRaf) tiltRaf = requestAnimationFrame(step); };
+        document.addEventListener('mousemove', function (e) {
+            var el = e.target.closest && e.target.closest('.tilt'); if (!el) return;
+            var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+            el.style.setProperty('--mx', (x * 100) + '%'); el.style.setProperty('--my', (y * 100) + '%');
+            if (!NX.tilt) return;
+            var st = stateOf(el);
+            st.tx = (.5 - y) * TILT; st.ty = (x - .5) * TILT; st.tl = 1; st.tpx = (.5 - x) * 10; st.tpy = (.5 - y) * 8;
+            el.classList.add('tilting'); kickTilt(st);
+        }, { passive: true });
+        document.addEventListener('mouseout', function (e) {
+            var el = e.target.closest && e.target.closest('.tilt'); if (!el || el.contains(e.relatedTarget)) return;
+            if (!el._tl) return;
+            var st = el._tl; st.tx = st.ty = st.tl = st.tpx = st.tpy = 0; kickTilt(st);
+        }, { passive: true });
     }
     $$('.nxp-theme-spotlight').forEach(function (el) {
         el.addEventListener('mousemove', function (e) {
@@ -354,7 +377,6 @@
                     if (pagi && np) pagi.replaceWith(np); else if (pagi) pagi.remove(); else if (np) ng.after(np);
                     if (push) history.pushState({ pg: 1 }, '', href);
                     document.title = doc.title;
-                    if (NX.tilt) $$('.tilt', ng).forEach(function (el) { el.classList.remove('tilt'); });
                     busyPg = false;
                 })
                 .catch(function () { location.href = href; });
