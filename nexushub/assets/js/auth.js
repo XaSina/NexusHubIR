@@ -30,10 +30,10 @@
        Leaving: restart the loader loops at 0, remember when the warp started, start loading the next page while the
        iris is still closing (the old page stays on screen until the new one paints).
        Arriving: keep the cover until fonts + logo are ready (and at least ~0.9s since the warp began), then exit. */
-    function warpRestart(w) { w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); document.documentElement.style.removeProperty('--wt'); }
+    function warpRestart(w) { var d = document.documentElement; d.classList.remove('warp-out'); d.style.removeProperty('--wt'); w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); }
     function warpExit() {
         var root = document.documentElement, t = parseFloat(root.style.getPropertyValue('--wt')) || 0;
-        var hold = Math.max(0, 900 + t);                 // --wt is negative: time already spent covered
+        var hold = Math.max(0, 1050 + t);                // --wt is negative: time already spent covered (line under the name completes first)
         var ready = [];
         if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
         var logo = document.querySelector('.nx-warp-core img');
@@ -43,7 +43,7 @@
             return new Promise(function (res) {
                 requestAnimationFrame(function () { requestAnimationFrame(function () {
                     root.classList.add('warp-out'); root.classList.remove('warp-in');
-                    setTimeout(function () { root.classList.remove('warp-out'); root.style.removeProperty('--wt'); }, 1300);
+                    // no clean-up later: dropping classes at the end restyled the whole page and caused a visible hitch
                     res();
                 }); });
             });
@@ -161,12 +161,20 @@
             setTimeout(function () { res(null); }, 2500);
         });
     }
-    var markReady = loadMark();
+    var markReady = loadMark(), PREP = null;
+    // heavy work up front (hidden under the transition / before the intro starts), so nothing stutters later
+    markReady.then(function (mark) {
+        try {
+            placeLogo();
+            var img = $('#auLogo');
+            PREP = mark ? sampleMark(mark, true) : (img && img.naturalWidth ? sampleMark(img, false) : null);
+        } catch (e) { PREP = null; }
+    });
     // returns ms until the logo is formed (0 = particles unavailable → show the image instead)
     function startLogo(mark) {
         var img = $('#auLogo'), em = $('#auEmblem'), pts = null;
         placeLogo();
-        try { pts = mark ? sampleMark(mark, true) : (img && img.naturalWidth ? sampleMark(img, false) : null); } catch (e) { pts = null; }
+        if (PREP) pts = PREP; else try { pts = mark ? sampleMark(mark, true) : (img && img.naturalWidth ? sampleMark(img, false) : null); } catch (e) { pts = null; }
         if (!pts || pts.length < 200) { if (em) em.classList.add('img-mode'); return 0; }
         em.classList.add('px');
         var R0 = Math.max(W, H) * .75, now = performance.now();
@@ -176,7 +184,7 @@
                 ph: Math.random() * 6.28, ox: 0, oy: 0, x: 0, y: 0, keep: Math.random() < (small ? .4 : .45) };
         });
         LOGO.state = reduce ? 'formed' : 'forming'; LOGO.t0 = now; LOGO.formAt = now + (reduce ? 0 : 1950); LOGO.doneAt = now + (reduce ? 0 : 2650);
-        setTimeout(buildSprites, reduce ? 0 : 120);
+        buildSprites();
         return reduce ? 1 : 1950;
     }
     var logoStyle = ($('#auEmblem') || {}).dataset ? $('#auEmblem').dataset.style || 'particles' : 'particles';

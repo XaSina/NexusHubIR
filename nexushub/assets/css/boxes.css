@@ -175,3 +175,6 @@
 /* performance: no per-frame repaint loops */
 .nxp-theme-neon { animation: none; box-shadow: 0 0 0 1px rgba(var(--nxp-rgb), .5), 0 0 28px -6px rgba(var(--nxp-rgb), .55); }
 .nxp-holo { mix-blend-mode: normal; animation: none; opacity: .3; }
+
+/* no halos on promo boxes */
+.nxp, .nxp-btn, .nxp:hover .nxp-btn, .nxp-ribbon, .nxp-theme-glitch, .nxp-theme-fire, .nxp-theme-neon { box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important; }

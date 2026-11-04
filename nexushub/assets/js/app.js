@@ -45,10 +45,10 @@
        Leaving: restart the loader loops at 0, remember when the warp started, start loading the next page while the
        iris is still closing (the old page stays on screen until the new one paints).
        Arriving: keep the cover until fonts + logo are ready (and at least ~0.9s since the warp began), then exit. */
-    function warpRestart(w) { w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); document.documentElement.style.removeProperty('--wt'); }
+    function warpRestart(w) { var d = document.documentElement; d.classList.remove('warp-out'); d.style.removeProperty('--wt'); w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); }
     function warpExit() {
         var root = document.documentElement, t = parseFloat(root.style.getPropertyValue('--wt')) || 0;
-        var hold = Math.max(0, 900 + t);                 // --wt is negative: time already spent covered
+        var hold = Math.max(0, 1050 + t);                // --wt is negative: time already spent covered (line under the name completes first)
         var ready = [];
         if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
         var logo = document.querySelector('.nx-warp-core img');
@@ -58,7 +58,7 @@
             return new Promise(function (res) {
                 requestAnimationFrame(function () { requestAnimationFrame(function () {
                     root.classList.add('warp-out'); root.classList.remove('warp-in');
-                    setTimeout(function () { root.classList.remove('warp-out'); root.style.removeProperty('--wt'); }, 1300);
+                    // no clean-up later: dropping classes at the end restyled the whole page and caused a visible hitch
                     res();
                 }); });
             });
@@ -130,7 +130,7 @@
                 io.unobserve(el);
                 el.style.setProperty('--rd', d + 'ms');
                 el.classList.add('in');
-                setTimeout(function () { el.removeAttribute('data-reveal'); el.classList.remove('in'); el.style.removeProperty('--rd'); }, 1500 + d);
+                setTimeout(function () { el.removeAttribute('data-reveal'); el.classList.remove('in'); el.style.removeProperty('--rd'); }, 2100 + d);
             });
         }, { rootMargin: '0px 0px -40px 0px', threshold: 0 });
         $$('[data-reveal]').forEach(function (el) { io.observe(el); });

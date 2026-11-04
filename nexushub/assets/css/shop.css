@@ -635,3 +635,10 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
 .mkt-rf:active { transform: scale(.92); }
 .mkt-rf.spin svg { animation: mktSpin .8s linear infinite; }
 @keyframes mktSpin { to { transform: rotate(360deg); } }
+
+/* no halos in the shop either */
+.shop-cats a.active, .pcard-shop, .pcard-shop:hover, .ps-badge, .ss span, .pkg input:checked + .pkg-box, .fly-dot, .os-beam, .os-beam::after,
+.order-steps li.done .os-ic, .order-steps li.now .os-ic, .bank-card, .sr-core, .suh-ic, .rate-chip, .mkt, .mkt-it, .cart-sum, .co-card, .pay-box, .state-card {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+.pcard-shop:hover { border-color: rgba(var(--primary-rgb), .4); }

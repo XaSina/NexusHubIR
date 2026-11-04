@@ -18,7 +18,7 @@
     --surface-rgb: 18,18,24; --glass-a: .55; --blur: 18px;
     --line: rgba(255,255,255,.08);
     --radius: 20px; --fs: 16px;
-    --shadow: 0 10px 24px -12px rgba(0,0,0,.6);
+    --shadow: 0 0 0 0 transparent;
     --grad: linear-gradient(135deg, var(--primary), var(--secondary));
     --ease: cubic-bezier(.22,1,.36,1); --ease-out: cubic-bezier(.16,1,.3,1); --ease-spring: cubic-bezier(.34,1.56,.64,1);
     --header-h: 76px;
@@ -1176,3 +1176,73 @@ body.cards-elevated .glass:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255,
 .to-top:hover { border-color: rgba(var(--primary-rgb), .5); background: rgba(var(--primary-rgb), .12); }
 .to-top svg:not(.to-top-ring) { transition: transform .3s var(--ease); }
 .to-top:hover svg:not(.to-top-ring) { transform: translateY(-2px); }
+
+/* ===================== No halos: in-page elements carry no outer glow / drop shadow =====================
+   (floating overlays — menus, toasts, notification panel — keep a small shadow so they stay readable) */
+.glass, .pcard, .pcard-card, .pcard-card:hover, .pcard-big, .pcard-row, .pcard-rank, .trend-item, .widget, .post-cover, .prose img, .video-embed,
+.sec-icon, .cat-block .sec-icon, .chip, .chip:hover, .chip-hot, .trend-num, .trend-item:first-child .trend-num, .pg-num.active, .cc-icon, .ph-icon,
+.btn-primary, .btn-primary:hover, .btn-glow:hover, .btn-tg, .btn-tg:hover, .btn-account:hover, .ba-avatar, .react.mine,
+.share-btn.tg:hover, .share-btn.wa:hover, .share-btn.copy:hover, .share-btn.native:hover, .f-social a:hover, .f-cta-icon,
+.wtg-logo img, .tg-cta-logo img, .mcard, .mcard-brand img, .acc-tabs button.active, .nx-player, .prose .np-dl, .np-dl, .to-top,
+.site-header.scrolled .header-inner, .footer-glow,
+body.cards-neon .glass, body.cards-gradient .glass, body.cards-elevated .glass, body.cards-elevated .glass:hover, body.cards-holo .glass, body.cards-frost .glass {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+.footer-glow { opacity: .5; }
+/* replace glows with a crisp border response */
+.pcard-card:hover, .trend-item:hover, .widget:hover { border-color: rgba(var(--primary-rgb), .38); }
+body.cards-neon .glass { border-color: rgba(var(--primary-rgb), .5); }
+body.cards-elevated .glass { box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 0 rgba(0,0,0,.35) !important; }
+.sec-icon, .cat-block .sec-icon { border: 1px solid rgba(255,255,255,.16); }
+
+/* ===================== Motion v3: softer, more cinematic scroll reveals + gentle site-wide motion ===================== */
+:root { --ease-silk: cubic-bezier(.19,1,.22,1); }
+/* cards rise and un-tilt out of the page (perspective), fade softly */
+.js-reveal [data-reveal] { opacity: 0; transform: perspective(1100px) translate3d(0, 46px, 0) rotateX(9deg) scale(.97); transform-origin: 50% 0;
+    transition: opacity .9s ease var(--rd, 0ms), transform 1.25s var(--ease-silk) var(--rd, 0ms); }
+.js-reveal [data-reveal].in { opacity: 1; transform: none; }
+.js-reveal .pcard-row[data-reveal], .js-reveal .pcard-rank[data-reveal] { transform: perspective(1100px) translate3d(34px, 0, 0) rotateY(-8deg); transform-origin: 100% 50%; }
+.js-reveal .h-scroll [data-reveal] { transform: translate3d(-40px, 0, 0) scale(.97); }
+.js-reveal .widget[data-reveal] { transform: translate3d(0, 30px, 0) scale(.98); }
+/* picture unveils from the bottom while it settles from a slight zoom */
+.js-reveal [data-reveal] .pc-media { clip-path: inset(100% 0 0 0 round 14px); }
+.js-reveal [data-reveal].in .pc-media { clip-path: inset(0 0 0 0 round 14px); transition: clip-path 1.1s var(--ease-silk) calc(var(--rd, 0ms) + .12s); }
+.js-reveal [data-reveal] .cover { transform: scale(1.18); }
+.js-reveal [data-reveal].in .cover { transform: none; transition: transform 1.6s var(--ease-silk) calc(var(--rd, 0ms) + .12s); }
+/* card text follows a beat later */
+.js-reveal [data-reveal] .pc-body > * { opacity: 0; transform: translate3d(0, 12px, 0); }
+.js-reveal [data-reveal].in .pc-body > * { opacity: 1; transform: none; transition: opacity .7s ease, transform .9s var(--ease-silk); }
+.js-reveal [data-reveal].in .pc-body > *:nth-child(1) { transition-delay: calc(var(--rd, 0ms) + .25s); }
+.js-reveal [data-reveal].in .pc-body > *:nth-child(2) { transition-delay: calc(var(--rd, 0ms) + .32s); }
+.js-reveal [data-reveal].in .pc-body > *:nth-child(3) { transition-delay: calc(var(--rd, 0ms) + .39s); }
+.js-reveal [data-reveal].in .pc-body > *:nth-child(n+4) { transition-delay: calc(var(--rd, 0ms) + .46s); }
+/* section titles: underline draws itself */
+.sec-title { position: relative; }
+.sec-title::after { content: ""; position: absolute; right: 52px; bottom: -8px; width: 56px; height: 2px; border-radius: 2px; background: var(--grad); transform-origin: right; transform: scaleX(1); }
+.js-reveal .sec-head[data-reveal] .sec-title::after { transform: scaleX(0); }
+.js-reveal .sec-head[data-reveal].in .sec-title::after { transform: scaleX(1); transition: transform 1s var(--ease-silk) .35s; }
+
+/* hover: a soft lift (independent `translate`, so it never fights the tilt effect) */
+.pcard-card, .trend-item, .pcard-shop, .widget { transition: translate .6s var(--ease-silk), border-color .4s ease, transform .5s var(--ease); }
+.pcard-card:hover, .trend-item:hover, .pcard-shop:hover { translate: 0 -6px; }
+.pcard-row { transition: translate .5s var(--ease-silk), background .3s; }
+.pcard-row:hover { translate: -4px 0; }
+
+/* page arrival: header glides down, content fades up (skipped when arriving through the page warp) */
+html:not(.warp-in) .site-header { animation: hdrIn .9s var(--ease-silk) both; }
+@keyframes hdrIn { from { opacity: 0; transform: translate3d(0, -18px, 0); } }
+html:not(.warp-in) main { animation: mainIn 1s var(--ease-silk) .08s both; }
+@keyframes mainIn { from { opacity: 0; transform: translate3d(0, 14px, 0); } }
+
+/* nav underline grows from the centre; no glow */
+.main-nav a::after { box-shadow: none; transition: left .45s var(--ease-silk), right .45s var(--ease-silk); }
+
+@media (hover: none), (max-width: 900px) {
+    .js-reveal [data-reveal] { transform: translate3d(0, 28px, 0) scale(.98); transition-duration: .7s, .95s; }
+    .js-reveal .pcard-row[data-reveal], .js-reveal .pcard-rank[data-reveal] { transform: translate3d(22px, 0, 0); }
+    .pcard-card:hover, .trend-item:hover, .pcard-shop:hover, .pcard-row:hover { translate: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .js-reveal [data-reveal] .pc-media, .js-reveal [data-reveal] .pc-body > * { clip-path: none !important; opacity: 1 !important; transform: none !important; }
+    html:not(.warp-in) .site-header, html:not(.warp-in) main { animation: none; }
+}
