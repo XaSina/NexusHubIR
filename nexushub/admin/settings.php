@@ -54,7 +54,7 @@ adm_head('تنظیمات', 'settings');
             <?= f_text('contact_email', 'ایمیل تماس', $s['contact_email'], ['ltr' => true, 'placeholder' => 'info@example.com', 'attrs' => 'inputmode="email" autocomplete="off" data-lpignore="true"']) ?>
             <div class="grid g2">
                 <?= f_text('posts_per_page', 'تعداد خبر در هر صفحه', $s['posts_per_page'], ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
-                <?= f_text('archive_per_page', 'تعداد خبر در هر صفحه‌ی «همه اخبار»', (string) ($s['archive_per_page'] ?? 15), ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
+                <?= f_text('archive_per_page', 'تعداد خبر در هر صفحه (همه اخبار، دسته‌ها، برچسب‌ها و جستجو)', (string) ($s['archive_per_page'] ?? 9), ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
                 <?= f_text('trending_days', 'بازه «داغ‌ترین‌ها» (روز)', $s['trending_days'], ['type' => 'number', 'min' => 1, 'max' => 365]) ?>
             </div>
         </div>

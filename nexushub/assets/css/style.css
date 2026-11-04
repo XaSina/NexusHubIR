@@ -1106,7 +1106,7 @@ body.cards-frost .glass { -webkit-backdrop-filter: blur(calc(var(--blur) + 14px)
 
 
 /* don't render far-below sections until they come near the screen (faster load, smoother scroll) */
-.cat-block, .trending, .home-shop, .site-footer { content-visibility: auto; contain-intrinsic-size: auto 620px; }
+.site-footer { content-visibility: auto; contain-intrinsic-size: auto 620px; }   /* never on sections with sideways rows: they were laid out late and jumped */
 
 @media (hover: none), (max-width: 900px) {
     /* the phone rule above lost to `.bg-blob.b1` etc. — keep the glows still on phones */
@@ -1262,3 +1262,6 @@ html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .tren
 .pagination { transition: opacity .3s ease; }
 .grid-cards.pg-out ~ .pagination { opacity: .4; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .grid-cards .pg-new { animation: none; } .grid-cards.pg-out > * { transition: none; } }
+
+/* sideways rows: start exactly at the first card (no snap correction on load), stay put */
+.h-scroll { scroll-padding-inline: 4px; overscroll-behavior-x: contain; }

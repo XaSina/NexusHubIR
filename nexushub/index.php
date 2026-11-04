@@ -31,7 +31,7 @@ function not_found(): never
 $path = route_path();
 $seg = $path === '' ? [] : explode('/', $path);
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$per = max(1, min(60, (int) setting('posts_per_page', 12)));
+$per = max(3, min(60, (int) setting('archive_per_page', 9)));   // all list pages: all news, categories, tags, authors, search
 
 // حالت تعمیر
 if (setting_on('maintenance') && (!current_user() || isset($_GET['maintenance_preview'])) && ($seg[0] ?? '') !== 'go') {
@@ -91,7 +91,6 @@ switch ($seg[0] ?? '') {
 
     case 'archive':
         track_visit();
-        $per = max(3, min(60, (int) setting('archive_per_page', 15)));
         [$posts, $total] = get_posts(['limit' => $per, 'offset' => ($page - 1) * $per, 'count' => true]);
         $pg = paginate($total, $per, $page);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => 'همه اخبار', 'icon' => '📰', 'sub' => 'جدیدترین مطالب ' . setting('site_title'), 'base' => url('archive'), 'bodyClass' => 'page-list'], [

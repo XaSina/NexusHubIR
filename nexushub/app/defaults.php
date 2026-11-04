@@ -84,7 +84,7 @@ function default_settings(): array
         'reactions_enabled' => '1',
         'reactions_list' => '🔥,❤️,😂,😮,😭,👍',
         'trending_days' => '30',
-        'archive_per_page' => '15',
+        'archive_per_page' => '9',
         'latest_mode' => 'count',   // count | hours | since
         'latest_count' => '12',
         'latest_hours' => '72',
