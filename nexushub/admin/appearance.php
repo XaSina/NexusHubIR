@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var fx = r.dataset.fx, follow = document.getElementById('fxFollow');
             if (!fx || !follow || !follow.checked) return;
             var t = document.querySelector('input[name=bg_effect][value="' + fx + '"]');
-            if (t) { t.checked = true; NXA.toast && NXA.toast('افکت پس‌زمینه‌ی پیشنهادی این تم انتخاب شد ✨'); }
+            if (t) t.checked = true;   // silently follows the theme (no toast covering the save bar)
         });
     });
 });

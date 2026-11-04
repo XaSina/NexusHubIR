@@ -130,7 +130,7 @@
     }
     // even, slightly jittered grid over the mark → uniform, crisp particle coverage
     function sampleMark(img, isMark) {
-        var S = 256, oc = document.createElement('canvas'); oc.width = oc.height = S;
+        var S = 384, oc = document.createElement('canvas'); oc.width = oc.height = S;
         var g = oc.getContext('2d'); g.drawImage(img, 0, 0, S, S);
         var d = g.getImageData(0, 0, S, S).data, bg = [d[0], d[1], d[2]];
         var inside = function (x, y) {
@@ -142,14 +142,14 @@
             var dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
             return dr * dr + dg * dg + db * db > 3600;
         };
-        var sz = LOGO.sz || 250, step = (small ? 1.75 : 1.85) / sz * S, pts = [], e = step * 1.8;
+        var sz = LOGO.sz || 250, step = (small ? 1.3 : 1.35) / sz * S, pts = [], e = step * 2.2;
         for (var y = step / 2; y < S; y += step) for (var x = step / 2; x < S; x += step) {
             var jx = x + (Math.random() - .5) * step * .9, jy = y + (Math.random() - .5) * step * .9;
             if (!inside(jx, jy)) continue;
             var edge = !inside(jx + e, jy) || !inside(jx - e, jy) || !inside(jx, jy + e) || !inside(jx, jy - e);
             pts.push([jx / S - .5, jy / S - .5, edge ? 2 : (Math.random() < .6 ? 1 : 0), Math.random() < .12 ? 1.5 : (Math.random() < .5 ? 1.15 : .95)]);
         }
-        var cap = small ? 3200 : 4800;
+        var cap = small ? 5200 : 7600;
         if (pts.length > cap) { for (var k = pts.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = pts[k]; pts[k] = pts[j]; pts[j] = t; } pts.length = cap; }
         return pts;
     }
@@ -211,11 +211,18 @@
         gx.globalAlpha = .07;
         for (var q = 0; q < L.parts.length; q += 9) { var pp = L.parts[q]; gx.drawImage(spP, pp.nx * L.sz + o - 13, pp.ny * L.sz + o - 13, 26, 26); }
         glowCv = g[0];
-        var c2 = mk(), cx2 = c2[1];
-        cx2.drawImage(glowCv, 0, 0, gsz, gsz);
         var paths = [new Path2D(), new Path2D(), new Path2D()];
         for (var i = 0; i < L.parts.length; i++) { var p = L.parts[i], z = s2 * p.k; paths[p.b].rect(p.nx * L.sz + o - z / 2, p.ny * L.sz + o - z / 2, z, z); }
-        for (var k = 0; k < 3; k++) { cx2.fillStyle = RED[k]; cx2.fill(paths[k]); }
+        var d = mk(), dx = d[1];
+        for (var k = 0; k < 3; k++) { dx.fillStyle = RED[k]; dx.fill(paths[k]); }
+        var c2 = mk(), cx2 = c2[1];
+        cx2.setTransform(1, 0, 0, 1, 0, 0);
+        if ('filter' in cx2) {
+            cx2.filter = 'blur(' + Math.round(10 * dpr) + 'px)'; cx2.globalAlpha = .55; cx2.drawImage(d[0], 0, 0);   // wide soft halo
+            cx2.filter = 'blur(' + Math.round(2.5 * dpr) + 'px)'; cx2.globalAlpha = .7; cx2.drawImage(d[0], 0, 0);   // tight bloom around each stroke
+            cx2.filter = 'none';
+        } else { cx2.globalAlpha = 1; cx2.drawImage(glowCv, 0, 0, m, m); }
+        cx2.globalAlpha = 1; cx2.drawImage(d[0], 0, 0);                                                                  // crisp dots on top
         comboCv = c2[0]; dotsCv = true;
     }
     // orbit: draws itself in once the logo forms, then a red comet runs around it; back half is behind the logo
@@ -451,6 +458,31 @@
         steps.identify.classList.add('in');
         if (!touch) setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
     });
+
+    /* keyboard on phones: lift the card smoothly (instead of the page jumping) so the focused field stays visible */
+    (function () {
+        var vv = window.visualViewport; if (!vv || !touch) return;
+        var kb = 0, raf = 0;
+        function fit() {
+            raf = 0;
+            var f = document.activeElement, cardEl = $('#auCard');
+            if (!cardEl || stage.hidden) return;
+            var hidden = window.innerHeight - vv.height - vv.offsetTop;            // how much the keyboard covers
+            var target = 0;
+            if (hidden > 80 && f && cardEl.contains(f)) {
+                var r = f.getBoundingClientRect(), cr = cardEl.getBoundingClientRect();
+                var bottomLimit = vv.offsetTop + vv.height - 16, btn = cardEl.querySelector('.au-step.in .au-btn');
+                var want = btn ? Math.max(r.bottom, Math.min(btn.getBoundingClientRect().bottom, cr.bottom)) : r.bottom;
+                var over = (want - kb) - bottomLimit;                            // positions without the current lift
+                target = over > 0 ? -Math.min(over, (cr.top - kb) - 12) : 0;
+            }
+            if (Math.abs(target - kb) > 2) { kb = Math.round(target); cardEl.style.setProperty('--kb', kb + 'px'); }
+        }
+        var q = function () { if (!raf) raf = requestAnimationFrame(fit); };
+        vv.addEventListener('resize', q); vv.addEventListener('scroll', q);
+        document.addEventListener('focusin', function () { setTimeout(q, 60); setTimeout(q, 350); });
+        document.addEventListener('focusout', function () { setTimeout(q, 120); });
+    })();
 
     function setDots(n) { dots.forEach(function (d, i) { d.classList.toggle('on', i < n); }); }
     function show(name) {
@@ -692,7 +724,7 @@
         av.textContent = letter;
         // shared-element flight: the avatar (or the button) travels into the centre of the ring
         var src = $('#auAvatar'); if (!src || !src.offsetParent) src = $('.au-btn.done') || $('#auFinish');
-        var from = src ? src.getBoundingClientRect() : null, fly = null;
+        var from = null, fly = null;   // the avatar now simply blooms in place (smoother than flying across)
         if (from && !reduce && document.body.animate) {
             fly = document.createElement('div'); fly.className = 'au-fly'; fly.textContent = letter;
             var sz = Math.min(from.width, from.height);
@@ -711,7 +743,7 @@
                 an.onfinish = res; setTimeout(res, 900);
             });
             av.classList.add('on'); fly.remove();
-        } else { av.classList.add('on'); }
+        } else { void av.offsetWidth; setTimeout(function () { av.classList.add('on'); }, reduce ? 0 : 180); await wait(500); }
         var lines = ['> handshake with nexus core ... <b>OK</b>', '> verifying identity [' + (j.code || 'NX') + '] ... <b>OK</b>', '> decrypting member profile ... <b>OK</b>', '> syncing preferences ... <b>OK</b>', '> access level: <b>MEMBER</b>'];
         var start = performance.now(), dur = reduce ? 1 : 1800, shown = 0;
         await new Promise(function (res) {

@@ -87,7 +87,7 @@ adm_head('اعضای سایت', 'members');
                         </a>
                     </td>
                     <td><span class="badge b-hot ltr" data-copy="<?= e($m['member_code']) ?>" style="cursor:pointer" title="کپی"><?= e($m['member_code']) ?></span></td>
-                    <td class="hide-m ltr small"><?= e($m['phone']) ?></td>
+                    <td class="ltr small m-phone"><?= e($m['phone']) ?></td>
                     <td class="hide-m ltr small"><?= e($m['email']) ?></td>
                     <td class="hide-m small muted"><?= jdate('j F Y', $m['created_at']) ?></td>
                     <td class="hide-m small muted"><?= $m['last_login'] ? jago($m['last_login']) : '—' ?></td>

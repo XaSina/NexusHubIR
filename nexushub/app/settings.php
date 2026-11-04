@@ -92,6 +92,8 @@ function theme_css_vars(): string
         '--primary-rgb' => hex_to_rgb($c['primary']),
         '--secondary' => $c['secondary'],
         '--secondary-rgb' => hex_to_rgb($c['secondary']),
+        // text colour on primary-coloured buttons: dark on light themes (silver / white), white otherwise
+        '--on-primary' => (function ($h) { [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($h))); return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 165 ? '#14151a' : '#fff'; })((string) $c['primary']),
         '--bg' => $c['bg'],
         '--bg-rgb' => hex_to_rgb($c['bg']),
         '--blur' => $blur . 'px',

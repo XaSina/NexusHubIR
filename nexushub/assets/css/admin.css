@@ -906,3 +906,47 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .mkt-tbl { width: 100%; margin: 10px 0 6px; border-collapse: collapse; font-size: .8rem; }
 .mkt-tbl th { text-align: right; color: var(--a-muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--a-line); }
 .mkt-tbl td { padding: 6px 8px; border-bottom: 1px dashed var(--a-line); white-space: nowrap; }
+
+/* tables: left-to-right values (numbers, codes, emails) line up under their right-aligned column titles */
+.tbl td.ltr, .tbl td .ltr { direction: ltr; text-align: right; font-variant-numeric: tabular-nums; }
+.tbl td { font-variant-numeric: tabular-nums; }
+.tbl .badge.ltr { display: inline-block; min-width: 96px; text-align: center; letter-spacing: .5px; }
+@media (max-width: 680px) {
+    .tbl td.m-phone { order: 3; flex: 1 1 100%; color: var(--a-muted); font-size: .82rem; padding-inline-start: 52px; }
+    .tbl td.m-phone::before { content: "📱 "; }
+}
+@media (max-width: 680px) {
+    .tbl td.m-phone { order: 4; padding-inline-start: 0; padding-inline-end: 52px; text-align: right; }
+    .tbl tr:has(.m-phone) td:last-child { order: 5; }
+}
+
+/* ---------- price calculator ---------- */
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 14px; }
+.calc-in, .calc-out { position: relative; padding: 16px; border-radius: 18px; background: var(--a-surface2); border: 1px solid var(--a-line); }
+.calc-lbl { display: block; font-size: .78rem; color: var(--a-muted); margin-bottom: 6px; }
+.calc-amt { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 14px; background: rgba(var(--a-ink), .04); border: 1px solid var(--a-line); transition: border-color .25s, box-shadow .25s; direction: ltr; }
+.calc-amt:focus-within { border-color: rgba(var(--primary-rgb), .7); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .14); }
+.calc-amt input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 1.7rem; font-weight: 900; font-variant-numeric: tabular-nums; padding: 4px 0; }
+.calc-amt span { font-weight: 900; color: var(--primary); font-size: 1rem; }
+.calc-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin-top: 10px; padding: 4px; border-radius: 13px; background: rgba(var(--a-ink), .05); border: 1px solid var(--a-line); }
+.calc-seg button { position: relative; z-index: 1; height: 36px; border-radius: 10px; font-size: .84rem; font-weight: 800; color: var(--a-muted); transition: color .25s; }
+.calc-seg button.on { color: #fff; }
+.calc-seg i { position: absolute; top: 4px; bottom: 4px; right: 4px; width: calc(50% - 4px); border-radius: 10px; background: var(--grad); box-shadow: 0 8px 20px -10px rgba(var(--primary-rgb), .9); transition: transform .35s var(--ease); }
+.calc-seg.alt i { transform: translateX(-100%); }
+.calc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.calc-chips button { min-width: 44px; height: 32px; padding: 0 10px; border-radius: 10px; font-size: .8rem; font-weight: 800; background: rgba(var(--a-ink), .04); border: 1px solid var(--a-line); transition: .2s; }
+.calc-chips button:hover { border-color: rgba(var(--primary-rgb), .55); color: var(--primary); transform: translateY(-1px); }
+.calc-out { overflow: hidden; display: flex; flex-direction: column; justify-content: center;
+    background: radial-gradient(120% 90% at 100% 0%, rgba(var(--primary-rgb), .16), transparent 60%), var(--a-surface2); border-color: rgba(var(--primary-rgb), .28); }
+.calc-out > small { font-size: .78rem; color: var(--a-muted); }
+.calc-total { display: flex; align-items: baseline; gap: 8px; margin: 4px 0 12px; }
+.calc-total b { font-size: clamp(1.6rem, 3.2vw, 2.3rem); font-weight: 900; line-height: 1.2; font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, var(--a-text) 30%, var(--primary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.calc-total b.flip { animation: calcFlip .45s var(--ease); }
+@keyframes calcFlip { from { opacity: .3; transform: translateY(6px); } }
+.calc-total em { font-style: normal; font-size: .85rem; color: var(--a-muted); }
+.calc-br { list-style: none; margin: 0; padding: 10px 0 0; border-top: 1px dashed var(--a-line); display: grid; gap: 6px; }
+.calc-br li { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; }
+.calc-br li span { color: var(--a-muted); } .calc-br li span em { font-style: normal; }
+.calc-br li b { font-variant-numeric: tabular-nums; }
+@media (max-width: 680px) { .calc { grid-template-columns: 1fr; } }

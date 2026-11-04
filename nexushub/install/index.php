@@ -36,7 +36,7 @@ foreach ($critical as $c) if (!$req[$c]) $canInstall = false;
 
 $f = [
     'db_host' => 'localhost', 'db_port' => '3306', 'db_name' => 'nexushub', 'db_user' => 'root', 'db_pass' => '',
-    'site_title' => 'NEXUS | HUB', 'admin_user' => 'admin', 'admin_name' => 'مدیر NEXUS', 'admin_email' => '', 'admin_pass' => '', 'demo' => '1',
+    'site_title' => 'NEXUS | HUB', 'admin_user' => 'admin', 'admin_name' => 'NexusHub', 'admin_email' => '', 'admin_pass' => '', 'demo' => '1',
 ];
 
 if (!$locked && $canInstall && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {

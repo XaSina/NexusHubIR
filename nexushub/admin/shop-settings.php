@@ -135,10 +135,23 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
     </div>
     <div class="card mt">
         <div class="card-head"><h3>🧮 ماشین‌حساب قیمت</h3><span class="muted small">قیمت نهایی را قبل از تعریف بسته ببینید</span></div>
-        <div class="calc-row">
-            <input id="cAmt" dir="ltr" inputmode="decimal" placeholder="مقدار" value="12">
-            <select id="cType"><option value="usd">دلار ($)</option><option value="ton">TON</option></select>
-            <span>=</span><b id="cOut">—</b><small class="muted">تومان (با سود و گرد کردن)</small>
+        <div class="calc">
+            <div class="calc-in">
+                <span class="calc-lbl">مقدار</span>
+                <label class="calc-amt"><input id="cAmt" dir="ltr" inputmode="decimal" placeholder="0" value="12" autocomplete="off"><span id="cUnit">$</span></label>
+                <div class="calc-seg" id="cSeg"><button type="button" data-v="usd" class="on">💵 دلار</button><button type="button" data-v="ton">💎 TON</button><i></i></div>
+                <div class="calc-chips" id="cChips"><?php foreach ([1, 5, 10, 25, 50, 100] as $q): ?><button type="button" data-a="<?= $q ?>"><?= fa_num((string) $q) ?></button><?php endforeach; ?></div>
+                <input type="hidden" id="cType" value="usd">
+            </div>
+            <div class="calc-out">
+                <small>قیمت نهایی برای مشتری</small>
+                <div class="calc-total"><b id="cOut">—</b><em>تومان</em></div>
+                <ul class="calc-br">
+                    <li><span>قیمت پایه</span><b id="cBase" dir="ltr">—</b></li>
+                    <li><span>سود <em id="cMarP"></em></span><b id="cMar" dir="ltr">—</b></li>
+                    <li><span>گرد کردن</span><b id="cRnd" dir="ltr">—</b></li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -220,13 +233,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (tab) { var b = document.querySelector('[data-tab="' + tab + '"]'); if (b) b.click(); }
     document.getElementById('shopSet').addEventListener('submit', function () { var a = document.querySelector('[data-tab].active'); document.getElementById('tabKeep').value = a ? a.dataset.tab : ''; });
     var R = { ton: <?= json_encode($r['ton']) ?>, usd: <?= json_encode($r['usd']) ?> };
+    var fmtT = function (n) { return A.fa(String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '٬')); };
     function calc() {
         var usd = parseFloat(en(document.getElementById('usdIn').value)) || R.usd, m = parseFloat(en(document.getElementById('marginIn').value)) || 0, rd = +document.getElementById('roundIn').value || 1;
         var a = parseFloat(en(document.getElementById('cAmt').value)) || 0, t = document.getElementById('cType').value;
-        var v = t === 'usd' ? a * usd : a * (R.ton || 0) * usd;
-        v = v * (1 + m / 100);
-        document.getElementById('cOut').textContent = v > 0 ? A.fa(String(Math.ceil(v / rd) * rd).replace(/\B(?=(\d{3})+(?!\d))/g, '٬')) : '—';
+        var base = t === 'usd' ? a * usd : a * (R.ton || 0) * usd, withM = base * (1 + m / 100), fin = withM > 0 ? Math.ceil(withM / rd) * rd : 0;
+        var out = document.getElementById('cOut'), txt = fin > 0 ? fmtT(fin) : '—';
+        if (out.textContent !== txt) { out.textContent = txt; out.classList.remove('flip'); void out.offsetWidth; out.classList.add('flip'); }
+        document.getElementById('cBase').textContent = base > 0 ? fmtT(base) : '—';
+        document.getElementById('cMar').textContent = base > 0 ? '+' + fmtT(withM - base) : '—';
+        document.getElementById('cMarP').textContent = m ? '(' + A.fa(String(m)) + '٪)' : '';
+        document.getElementById('cRnd').textContent = fin > 0 ? '+' + fmtT(fin - withM) : '—';
+        document.getElementById('cUnit').textContent = t === 'usd' ? '$' : 'TON';
     }
+    var seg = document.getElementById('cSeg');
+    seg.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        [].forEach.call(seg.querySelectorAll('button'), function (x) { x.classList.toggle('on', x === b); });
+        seg.classList.toggle('alt', b.dataset.v === 'ton');
+        var s = document.getElementById('cType'); s.value = b.dataset.v; s.dispatchEvent(new Event('change'));
+    });
+    document.getElementById('cChips').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var i = document.getElementById('cAmt'); i.value = b.dataset.a; i.dispatchEvent(new Event('input'));
+    });
     ['usdIn', 'marginIn', 'roundIn', 'cAmt', 'cType'].forEach(function (id) { var el = document.getElementById(id); el.addEventListener('input', calc); el.addEventListener('change', calc); });
     calc();
     document.getElementById('mktTest').addEventListener('click', function () {

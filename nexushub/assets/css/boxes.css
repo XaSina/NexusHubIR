@@ -171,3 +171,7 @@
 /* the corner ribbon never sits on top of the icon / title */
 .nxp:has(.nxp-ribbon) .nxp-head { padding-right: 46px; }
 .nxp:has(.nxp-ribbon) .nxp-fmt-image .nxp-inner, .nxp-fmt-image:has(.nxp-ribbon) .nxp-head { padding-right: 0; }
+
+/* performance: no per-frame repaint loops */
+.nxp-theme-neon { animation: none; box-shadow: 0 0 0 1px rgba(var(--nxp-rgb), .5), 0 0 28px -6px rgba(var(--nxp-rgb), .55); }
+.nxp-holo { mix-blend-mode: normal; animation: none; opacity: .3; }

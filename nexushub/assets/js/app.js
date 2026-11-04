@@ -142,7 +142,7 @@
     if (cv && !reduce) {
         var ctx = cv.getContext('2d');
         var lite = window.matchMedia('(hover: none), (max-width: 900px)').matches;
-        var W, H, dpr = lite ? 1 : Math.min(window.devicePixelRatio || 1, 2), parts = [], cols = [], running = true, scrolling = false, scrollT, tick = 0;
+        var W, H, dpr = 1, parts = [], cols = [], running = true, scrolling = false, scrollT, tick = 0;
         var hexToRgb = function (h) { h = h.replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
         var pc = hexToRgb(NX.primary || '#ff1f3d'), sc = hexToRgb(NX.secondary || '#ff7a3d');
         var rgba = function (c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; };
@@ -256,7 +256,7 @@
             }
         }
         var draw = { matrix: drawMatrix, stars: drawStars, waves: drawWaves, bokeh: drawBokeh, fireflies: drawMotes, embers: drawMotes, rain: drawRain }[mode] || drawParticles;
-        var last = 0, frame = mode === 'matrix' ? 55 : (lite ? 33 : 0);
+        var last = 0, frame = mode === 'matrix' ? 55 : 33;   // slow ambient motion: 30fps everywhere
         var looping = false;                             // guard: never run two loops at once (tab switches used to start a second one)
         function kick() { if (!looping && running && !scrolling) { looping = true; requestAnimationFrame(loop); } }
         function loop(t) {

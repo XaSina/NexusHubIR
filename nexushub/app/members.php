@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 6;
+const NX_DB_VERSION = 7;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -43,6 +43,10 @@ function nx_migrate(): void
             save_settings(['home_sections' => json_encode($hs, JSON_UNESCAPED_UNICODE)]);
         }
         private_dir();
+    }
+    if ($v < 7) {
+        // v7: the default admin display name becomes the brand name
+        q("UPDATE users SET display_name = 'NexusHub' WHERE display_name IN ('مدیر NEXUS', 'مدیر nexus')");
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
