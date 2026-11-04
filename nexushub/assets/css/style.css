@@ -1272,3 +1272,35 @@ html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .tren
 .tilt.tilting .cover { transform: scale(1.1); }
 .tilt .card-shine { transition: opacity .4s ease; }
 .tilt.tilting .card-shine { opacity: 1; }
+
+/* ======================================================================
+   Responsive safety net: nothing may be wider than the phone screen
+   (bare `1fr` grid tracks grow to fit wide content such as a video or a long link)
+   ====================================================================== */
+.layout-2col > *, .hero-mag > *, .hm-side > *, .post-nav > *, .form-row > *, .footer-grid > *, .contact-grid > *, .grid-cards > *, .trend-grid > *, .acc-hero > *, .acc-info > * { min-width: 0; }
+.post-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.prose, .post-head, .post-title, .pc-title, .comments, .comment-body, .widget { overflow-wrap: anywhere; word-break: normal; }
+.prose img, .prose video, .prose iframe, .prose embed, .prose object, .prose figure, .nx-player, .nx-player video { max-width: 100%; }
+.prose iframe, .prose video { height: auto; }
+.prose iframe { aspect-ratio: 16 / 9; width: 100%; }
+.prose pre, .prose table { max-width: 100%; }
+.prose pre { white-space: pre; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.prose td, .prose th { min-width: 90px; }
+.search-overlay { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.so-form { max-width: 100%; min-width: 0; }
+.so-field { width: 100%; min-width: 0; box-sizing: border-box; }
+.so-field .btn { flex-shrink: 0; }
+@media (max-width: 1020px) {
+    .layout-2col, .hero-mag, .contact-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+    .hm-side, .hero-grid3, .grid-cards, .grid-cards.cols-2, .post-nav, .form-row, .acc-info { grid-template-columns: minmax(0, 1fr); }
+    .so-label { font-size: 1.25rem; }
+    .so-field { padding-right: 14px; gap: 8px; }
+    .so-field input { font-size: 1rem; }
+}
+@media (max-width: 900px) { .acc-hero { grid-template-columns: minmax(0, 1fr); } }
+/* section titles glide in from inside the page (they used to start 24px past the screen edge) */
+.js-reveal .sec-head[data-reveal] .sec-title { transform: translate3d(-24px, 0, 0); }
+html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: translate3d(24px, 0, 0); }
