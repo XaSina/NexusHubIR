@@ -302,7 +302,7 @@
 
     /* ---------- Scroll: header, progress, to-top, parallax ---------- */
     var header = $('#siteHeader'), prog = $('#readProgress'), toTop = $('#toTop'), postBody = $('.post-body'), par = $('.parallax .cover');
-    var ring = toTop ? $('circle', toTop) : null;
+    var ring = toTop ? ($('.tt-prog', toTop) || $('circle', toTop)) : null;
     function onScroll() {
         var y = window.scrollY, h = document.documentElement.scrollHeight - window.innerHeight;
         if (header) header.classList.toggle('scrolled', y > 30);

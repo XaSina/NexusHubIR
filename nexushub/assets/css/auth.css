@@ -729,3 +729,39 @@ button { cursor: pointer; border: 0; background: none; }
 .au-start-glow { display: none; }
 .au-start, .au-btn, .au-start-label { color: var(--on-primary, #fff); }
 .au-start svg { background: color-mix(in srgb, var(--on-primary, #fff) 14%, transparent); }
+
+/* ======================================================================
+   v8 — start button, holographic planet, gentle keyboard lift
+   ====================================================================== */
+/* keyboard: the card never gets pushed above the top edge */
+@media (max-width: 640px) { .au-stage { place-items: safe center; } }
+.au-card { transition: width .6s var(--ease), height .55s var(--ease), transform .5s var(--ease), translate .6s cubic-bezier(.22,1,.36,1); }
+
+/* start button: dark glass pill, glowing border, arrow orb that floods the button on hover */
+.au-start { gap: 16px; padding: 10px 30px 10px 10px; padding-inline: 30px 10px; color: #fff; border: 1px solid rgba(var(--primary-rgb), .55);
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.015)), rgba(12,7,12,.6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 0 1px rgba(0,0,0,.3), 0 16px 40px -18px rgba(var(--primary-rgb), .85), 0 0 26px -10px rgba(var(--primary-rgb), .7);
+    transition: opacity .7s ease, transform .9s var(--ease-out), box-shadow .4s ease, border-color .4s ease, color .35s ease; }
+.au-start .au-start-label { color: inherit; transition: color .35s ease; }
+.au-start svg { position: relative; z-index: 2; width: 18px; height: 18px; padding: 13px; border-radius: 50%; color: var(--on-primary, #fff);
+    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 60%, var(--secondary))); box-shadow: 0 6px 16px -6px rgba(var(--primary-rgb), .9); transition: transform .45s var(--spring); }
+.au-start-glow { display: block !important; position: absolute; z-index: 0; inset: auto; left: 10px; top: 50%; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 60%, var(--secondary))); transform: scale(1); opacity: 0; animation: none !important;
+    transition: transform .65s cubic-bezier(.65,0,.35,1), opacity .25s ease; }
+.au-start:hover .au-start-glow, .au-start:focus-visible .au-start-glow { opacity: 1; transform: scale(7); }
+.au-start:hover { color: var(--on-primary, #fff); border-color: transparent; transform: translateY(-2px); box-shadow: 0 22px 46px -18px rgba(var(--primary-rgb), 1); }
+.au-start:hover svg { transform: translateX(-4px); animation: none; background: rgba(255,255,255,.18); box-shadow: none; }
+.au-start:active { transform: scale(.97); }
+@media (hover: none) { .au-start:hover .au-start-glow { opacity: 0; transform: scale(1); } .au-start:hover { color: #fff; border-color: rgba(var(--primary-rgb), .55); } }
+.au-start.fired .au-start-glow { opacity: 1; transform: scale(7); }
+.au-start.fired { color: var(--on-primary, #fff); }
+
+/* planet: holographic globe — shaded sphere, thin bright limb, latitude + meridian lines fading into the dark */
+.au-planet { background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--primary) 22%, #0b0609) 0, #080409 22%, #040205 48%);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,.5), inset 0 8px 18px -8px rgba(var(--primary-rgb), .95), inset 0 40px 80px -46px rgba(var(--primary-rgb), .55); }
+.au-planet::after { opacity: .5; background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0 calc(2.2% - 1px), rgba(var(--primary-rgb), .55) calc(2.2% - 1px) 2.2%),
+        repeating-conic-gradient(from 0deg at 50% 50%, transparent 0 4.6deg, rgba(var(--primary-rgb), .45) 4.6deg 4.75deg);
+    background-size: auto; -webkit-mask: radial-gradient(ellipse 46% 13% at 50% 0%, #000 10%, rgba(0,0,0,.35) 55%, transparent 100%); mask: radial-gradient(ellipse 46% 13% at 50% 0%, #000 10%, rgba(0,0,0,.35) 55%, transparent 100%); }
+.au-planet-wrap::after { content: ""; position: absolute; left: 50%; top: 57%; width: 70vmin; height: 2px; margin: -1px 0 0 -35vmin; border-radius: 2px; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(255,255,255,.85), rgba(var(--primary-rgb), .45) 45%, transparent); }
+@media (max-width: 640px) { .au-planet-wrap::after { top: 60%; } }

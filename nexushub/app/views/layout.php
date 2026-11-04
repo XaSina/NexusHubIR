@@ -102,7 +102,10 @@ $jsCfg['cart'] = $cartN;
 <?php endif; ?>
 <?= setting('head_code') ?>
 </head>
-<body class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
+<body class="<?= e($bodyClass) ?>
+<?php if (setting_on('maintenance') && current_user()): ?>
+<div class="mnt-bar" role="status">🔧 <b>حالت تعمیر روشن است</b> — بازدیدکنندگان صفحه‌ی تعمیر را می‌بینند؛ فقط شما (مدیر) سایت را می‌بینید. <a href="?maintenance_preview=1">دیدن صفحه‌ی تعمیر</a> · <a href="<?= e(url('admin/settings.php?tab=advanced')) ?>">خاموش کردن</a></div>
+<?php endif; ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
 <link rel="preload" href="<?= e(logo_url()) ?>" as="image">
 <script>try{var w=+sessionStorage.getItem('nx_warp');if(w){var d=document.documentElement,el=Date.now()-w;d.classList.add('warp-in');if(w>1&&el>=0&&el<20000)d.style.setProperty('--wt',-el+'ms')}}catch(e){}</script>
 <div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e(logo_url()) ?>" alt="" onload="this.classList.add('ok')"></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
@@ -302,7 +305,7 @@ $jsCfg['cart'] = $cartN;
 </div>
 
 <button class="to-top" id="toTop" aria-label="بازگشت به بالا">
-    <svg viewBox="0 0 48 48" class="to-top-ring"><circle cx="24" cy="24" r="21"/></svg>
+    <svg viewBox="0 0 48 48" class="to-top-ring"><circle class="tt-track" cx="24" cy="24" r="21"/><circle class="tt-prog" cx="24" cy="24" r="21"/></svg>
     <?= icon('arrow-up', 20) ?>
 </button>
 <div class="toast-wrap" id="toasts"></div>

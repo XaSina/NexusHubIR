@@ -1171,3 +1171,14 @@ body:not(.cards-frost) :is(.shop-hero, .shop-empty, .contact-form, .tg-cta, .ph-
 .ticker-move a:hover .ic { transform: scale(1.2) rotate(-8deg); }
 .btn-primary, .btn-primary .ic, .chip-feat-on { color: var(--on-primary, #fff); }
 .btn-primary:hover { color: var(--on-primary, #fff); }
+.mnt-bar { position: relative; z-index: 300; padding: 9px 16px; text-align: center; font-size: .84rem; color: #fff; background: linear-gradient(90deg, #b8860b, #d97706); }
+.mnt-bar a { color: #fff; text-decoration: underline; font-weight: 700; margin: 0 4px; }
+/* back-to-top: clean circle, thin progress ring, no clipped glow */
+.to-top { box-shadow: 0 10px 24px -14px rgba(0,0,0,.7); overflow: hidden; }
+.to-top-ring { overflow: visible; }
+.to-top-ring circle { filter: none !important; stroke-width: 2; }
+.to-top-ring .tt-track { stroke: rgba(var(--text-rgb), .1); stroke-dasharray: none; stroke-dashoffset: 0; }
+.to-top-ring .tt-prog { stroke: var(--primary); }
+.to-top:hover { border-color: rgba(var(--primary-rgb), .5); background: rgba(var(--primary-rgb), .12); }
+.to-top svg:not(.to-top-ring) { transition: transform .3s var(--ease); }
+.to-top:hover svg:not(.to-top-ring) { transform: translateY(-2px); }

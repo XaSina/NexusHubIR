@@ -118,3 +118,11 @@ html.warp-in .nx-warp *, html.warp-in .nx-warp *::before, html.warp-in .nx-warp 
     .nx-warp-disc, .nx-warp-core, .nx-warp-fx, html.warp-out .nx-warp-core, html.warp-out .nx-warp-disc, html.warp-out .nx-warp-fx { transition-duration: .01ms !important; }
     .nx-warp * { animation: none !important; }
 }
+
+/* the line under NEXUS | HUB grows out from the centre, then its light runs */
+.wc-bar { transform: scaleX(0); opacity: 0; transition: transform .9s cubic-bezier(.16,1,.3,1) .55s, opacity .3s ease .55s; }
+.nx-warp.cover .wc-bar, .warp-in .wc-bar { transform: none; opacity: 1; }
+.warp-in .wc-bar { transition: none; }
+.wc-bar::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 2px var(--primary, #ff1f3d); opacity: 0; }
+.nx-warp.cover .wc-bar::after { animation: wcSpark .9s cubic-bezier(.16,1,.3,1) .55s; }
+@keyframes wcSpark { 0% { opacity: 1; transform: scale(1.4); } 100% { opacity: 0; transform: scale(.4); } }

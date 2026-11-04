@@ -217,33 +217,38 @@
         for (var k = 0; k < 3; k++) { dx.fillStyle = RED[k]; dx.fill(paths[k]); }
         var c2 = mk(), cx2 = c2[1];
         cx2.setTransform(1, 0, 0, 1, 0, 0);
-        if ('filter' in cx2) {
-            cx2.filter = 'blur(' + Math.round(10 * dpr) + 'px)'; cx2.globalAlpha = .55; cx2.drawImage(d[0], 0, 0);   // wide soft halo
-            cx2.filter = 'blur(' + Math.round(2.5 * dpr) + 'px)'; cx2.globalAlpha = .7; cx2.drawImage(d[0], 0, 0);   // tight bloom around each stroke
-            cx2.filter = 'none';
-        } else { cx2.globalAlpha = 1; cx2.drawImage(glowCv, 0, 0, m, m); }
-        cx2.globalAlpha = 1; cx2.drawImage(d[0], 0, 0);                                                                  // crisp dots on top
+        cx2.globalAlpha = 1; cx2.drawImage(d[0], 0, 0);                                                                  // crisp dots only (no glow)
         comboCv = c2[0]; dotsCv = true;
     }
-    // orbit: draws itself in once the logo forms, then a red comet runs around it; back half is behind the logo
+    // orbit: whirls in as the logo forms (tilt and size settle, comet spins fast then slows to a calm orbit).
+    // Front half (in front of the logo) is brighter than the back half.
     function drawOrbit(now, front) {
-        var L = LOGO, sz = L.sz, rx = sz * .84, ry = sz * .24, rot = -.28, ocy = L.cy + sz * .02;
-        var prog = Math.max(0, Math.min(1, (now - L.formAt + 200) / 1300)); if (!prog) return;
-        var pe = easeOut3(prog), a0 = -1.2, span = pe * 6.2832, N = 72, cr = Math.cos(rot), sr = Math.sin(rot);
-        var pt = function (a) { var ex = Math.cos(a) * rx, ey = Math.sin(a) * ry; return [L.cx + ex * cr - ey * sr, ocy + ex * sr + ey * cr]; };
-        ctx.strokeStyle = rgba(PC, 1); ctx.lineWidth = front ? 1 : .8; ctx.globalAlpha = front ? .5 : .2;
-        ctx.beginPath(); var pen = false;
-        for (var i = 0; i <= N; i++) {
-            var a = a0 + span * i / N, f = Math.sin(a) > 0, q = pt(a);
-            if (f === front) { if (!pen) { ctx.moveTo(q[0], q[1]); pen = true; } else ctx.lineTo(q[0], q[1]); } else pen = false;
+        var L = LOGO, sz = L.sz, ocy = L.cy + sz * .02;
+        var p = Math.max(0, Math.min(1, (now - L.formAt + 350) / 1600)); if (!p) return;
+        var e = 1 - Math.pow(1 - p, 3);
+        var rx = sz * (.5 + .34 * e), ry = sz * (.08 + .16 * e), rot = -.28 - (1 - e) * 1.9, cr = Math.cos(rot), sr = Math.sin(rot);
+        var pt = function (a, k) { k = k || 1; var ex = Math.cos(a) * rx * k, ey = Math.sin(a) * ry * k; return [L.cx + ex * cr - ey * sr, ocy + ex * sr + ey * cr]; };
+        // main ring: brightness follows depth (front = sin>0)
+        var N = small ? 48 : 72;
+        ctx.lineWidth = front ? 1.2 : .9; ctx.strokeStyle = rgba(mix(PC, [255, 255, 255], .25), 1);
+        for (var i = 0; i < N; i++) {
+            var a0 = i / N * 6.2832, a1 = (i + 1) / N * 6.2832, sm = Math.sin((a0 + a1) / 2);
+            if ((sm > 0) !== front) continue;
+            var q0 = pt(a0), q1 = pt(a1);
+            ctx.globalAlpha = e * (front ? .25 + .45 * sm : .1 + .08 * (1 + sm));
+            ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
         }
-        ctx.stroke();
-        // comet: leads the draw-in, then keeps orbiting
-        var head = prog < 1 ? a0 + span : a0 + 6.2832 + (now - L.formAt - 1100) * .0008;
+        // outer dashed ring, slowly counter-rotating (only behind)
+        if (!front) {
+            ctx.save(); ctx.globalAlpha = .16 * e; ctx.setLineDash([2, 7]); ctx.lineDashOffset = -now * .01; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.ellipse(L.cx, ocy, rx * 1.12, ry * 1.12, rot, 0, 6.2832); ctx.stroke(); ctx.restore();
+        }
+        // comet: fast whirl during the entrance, then a calm orbit
+        var head = -1.2 + e * 6.2832 * 1.6 + Math.max(0, now - L.formAt - 1250) * .0008;
         for (var c = 0, cn = small ? 10 : 16; c < cn; c++) {
-            var aa = head - c * (small ? .07 : .045); if (Math.sin(aa) > 0 !== front) continue;
-            var q2 = pt(aa), gs = (c ? 8 : 16) * (1 - c / (cn + 2)) * (front ? 1 : .7);
-            ctx.globalAlpha = (1 - c / cn) * (front ? .9 : .4); ctx.drawImage(spP, q2[0] - gs / 2, q2[1] - gs / 2, gs, gs);
+            var aa = head - c * (small ? .07 : .045) * (1 + (1 - e) * 2); if ((Math.sin(aa) > 0) !== front) continue;
+            var q2 = pt(aa), gs = (c ? 7 : 15) * (1 - c / (cn + 2)) * (front ? 1 : .7);
+            ctx.globalAlpha = e * (1 - c / cn) * (front ? .9 : .35); ctx.drawImage(spP, q2[0] - gs / 2, q2[1] - gs / 2, gs, gs);
         }
         ctx.globalAlpha = 1;
     }
@@ -264,7 +269,7 @@
             L.settled = true;
         } else {
             L.settled = false;
-            if (glowCv && ga) { ctx.globalAlpha = ga; ctx.drawImage(glowCv, gxp, gyp, gsz, gsz); ctx.globalAlpha = 1; }
+
             var paths = [new Path2D(), new Path2D(), new Path2D()];
             for (var i = 0; i < L.parts.length; i++) {
                 var p = L.parts[i], tx = L.cx + p.nx * sz, ty = L.cy + p.ny * sz, x, y, s = ps;
@@ -471,10 +476,9 @@
             var target = 0;
             if (hidden > 80 && f && cardEl.contains(f)) {
                 var r = f.getBoundingClientRect(), cr = cardEl.getBoundingClientRect();
-                var bottomLimit = vv.offsetTop + vv.height - 16, btn = cardEl.querySelector('.au-step.in .au-btn');
-                var want = btn ? Math.max(r.bottom, Math.min(btn.getBoundingClientRect().bottom, cr.bottom)) : r.bottom;
-                var over = (want - kb) - bottomLimit;                            // positions without the current lift
-                target = over > 0 ? -Math.min(over, (cr.top - kb) - 12) : 0;
+                var bottomLimit = vv.offsetTop + vv.height - 20;
+                var over = (r.bottom - kb) - bottomLimit;                        // the focused field only
+                target = over > 0 ? -Math.min(over, (cr.top - kb) - 12, hidden * .45) : 0;
             }
             if (Math.abs(target - kb) > 2) { kb = Math.round(target); cardEl.style.setProperty('--kb', kb + 'px'); }
         }

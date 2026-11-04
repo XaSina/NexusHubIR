@@ -34,7 +34,7 @@ $page = max(1, (int) ($_GET['page'] ?? 1));
 $per = max(1, min(60, (int) setting('posts_per_page', 12)));
 
 // حالت تعمیر
-if (setting_on('maintenance') && !current_user() && ($seg[0] ?? '') !== 'go') {
+if (setting_on('maintenance') && (!current_user() || isset($_GET['maintenance_preview'])) && ($seg[0] ?? '') !== 'go') {
     http_response_code(503);
     echo view('maintenance');
     exit;
