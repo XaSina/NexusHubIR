@@ -90,7 +90,7 @@
        Canvas FX: embers · hyperspace warp · confetti
        ========================================================================== */
     var small = window.innerWidth < 760;
-    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, small ? 1.25 : 2);
+    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, small ? 1 : 2);
     var hex = function (h) { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
     var PC = hex(cssVar('--primary', '#ff1f3d')), SC = hex(cssVar('--secondary', '#ff7a3d'));
     var embers = [], streaks = [], confetti = [], warpUntil = 0, warpStart = 0;
@@ -99,8 +99,15 @@
         return { x: Math.random() * W, y: fresh ? H + Math.random() * 60 : Math.random() * H, vx: (Math.random() - .5) * .35, vy: -(.25 + Math.random() * 1.1),
             r: .5 + Math.random() * 2.2, a: .3 + Math.random() * .7, c: Math.random() < .72 ? PC : SC, w: Math.random() * 6.28 };
     }
+    function glowSprite(c, core) {
+        var o = document.createElement('canvas'), R = 32; o.width = o.height = R * 2;
+        var g = o.getContext('2d'), gr = g.createRadialGradient(R, R, 0, R, R, R);
+        gr.addColorStop(0, 'rgba(' + core + ',1)'); gr.addColorStop(.12, 'rgba(' + core + ',.9)'); gr.addColorStop(.2, 'rgba(' + c.join(',') + ',.35)'); gr.addColorStop(1, 'rgba(' + c.join(',') + ',0)');
+        g.fillStyle = gr; g.fillRect(0, 0, R * 2, R * 2); return o;
+    }
+    var spP = glowSprite(PC, '255,190,170'), spS = glowSprite(SC, '255,230,170');
     size();
-    var EMBERS = Math.min(small ? 45 : 110, Math.floor(W * H / 14000));
+    var EMBERS = Math.min(small ? 34 : 110, Math.floor(W * H / 14000));
     for (var i = 0; i < EMBERS; i++) embers.push(ember(false));
     window.addEventListener('resize', function () { size(); });
 
@@ -115,30 +122,32 @@
             var e = embers[i];
             e.w += .02; e.x += e.vx + Math.sin(e.w) * .25; e.y += e.vy * (1 + k * 6);
             if (e.y < -20) embers[i] = e = ember(true);
-            ctx.fillStyle = 'rgba(' + e.c.join(',') + ',' + (e.a * .18) + ')';
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 4, 0, 6.28); ctx.fill();
-            ctx.fillStyle = 'rgba(255,' + (190 + (e.c === SC ? 40 : 0)) + ',170,' + e.a + ')';
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.r * .8, 0, 6.28); ctx.fill();
+            var es = e.r * 8;
+            ctx.globalAlpha = e.a; ctx.drawImage(e.c === SC ? spS : spP, e.x - es / 2, e.y - es / 2, es, es);
         }
         // hyperspace: soft streaks that fade in as they accelerate, plus a light core that blooms and fades
         var wp = warping ? (now - warpStart) / (warpUntil - warpStart) : 1;
+        ctx.globalAlpha = 1;
         if (warping && !reduce) {
-            var bloom = Math.sin(Math.min(1, wp) * Math.PI);
-            var g = ctx.createRadialGradient(W / 2, H * .55, 0, W / 2, H * .55, Math.max(W, H) * .55);
-            g.addColorStop(0, 'rgba(255,236,225,' + (.32 * bloom) + ')'); g.addColorStop(.35, 'rgba(' + PC.join(',') + ',' + (.14 * bloom) + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-            if (wp < .72) for (var s = 0; s < (small ? 4 : 8); s++) {
+            if (wp < .72) for (var s = 0; s < (small ? 3 : 8); s++) {
                 var ang = Math.random() * 6.283, d0 = 30 + Math.random() * 60;
                 streaks.push({ x: W / 2 + Math.cos(ang) * d0, y: H * .55 + Math.sin(ang) * d0, a: ang, v: 2.5 + Math.random() * 3.5, l: 0, c: Math.random() < .55 ? PC : [255, 245, 238] });
             }
         }
-        for (var j = streaks.length - 1; j >= 0; j--) {
-            var st = streaks[j];
-            st.v *= 1.06; st.l = Math.min(220, st.l + st.v * .8);
-            st.x += Math.cos(st.a) * st.v; st.y += Math.sin(st.a) * st.v;
-            ctx.strokeStyle = 'rgba(' + st.c.join(',') + ',' + (Math.min(1, st.l / 90) * .6).toFixed(3) + ')'; ctx.lineWidth = Math.min(2.2, .8 + st.v * .05);
-            ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(st.x - Math.cos(st.a) * st.l, st.y - Math.sin(st.a) * st.l); ctx.stroke();
-            if (st.x < -300 || st.x > W + 300 || st.y < -300 || st.y > H + 300) streaks.splice(j, 1);
+        if (streaks.length) {
+            // two batched paths (coloured + white) instead of one stroke call per streak
+            var pathC = new Path2D(), pathW = new Path2D();
+            for (var j = streaks.length - 1; j >= 0; j--) {
+                var st = streaks[j];
+                st.v *= 1.06; st.l = Math.min(200, st.l + st.v * .8);
+                st.x += Math.cos(st.a) * st.v; st.y += Math.sin(st.a) * st.v;
+                if (st.x < -260 || st.x > W + 260 || st.y < -260 || st.y > H + 260) { streaks.splice(j, 1); continue; }
+                var pth = st.c === PC ? pathC : pathW;
+                pth.moveTo(st.x, st.y); pth.lineTo(st.x - Math.cos(st.a) * st.l, st.y - Math.sin(st.a) * st.l);
+            }
+            ctx.lineWidth = small ? 1.2 : 1.5;
+            ctx.strokeStyle = 'rgba(' + PC.join(',') + ',.55)'; ctx.stroke(pathC);
+            ctx.strokeStyle = 'rgba(255,245,238,.45)'; ctx.stroke(pathW);
         }
         // confetti
         ctx.globalCompositeOperation = 'source-over';
@@ -198,7 +207,7 @@
         body.classList.add('s1'); setHud('BOOTING');
         await Promise.all([wait(650), logoReady]);
         body.classList.add('s2'); setHud('SIGNAL LOCKED');
-        setTimeout(flash, reduce ? 0 : 1050);       // flash when the logo lands
+        setTimeout(function () { flash(true); }, reduce ? 0 : 1050);       // soft warm flash when the logo lands
         await wait(1300);
         body.classList.add('s3');
         scramble(title, titleText, 1100);

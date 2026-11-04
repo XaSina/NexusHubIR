@@ -523,3 +523,41 @@ button { cursor: pointer; border: 0; background: none; }
     .au-ridges { height: 10vh; top: calc(60% - 10vh); }
 }
 @media (prefers-reduced-motion: reduce) { .au-stars i, .au-godrays i, .au-reflect, .au-flare, .au-flare::after { animation: none !important; } }
+
+/* ======================================================================
+   Phones & tablets: no glitches, steady frame rate
+   - no layers larger than the GPU can hold in one texture (huge rotating rays)
+   - no fine moving stripes (they shimmer/moiré on dense screens)
+   - no RGB-split glitch slices, no per-frame letter-spacing (layout) animation
+   ====================================================================== */
+@media (hover: none), (max-width: 900px) {
+    .au-scan { display: none; }
+    .au-godrays i { width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax; animation: none; }
+    .au-rays { width: 120vmax; height: 120vmax; margin: -60vmax 0 0 -60vmax; animation: raysIn 1s ease .2s forwards; }
+    .au-reflect { background: linear-gradient(to bottom, rgba(var(--secondary-rgb), .6), rgba(var(--primary-rgb), .28) 45%, transparent 100%); }
+    .s1 .au-reflect { animation: none; opacity: .7; }
+    .au-title::before, .au-title::after, .au-granted strong::before, .au-granted strong::after { display: none; }
+    .au-title { transition: opacity .6s ease; }
+    .au-granted strong, .au-granted.on strong { transition: none; letter-spacing: 5px; }
+    .warping .au-scene { transform: scale(1.1); }
+    .au-stars i:nth-child(1) { animation: starTw 4s ease-in-out infinite alternate; }
+    .au-ridge .rl { stroke-width: 1.1; opacity: .6; }
+    .au-ridge .rlf { opacity: .35; }
+    .au-flare::after { display: none; }
+    .au-sunglow i { animation: none; }
+    .au-fog i { animation: none; }
+}
+
+/* warp bloom: a composited light layer (was a full-screen canvas gradient redrawn every frame) */
+.au-bloom { position: absolute; left: 50%; top: 55%; width: 130vmax; height: 130vmax; margin: -65vmax 0 0 -65vmax; border-radius: 50%; pointer-events: none; opacity: 0; transform: scale(.4);
+    background: radial-gradient(circle, rgba(255,236,225,.34) 0, rgba(var(--primary-rgb), .16) 20%, transparent 50%); }
+.warping .au-bloom { animation: bloomGo 1.15s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes bloomGo { 0% { opacity: 0; transform: scale(.4); } 45% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.25); } }
+@media (hover: none), (max-width: 900px) { .au-bloom { width: 110vmax; height: 110vmax; margin: -55vmax 0 0 -55vmax; } }
+@media (prefers-reduced-motion: reduce) { .au-bloom { display: none; } }
+
+/* flashes: a warm, centred glow instead of a full-screen white wash */
+.au-flash.soft { background: radial-gradient(circle at 50% 55%, rgba(255,232,218,.95), rgba(var(--primary-rgb), .45) 40%, transparent 72%); }
+@keyframes flashSoft { 0% { opacity: 0; } 30% { opacity: .3; } 100% { opacity: 0; } }
+.au-bloom { background: radial-gradient(circle, rgba(255,236,225,.24) 0, rgba(var(--primary-rgb), .12) 20%, transparent 48%); }
+@media (hover: none), (max-width: 900px) { @keyframes flashSoft { 0% { opacity: 0; } 30% { opacity: .22; } 100% { opacity: 0; } } }

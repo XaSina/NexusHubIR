@@ -33,7 +33,7 @@
 @keyframes wfSonar { 0% { transform: scale(.7); opacity: 0; } 12% { opacity: .7; } 100% { transform: scale(5.5); opacity: 0; } }
 .wf-sweep { position: absolute; left: 50%; top: 50%; width: 130vmin; height: 130vmin; margin: -65vmin 0 0 -65vmin; border-radius: 50%;
     background: conic-gradient(from 0deg, transparent 0 300deg, rgba(var(--primary-rgb, 255,31,61), .0) 300deg, rgba(var(--primary-rgb, 255,31,61), .16) 356deg, rgba(255,255,255,.22) 359deg, transparent 360deg);
-    -webkit-mask: radial-gradient(circle, transparent 0 70px, #000 71px, rgba(0,0,0,.5) 45%, transparent 66%); mask: radial-gradient(circle, transparent 0 70px, #000 71px, rgba(0,0,0,.5) 45%, transparent 66%);
+    -webkit-mask: radial-gradient(closest-side, transparent 0 11%, #000 12%, rgba(0,0,0,.45) 60%, transparent 100%); mask: radial-gradient(closest-side, transparent 0 11%, #000 12%, rgba(0,0,0,.45) 60%, transparent 100%);
     animation: nxWarpSpin 4.2s linear infinite; }
 .wf-scan { position: absolute; left: 0; right: 0; top: 0; height: 26vh; opacity: .35;
     background: linear-gradient(to bottom, transparent, rgba(var(--primary-rgb, 255,31,61), .05) 60%, rgba(var(--primary-rgb, 255,31,61), .11) 88%, transparent);
@@ -58,7 +58,7 @@
 .wc-ring { position: absolute; border-radius: 50%; }
 /* r1: a comet of light running around the logo */
 .wc-ring.r1 { inset: 6px; background: conic-gradient(from 0deg, transparent 0 55%, rgba(var(--primary-rgb, 255,31,61), .15) 70%, var(--primary, #ff1f3d) 96%, #fff 100%);
-    -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 3px), #000 calc(50% - 2px)); mask: radial-gradient(circle, transparent 0 calc(50% - 3px), #000 calc(50% - 2px));
+    -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
     animation: nxWarpSpin 1.5s linear infinite; }
 .wc-ring.r2 { inset: 18px; border: 1px solid rgba(255,255,255,.14); border-top-color: rgba(var(--secondary-rgb, 255,122,61), .9); animation: nxWarpSpin 2.6s cubic-bezier(.5,.1,.5,.9) infinite reverse; }
 .wc-ring.r3 { inset: -8px; border: 1px dashed rgba(255,255,255,.13); animation: nxWarpSpin 14s linear infinite; }
@@ -99,6 +99,10 @@ html .nx-warp:not(.cover) *, html .nx-warp:not(.cover) *::before, html .nx-warp:
 html.warp-in .nx-warp *, html.warp-in .nx-warp *::before, html.warp-in .nx-warp *::after { animation-play-state: running; }
 .nx-warp.rs *, .nx-warp.rs *::before, .nx-warp.rs *::after { animation: none !important; }
 
+@media (hover: none), (max-width: 900px) {
+    .wf-scan { display: none; }            /* thin moving band shimmers on dense phone screens */
+    .wf-grid { animation: none; }
+}
 @media (max-width: 600px) {
     .wf-corner { width: 30px; height: 30px; }
     .wf-corner.c1, .wf-corner.c2 { top: 14px; } .wf-corner.c3, .wf-corner.c4 { bottom: 14px; }
