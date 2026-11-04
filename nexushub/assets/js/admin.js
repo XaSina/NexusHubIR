@@ -667,5 +667,16 @@
         });
     }, 1000);
 
+    /* animated previews (themes / card styles / effects): only the ones on screen run, the rest pause */
+    function gatePreviews() {
+        var opts = [].slice.call(document.querySelectorAll('.opt')).filter(function (o) { return o.querySelector('.swatch, .cs-thumb, .fx-thumb'); });
+        if (!opts.length) return;
+        opts.forEach(function (o) { o.classList.add('anim-gate'); });
+        if (!('IntersectionObserver' in window)) { opts.forEach(function (o) { o.classList.add('live'); }); return; }
+        var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('live', e.isIntersecting); }); }, { rootMargin: '40px 0px' });
+        opts.forEach(function (o) { io.observe(o); });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gatePreviews); else gatePreviews();
+
     window.NXA = A;
 })();

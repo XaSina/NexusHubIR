@@ -74,7 +74,7 @@ adm_head($a['id'] ? 'ویرایش تبلیغ' : 'تبلیغ جدید', 'ads');
                 <div class="card-head"><h3><?= adm_icon('edit', 20) ?> محتوای تبلیغ</h3></div>
                 <div class="tabs" id="fmtTabs">
                     <?php foreach (ad_formats() as $k => $l): ?>
-                        <label class="opt" style="padding:8px 14px;flex-direction:row;align-items:center"><input type="radio" name="format" value="<?= e($k) ?>" <?= $a['format'] === $k ? 'checked' : '' ?>><b style="font-size:.84rem"><?= e(explode(' (', $l)[0]) ?></b></label>
+                        <label class="opt opt-pill" style="padding:8px 14px;flex-direction:row;align-items:center"><input type="radio" name="format" value="<?= e($k) ?>" <?= $a['format'] === $k ? 'checked' : '' ?>><b style="font-size:.84rem"><?= e(explode(' (', $l)[0]) ?></b></label>
                     <?php endforeach; ?>
                 </div>
                 <div data-fmt="card image">

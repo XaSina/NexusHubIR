@@ -843,3 +843,55 @@ html.theme-light .tbl .thumb, html.theme-light .m-item { background: #e9eaf0; }
 .cs-gradient i { background-image: linear-gradient(#14141c, #14141c), linear-gradient(90deg, var(--primary), var(--secondary), #00e5ff, var(--primary)); background-size: 100% 100%, 200% 100%; }
 @keyframes csHolo { from { background-position: 0 0; } to { background-position: 200% 0; } }
 @keyframes csGrad { from { background-position: 0 0, 0 0; } to { background-position: 0 0, 200% 0; } }
+
+/* ================= Phones: smooth panel ================= */
+@media (hover: none), (max-width: 900px) {
+    /* backdrop blur is the most expensive thing a phone GPU does — use near-opaque surfaces instead */
+    .adm-body *, .adm-body *::before, .adm-body *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    html.theme-dark { --a-surface: rgba(var(--surface-rgb, 22,22,30), .9); }
+    html.theme-light { --a-surface: rgba(255,255,255,.93); }
+    .adm-top { background: rgba(var(--surface-rgb, 22,22,30), .96); }
+    html.theme-light .adm-top { background: rgba(255,255,255,.97); }
+    .sticky-save { background: rgba(var(--surface-rgb, 15,15,22), .97); }
+    html.theme-light .sticky-save { background: rgba(255,255,255,.97); }
+    body.cards-frost .card, body.cards-frost .adm-side, body.cards-frost .adm-top { background: rgba(var(--surface-rgb, 22,22,30), .93); }
+    /* static glow instead of huge blurred, moving blobs */
+    .adm-bg i { filter: none; animation: none; opacity: .28; }
+    .card, .stat, .nxp-card, .opt, .theme-opt { contain: layout paint; }
+}
+@media (max-width: 680px) {
+    /* bottom save bar: big save button + two compact buttons, never cut off */
+    .sticky-save { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; bottom: 8px; }
+    .sticky-save .abtn { min-width: 0; padding: 0 10px; height: 42px; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; justify-content: center; }
+    .sticky-save .abtn-primary { grid-column: 1 / -1; order: -1; height: 46px; font-size: .92rem; }
+    .sticky-save .abtn:only-child { grid-column: 1 / -1; }
+
+    /* tables become stacked rows instead of being cut off at the side */
+    .tbl-wrap { overflow: visible; margin: 0; }
+    .tbl, .tbl tbody { display: block; width: 100%; }
+    .tbl thead { display: none; }
+    .tbl tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px; margin-bottom: 8px; border-radius: 14px; background: var(--a-surface2); border: 1px solid var(--a-line); }
+    .tbl td { display: block; padding: 0; background: none !important; border-radius: 0 !important; min-width: 0; }
+    .tbl td:first-child { flex: 1 1 55%; }
+    .tbl td:first-child:has(> input[type=checkbox]), .tbl td:has(> img.thumb) { flex: 0 0 auto; }
+    .tbl td:has(.t-title) { flex: 1 1 45%; }
+    .tbl td:last-child { margin-inline-start: auto; }
+    .tbl .actions { flex-wrap: wrap; }
+    .tbl .t-title { max-width: none; }
+    .tbl tbody tr:hover { background: rgba(var(--primary-rgb), .07); }
+    .tbl tbody tr:hover td { background: none !important; }
+    .tbl td[colspan] { flex: 1 1 100%; text-align: center; }
+
+    /* ad theme picker: name and description stacked */
+    .theme-opt .t-name { flex-direction: column; gap: 2px; line-height: 1.5; }
+}
+/* small pill options (e.g. ad format): check sits beside the text, not on it */
+.opt.opt-pill { gap: 8px; }
+.opt.opt-pill:has(input:checked)::after { position: static; order: -1; width: 20px; height: 20px; font-size: .68rem; flex-shrink: 0; }
+/* text-only option cards: keep a corner free for the check badge */
+.opt:not(.opt-pill):not(:has(.swatch, .cs-thumb, .fx-thumb, .layout-thumb)) { padding-inline-end: 40px; }
+.opt.anim-gate:not(.live) *, .opt.anim-gate:not(.live) *::before, .opt.anim-gate:not(.live) *::after { animation-play-state: paused !important; }
+/* cheaper shine: a glint that fades in and out (opacity only, no clipped moving layer) */
+.swatch i { overflow: visible; }
+.swatch i::after { border-radius: inherit; transform: none; opacity: 0; background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,.85) 50%, transparent 90%); animation: swGlint 3.4s ease-in-out infinite; }
+@keyframes swGlint { 0%, 55%, 100% { opacity: 0; } 75% { opacity: .9; } }
