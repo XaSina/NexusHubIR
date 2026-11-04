@@ -765,3 +765,60 @@ button { cursor: pointer; border: 0; background: none; }
 .au-planet-wrap::after { content: ""; position: absolute; left: 50%; top: 57%; width: 70vmin; height: 2px; margin: -1px 0 0 -35vmin; border-radius: 2px; pointer-events: none;
     background: radial-gradient(closest-side, rgba(255,255,255,.85), rgba(var(--primary-rgb), .45) 45%, transparent); }
 @media (max-width: 640px) { .au-planet-wrap::after { top: 60%; } }
+
+/* ======================================================================
+   v9 — start button "Nexus Pulse" + eclipse horizon
+   ====================================================================== */
+.au-start.nb { position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; gap: 18px;
+    padding: 8px 8px 8px 30px; padding-inline: 30px 8px; border: 0; border-radius: 999px; color: #fff; background: none;
+    box-shadow: 0 18px 44px -20px rgba(var(--primary-rgb), .95), 0 2px 0 rgba(0,0,0,.25);
+    transform: translate3d(var(--mx, 0px), var(--my, 0px), 0); transition: opacity .7s ease, transform .5s cubic-bezier(.22,1,.36,1), box-shadow .4s ease; }
+.s4 .au-start.nb { transform: translate3d(var(--mx, 0px), var(--my, 0px), 0); }
+.au-start.nb::before, .au-start.nb::after { display: none !important; }
+/* a light runs around the edge */
+.nb-edge { position: absolute; inset: 0; z-index: -2; border-radius: inherit; overflow: hidden; }
+.nb-edge::before { content: ""; position: absolute; left: 50%; top: 50%; width: 260%; aspect-ratio: 1; margin: -130% 0 0 -130%;
+    background: conic-gradient(from 0deg, transparent 0 62%, rgba(255,255,255,.0) 64%, rgba(255,255,255,.95) 72%, color-mix(in srgb, var(--primary) 60%, #fff) 76%, transparent 84%);
+    animation: nbSpin 3.6s linear infinite; }
+@keyframes nbSpin { to { transform: rotate(360deg); } }
+.nb-face { position: absolute; inset: 1.5px; z-index: -1; border-radius: inherit; overflow: hidden;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 92%, #fff), var(--primary) 45%, color-mix(in srgb, var(--primary) 70%, var(--secondary)) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -10px 18px -10px rgba(0,0,0,.35); }
+.nb-sheen { position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.38), transparent); transform: skewX(-18deg) translateX(0);
+    animation: nbSheen 4.2s cubic-bezier(.65,0,.35,1) 1s infinite; }
+@keyframes nbSheen { 0%, 55% { transform: skewX(-18deg) translateX(0); } 100% { transform: skewX(-18deg) translateX(520%); } }
+.nb-label { position: relative; font-size: 1.08rem; font-weight: 900; letter-spacing: .2px; color: var(--on-primary, #fff); text-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .45s cubic-bezier(.22,1,.36,1); }
+.nb-orb { position: relative; width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+    color: var(--primary); background: #fff; box-shadow: 0 6px 16px -6px rgba(0,0,0,.45), inset 0 -2px 4px rgba(0,0,0,.08); transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+.nb-arrows { position: relative; width: 20px; height: 20px; }
+.nb-arrows svg { position: absolute; inset: 0; width: 20px; height: 20px; transition: transform .45s cubic-bezier(.65,0,.35,1); }
+.nb-arrows svg:last-child { transform: translateX(160%); }
+/* hover: the arrow leaves, a new one slides in; the orb swells; the label nudges */
+.au-start.nb:hover .nb-arrows svg:first-child, .au-start.nb.fired .nb-arrows svg:first-child { transform: translateX(-160%); }
+.au-start.nb:hover .nb-arrows svg:last-child, .au-start.nb.fired .nb-arrows svg:last-child { transform: none; }
+.au-start.nb:hover .nb-orb { transform: scale(1.08); }
+.au-start.nb:hover .nb-label { transform: translateX(3px); }
+.au-start.nb:hover { box-shadow: 0 24px 54px -20px rgba(var(--primary-rgb), 1), 0 2px 0 rgba(0,0,0,.25); }
+.au-start.nb:active { transition-duration: .15s; }
+.au-start.nb:active .nb-face { filter: brightness(.94); }
+/* press ripple from the touch point */
+.nb-ripple { position: absolute; z-index: 0; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: rgba(255,255,255,.45); pointer-events: none; animation: nbRipple .7s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes nbRipple { from { opacity: 1; transform: scale(0); } to { opacity: 0; transform: scale(18); } }
+.au-start.nb .au-start-ring, .au-start.nb .au-start-glow { display: none !important; }
+@media (hover: none), (max-width: 900px) { .nb-sheen { animation-duration: 6s; } }
+@media (prefers-reduced-motion: reduce) { .nb-edge::before, .nb-sheen { animation: none; } }
+
+/* eclipse horizon under the button: dark world, crisp light rim brightest at the centre, soft atmosphere */
+.au-planet { background: radial-gradient(ellipse 70% 40% at 50% 0%, color-mix(in srgb, var(--primary) 14%, #07040a) 0, #050306 45%, #030204 70%) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 2px 1px -1px rgba(var(--primary-rgb), .9) !important; }
+.au-planet::after { opacity: 1 !important; background: radial-gradient(ellipse 22% 1.6% at 50% 0%, rgba(255,255,255,.95), rgba(255,240,240,.4) 40%, transparent 100%),
+        radial-gradient(ellipse 48% 3.5% at 50% 0%, rgba(var(--primary-rgb), .95), rgba(var(--primary-rgb), .25) 55%, transparent 100%) !important;
+    -webkit-mask: none !important; mask: none !important; background-size: auto !important; }
+.au-planet-wrap::before { background: radial-gradient(50% 30% at 50% 70%, rgba(var(--primary-rgb), .34), rgba(var(--primary-rgb), .1) 50%, transparent 100%) !important; }
+.au-planet-wrap::after { display: none !important; }
+.au-horizon-glow { position: absolute; left: 50%; bottom: calc(43% - 1px); width: 46vmin; height: 46vmin; margin-left: -23vmin; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(255,235,235,.22), rgba(var(--primary-rgb), .12) 40%, transparent 75%); transform: scaleY(.28); transform-origin: 50% 100%; }
+.au-start.nb .nb-arrows svg { padding: 0 !important; margin: 0; background: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0; box-sizing: border-box; color: var(--primary); animation: none !important; }
+.au-start.nb:hover .nb-arrows svg:first-child, .au-start.nb.fired .nb-arrows svg:first-child { transform: translateX(-160%) !important; }
+.au-start.nb:hover .nb-arrows svg:last-child, .au-start.nb.fired .nb-arrows svg:last-child { transform: none !important; }
+.au-start.nb .nb-arrows svg:last-child { transform: translateX(160%); }

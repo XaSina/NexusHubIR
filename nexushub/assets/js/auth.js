@@ -446,6 +446,20 @@
     var steps = {}; $$('.au-step').forEach(function (s) { steps[s.dataset.step] = s; });
     var current = 'identify', identity = { value: '', type: '' };
 
+    /* start button: gentle magnetic pull toward the cursor (desktop) and a ripple from the press point */
+    (function () {
+        var b = $('#auStart'); if (!b) return;
+        if (!touch && !reduce) {
+            b.addEventListener('pointermove', function (e) { var r = b.getBoundingClientRect(); b.style.setProperty('--mx', ((e.clientX - r.left - r.width / 2) * .12).toFixed(1) + 'px'); b.style.setProperty('--my', ((e.clientY - r.top - r.height / 2) * .22).toFixed(1) + 'px'); });
+            b.addEventListener('pointerleave', function () { b.style.setProperty('--mx', '0px'); b.style.setProperty('--my', '0px'); });
+        }
+        b.addEventListener('pointerdown', function (e) {
+            if (reduce) return;
+            var r = b.getBoundingClientRect(), s = document.createElement('i'); s.className = 'nb-ripple';
+            s.style.left = (e.clientX - r.left) + 'px'; s.style.top = (e.clientY - r.top) + 'px'; b.appendChild(s);
+            setTimeout(function () { s.remove(); }, 750);
+        });
+    })();
     $('#auStart').addEventListener('click', async function () {
         var btn = this; if (btn.disabled) return; btn.disabled = true;
         btn.classList.add('fired');

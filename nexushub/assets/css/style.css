@@ -1146,12 +1146,6 @@ body.cards-elevated .glass:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255,
 .live-dot { animation: liveBlink 1.5s ease-in-out infinite; box-shadow: 0 0 8px rgba(255,255,255,.7); }
 @keyframes liveBlink { 50% { opacity: .35; } }
 .announce-gradient { animation: none; background-size: 100% 100%; }
-/* big panels: a near-opaque surface instead of live backdrop blur (the blur of a huge area was re-done for every
-   background animation frame). Small cards keep their glass. */
-body:not(.cards-frost) :is(.shop-hero, .shop-empty, .contact-form, .tg-cta, .ph-inner, .widget).glass {
-    -webkit-backdrop-filter: none; backdrop-filter: none;
-    background: linear-gradient(160deg, rgba(var(--surface-rgb), .9), rgba(var(--surface-rgb), .82));
-}
 .drawer:not(.open) .drawer-backdrop { -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* phones: full-screen masked layers and large glows stay still (each animated one costs a full-screen GPU pass per frame) */
 @media (hover: none), (max-width: 900px) {

@@ -65,10 +65,11 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>
     <p class="au-tagline"><span id="auType"></span><i class="au-caret"></i></p>
-    <button class="au-start" id="auStart" type="button">
-        <span class="au-start-glow"></span>
-        <span class="au-start-label">ورود و ثبت‌نام</span>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    <button class="au-start nb" id="auStart" type="button">
+        <span class="nb-edge" aria-hidden="true"></span>
+        <span class="nb-face" aria-hidden="true"><i class="nb-sheen"></i></span>
+        <span class="au-start-label nb-label">ورود و ثبت‌نام</span>
+        <span class="nb-orb" aria-hidden="true"><span class="nb-arrows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></span>
     </button>
 </main>
 
