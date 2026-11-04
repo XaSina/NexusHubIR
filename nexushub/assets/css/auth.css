@@ -339,3 +339,111 @@ button { cursor: pointer; border: 0; background: none; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ======================================================================
+   v2 motion — smoother start, typing FX, gentle error, access granted
+   (transform/opacity only; the canvas handles streaks)
+   ====================================================================== */
+:root { --ease-out: cubic-bezier(.16,1,.3,1); --ease-io: cubic-bezier(.65,0,.35,1); --spring: cubic-bezier(.34,1.56,.64,1); }
+
+/* ---- start: a camera push into the sun instead of a hard zoom ---- */
+.au-scene { transform-origin: 50% 60%; transition: transform 1.7s var(--ease-out); }
+.warping .au-scene { transform: scale(1.18); transition: transform 1.05s var(--ease-io); }
+.warping .au-intro { transform: translate3d(0, -3vh, 0) scale(1.28); opacity: 0; pointer-events: none; transition: transform .95s var(--ease-io), opacity .55s ease .12s; }
+.au-start.fired { transform: scale(.94); transition: transform .18s ease; }
+.au-start.fired::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; border: 2px solid #fff; animation: startRing .7s var(--ease-out) forwards; pointer-events: none; }
+@keyframes startRing { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.6, 2.2); } }
+.au-flash.soft.go { animation: flashSoft .85s ease-out; }
+@keyframes flashSoft { 0% { opacity: 0; } 30% { opacity: .35; } 100% { opacity: 0; } }
+/* card arrives out of the light: rises, untilts, settles */
+@keyframes cardIn { 0% { opacity: 0; transform: translate3d(0, 46px, -260px) rotateX(16deg) scale(.92); } 45% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+.au-card { animation-duration: 1.05s; animation-timing-function: var(--ease-out); }
+
+/* ---- identifier field ---- */
+.au-id-field input { text-align: right; padding: 8px 58px 8px 96px; }
+.au-id-field input::placeholder { color: rgba(255,255,255,.38); font-size: .92rem; letter-spacing: 0; font-family: "Vazirmatn", Tahoma, sans-serif; }
+.au-id-line { position: absolute; right: 58px; left: 96px; bottom: 9px; height: 2px; border-radius: 2px; pointer-events: none; transform-origin: right center; transform: scaleX(0);
+    background: linear-gradient(270deg, var(--primary), var(--secondary), rgba(var(--secondary-rgb), 0)); box-shadow: 0 0 10px rgba(var(--primary-rgb), .9); transition: transform .35s var(--ease-out); }
+.au-id-ring { position: absolute; inset: 0; border-radius: 16px; pointer-events: none; border: 1.5px solid rgba(var(--primary-rgb), .9); opacity: 0; }
+.au-id-sparks { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.au-spark { position: absolute; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 2px rgba(var(--primary-rgb), .95); pointer-events: none; }
+.au-id-field.valid input { border-color: rgba(var(--primary-rgb), .9); }
+.au-id-field.valid .au-id-icon { box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .22), 0 8px 22px -6px rgba(var(--primary-rgb), 1); }
+.au-id-field::after { content: ""; position: absolute; inset: 0; border-radius: 16px; pointer-events: none; overflow: hidden; opacity: 0;
+    background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.18) 50%, transparent 65%); background-size: 250% 100%; }
+.au-id-field.sweep::after { animation: idSweep .9s var(--ease-out); }
+@keyframes idSweep { 0% { opacity: 1; background-position: 120% 0; } 100% { opacity: 1; background-position: -60% 0; } }
+.au-id-type::before { content: "✓ "; }
+.au-btn.armed { animation: btnArm 2.2s ease-in-out infinite; }
+@keyframes btnArm { 50% { box-shadow: 0 16px 46px -8px rgba(var(--primary-rgb), 1), 0 0 34px rgba(var(--primary-rgb), .45); } }
+
+/* ---- wrong password: one tight damped shake (driven by JS) + red pulse; the card no longer flies away ---- */
+.au-card.bad { box-shadow: 0 40px 100px -20px rgba(0,0,0,.9), 0 0 70px -12px rgba(255,60,80,.95), inset 0 1px 0 rgba(255,255,255,.08); transition: box-shadow .25s ease; }
+.au-field.err input { animation: errPulse .7s ease-out; }
+@keyframes errPulse { 0% { box-shadow: 0 0 0 0 rgba(255,90,110,.65); } 100% { box-shadow: 0 0 0 14px rgba(255,90,110,0); } }
+.au-error.on { animation: errIn .45s var(--spring); }
+@keyframes errIn { from { opacity: 0; transform: translate3d(0, -6px, 0) scale(.97); } }
+
+/* ---- login button success state ---- */
+.au-btn .au-ok { display: none; width: 22px; height: 22px; }
+.au-btn .au-ok path { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.au-btn.done { pointer-events: none; }
+.au-btn.done > span, .au-btn.done .au-spin { display: none; }
+.au-btn.done .au-ok { display: block; }
+.au-btn.done .au-ok path { animation: draw .45s var(--ease-out) forwards; }
+.au-card.leaving { animation: cardOut2 .6s var(--ease-io) forwards; }
+@keyframes cardOut2 { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translate3d(0, -10px, 0) scale(.94); } }
+.au-fly { position: fixed; z-index: 40; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #fff; pointer-events: none;
+    background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 0 40px rgba(var(--primary-rgb), .8); }
+
+/* ---- access granted ---- */
+.au-enter { gap: 18px; background: radial-gradient(circle at 50% 45%, rgba(var(--primary-rgb), .16), rgba(0,0,0,.72) 62%); }
+.au-rays { position: absolute; left: 50%; top: 45%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; pointer-events: none; opacity: 0;
+    background: repeating-conic-gradient(from 0deg, rgba(var(--primary-rgb), .09) 0deg 4deg, transparent 4deg 14deg);
+    -webkit-mask: radial-gradient(circle, #000 0, transparent 55%); mask: radial-gradient(circle, #000 0, transparent 55%);
+    animation: raysIn 1s ease .2s forwards, raysSpin 40s linear infinite; }
+@keyframes raysIn { to { opacity: 1; } }
+@keyframes raysSpin { to { transform: rotate(360deg); } }
+.au-enter-core { animation: coreIn2 .8s var(--ease-out) both; }
+@keyframes coreIn2 { from { opacity: 0; transform: scale(.6); } }
+.au-enter-rings .e0 { stroke: rgba(255,255,255,.08); stroke-width: 3; }
+.au-enter-rings .ep { stroke: var(--primary); stroke-width: 3.4; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); filter: drop-shadow(0 0 6px rgba(var(--primary-rgb), .9)); transition: stroke .4s; }
+.au-enter-rings .e2 { stroke: rgba(255,255,255,.28); stroke-width: 1.2; stroke-dasharray: 2 6; animation: spin 14s linear infinite reverse; }
+.au-enter-rings .e3 { stroke: var(--secondary); stroke-width: 2; stroke-dasharray: 60 355; animation: spin 2.4s linear infinite; }
+.au-enter-avatar { position: relative; width: 104px; height: 104px; border-radius: 50%; display: grid; place-items: center; font-size: 2.6rem; font-weight: 900; color: #fff; opacity: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 0 0 6px rgba(255,255,255,.06), 0 0 50px rgba(var(--primary-rgb), .7); transition: transform .6s var(--spring), opacity .3s; }
+.au-enter-avatar.on { opacity: 1; }
+.au-enter-check { position: absolute; width: 64px; height: 64px; left: 50%; top: 50%; margin: -32px; opacity: 0; }
+.au-enter-check path { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.au-enter-burst { position: absolute; inset: 20px; border-radius: 50%; border: 2px solid rgba(var(--primary-rgb), .9); opacity: 0; pointer-events: none; }
+.au-enter-pct { font: 800 .95rem/1 ui-monospace, Menlo, Consolas, "Courier New", monospace; letter-spacing: 3px; color: rgba(255,255,255,.85); text-shadow: 0 0 12px rgba(var(--primary-rgb), .9); }
+.au-term { min-height: 86px; padding: 12px 16px; border-radius: 14px; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.07); font: 600 .78rem/1.85 ui-monospace, Menlo, Consolas, "Courier New", monospace; color: rgba(255,255,255,.72); text-shadow: none; }
+.au-term div { animation: termIn .35s var(--ease-out) both; }
+@keyframes termIn { from { opacity: 0; transform: translate3d(-8px, 0, 0); } }
+.au-term div b { color: #3ddc84; text-shadow: 0 0 8px rgba(61,220,132,.7); }
+/* final moment */
+.granted .au-enter-rings .ep { stroke: #3ddc84; filter: drop-shadow(0 0 8px rgba(61,220,132,.9)); }
+.granted .au-enter-core { transform: none; animation: corePulse .7s var(--spring); }
+@keyframes corePulse { 40% { transform: scale(1.08); } }
+.granted .au-enter-avatar { background: linear-gradient(135deg, #1fbf6a, #3ddc84); box-shadow: 0 0 0 6px rgba(61,220,132,.15), 0 0 60px rgba(61,220,132,.7); color: transparent; }
+.granted .au-enter-check { opacity: 1; }
+.granted .au-enter-check path { animation: draw .5s var(--ease-out) .1s forwards; }
+.granted .au-enter-burst { animation: burstRing .9s var(--ease-out) forwards; border-color: rgba(61,220,132,.9); }
+.granted .au-enter-burst.d2 { animation-delay: .15s; }
+@keyframes burstRing { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(2.4); } }
+.granted .au-term, .granted .au-enter-pct { opacity: 0; transform: translate3d(0, 8px, 0); transition: opacity .4s, transform .5s var(--ease-out); }
+.au-granted { transform: translate3d(0, 14px, 0); }
+.au-granted.on { animation: granted2 .9s var(--ease-out) forwards; }
+@keyframes granted2 { to { opacity: 1; transform: none; } }
+.au-granted strong { letter-spacing: 18px; transition: letter-spacing 1.2s var(--ease-out); text-shadow: 0 0 26px rgba(61,220,132,.9), 0 0 60px rgba(61,220,132,.45); }
+.au-granted.on strong { letter-spacing: 6px; }
+.au-granted strong::before, .au-granted strong::after { animation-iteration-count: 2; }
+@media (max-width: 640px) {
+    .au-id-field input { padding-left: 88px; }
+    .au-id-line { left: 88px; }
+    .au-enter-core { width: 170px; height: 170px; }
+    .au-enter-avatar { width: 88px; height: 88px; font-size: 2.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .au-scene, .warping .au-scene { transform: none !important; } .au-rays { display: none; } }
+/* the identifier stays right-aligned (next to its icon) for placeholder and typed text alike — no jump when typing starts */
+.au-id-field input[dir="ltr"] { text-align: right; }

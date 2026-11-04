@@ -22,7 +22,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 <link rel="stylesheet" href="<?= e(asset('css/auth.css')) ?>">
 <?php $decorHtml = decor_html('auth'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
-<script>try{if(sessionStorage.getItem('nx_warp'))document.documentElement.classList.add('warp-in')}catch(e){}</script>
+<script>try{var w=+sessionStorage.getItem('nx_warp');if(w){var d=document.documentElement,el=Date.now()-w;d.classList.add('warp-in');if(w>1&&el>=0&&el<20000)d.style.setProperty('--wt',-el+'ms')}}catch(e){}</script>
 </head>
 <body class="au-body">
 <?= $decorHtml ?>
@@ -97,8 +97,11 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
                 <p class="au-sub">شماره موبایل، ایمیل یا نام کاربری‌ات رو وارد کن. اگه حساب داشته باشی وارد می‌شی، نداشته باشی حسابت رو می‌سازیم.</p>
                 <label class="au-field au-id-field">
                     <span class="au-id-icon" id="auIdIcon"></span>
-                    <input type="text" name="identifier" id="auIdentifier" dir="ltr" autocomplete="username" placeholder="0912… / name@mail.com / username" required>
+                    <input type="text" name="identifier" id="auIdentifier" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="موبایل، ایمیل یا نام کاربری" required>
                     <em class="au-id-type" id="auIdType"></em>
+                    <span class="au-id-line" aria-hidden="true"></span>
+                    <span class="au-id-ring" aria-hidden="true"></span>
+                    <span class="au-id-sparks" aria-hidden="true"></span>
                 </label>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ادامه</span><i class="au-spin"></i></button>
@@ -116,7 +119,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
                     <span class="au-flabel">رمز عبور</span>
                 </label>
                 <div class="au-error" role="alert"></div>
-                <button class="au-btn" type="submit"><span>ورود</span><i class="au-spin"></i></button>
+                <button class="au-btn" type="submit"><span>ورود</span><i class="au-spin"></i><svg class="au-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="100"/></svg></button>
             </form>
 
             <!-- 3: register -->
@@ -164,10 +167,19 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 
 <!-- ============ Access granted sequence ============ -->
 <div class="au-enter" id="auEnter" hidden>
-    <div class="au-enter-core">
-        <svg class="au-enter-rings" viewBox="0 0 200 200" aria-hidden="true"><circle class="e1" cx="100" cy="100" r="92"/><circle class="e2" cx="100" cy="100" r="78"/><circle class="e3" cx="100" cy="100" r="64"/></svg>
-        <b class="au-enter-pct" id="auPct">۰٪</b>
+    <div class="au-rays" aria-hidden="true"></div>
+    <div class="au-enter-core" id="auCore">
+        <svg class="au-enter-rings" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="e0" cx="100" cy="100" r="92"/>
+            <circle class="ep" id="auProg" cx="100" cy="100" r="92" pathLength="100"/>
+            <circle class="e2" cx="100" cy="100" r="78"/>
+            <circle class="e3" cx="100" cy="100" r="66"/>
+        </svg>
+        <span class="au-enter-avatar" id="auEnterAvatar">N</span>
+        <svg class="au-enter-check" viewBox="0 0 120 120" aria-hidden="true"><path d="M36 62 l16 16 l32 -34" pathLength="100"/></svg>
+        <span class="au-enter-burst"></span><span class="au-enter-burst d2"></span>
     </div>
+    <b class="au-enter-pct" id="auPct" dir="ltr">0%</b>
     <div class="au-term" id="auTerm" dir="ltr"></div>
     <div class="au-granted" id="auGranted">
         <strong data-text="ACCESS GRANTED">ACCESS GRANTED</strong>

@@ -40,14 +40,47 @@
     window.nxApi = api;
 
     /* ---------- Cinematic page warp (login / account links) ---------- */
+    /* Warp hand-off helpers.
+       Leaving: restart the loader loops at 0, remember when the warp started, start loading the next page while the
+       iris is still closing (the old page stays on screen until the new one paints).
+       Arriving: keep the cover until fonts + logo are ready (and at least ~0.9s since the warp began), then exit. */
+    function warpRestart(w) { w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); document.documentElement.style.removeProperty('--wt'); }
+    function warpExit() {
+        var root = document.documentElement, t = parseFloat(root.style.getPropertyValue('--wt')) || 0;
+        var hold = Math.max(0, 900 + t);                 // --wt is negative: time already spent covered
+        var ready = [];
+        if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
+        var logo = document.querySelector('.nx-warp-core img');
+        if (logo && logo.decode) ready.push(logo.decode().catch(function () {}));
+        ready.push(new Promise(function (r) { setTimeout(r, hold); }));
+        return Promise.race([Promise.all(ready), new Promise(function (r) { setTimeout(r, 1600); })]).then(function () {
+            return new Promise(function (res) {
+                requestAnimationFrame(function () { requestAnimationFrame(function () {
+                    root.classList.add('warp-out'); root.classList.remove('warp-in');
+                    setTimeout(function () { root.classList.remove('warp-out'); root.style.removeProperty('--wt'); }, 1300);
+                    res();
+                }); });
+            });
+        });
+    }
+    var warpPrefetched = {};
+    function warpPrefetch(a) {
+        if (!a || !a.href || warpPrefetched[a.href] || a.origin !== location.origin) return;
+        warpPrefetched[a.href] = 1;
+        var l = document.createElement('link'); l.rel = 'prefetch'; l.href = a.href; document.head.appendChild(l);
+    }
+    ['pointerenter', 'touchstart', 'focusin'].forEach(function (ev) {
+        document.addEventListener(ev, function (e) { var a = e.target.closest && e.target.closest('a[data-warp]'); if (a) warpPrefetch(a); }, { passive: true, capture: true });
+    });
     var warp = $('#nxWarp'), warpIn = document.documentElement.classList.contains('warp-in');
     function warpTo(href, x, y) {
         if (!warp || reduce) { location.href = href; return; }
         warp.style.setProperty('--wx', (x == null ? window.innerWidth / 2 : x) + 'px');
         warp.style.setProperty('--wy', (y == null ? window.innerHeight / 2 : y) + 'px');
+        warpRestart(warp);
         warp.classList.add('cover');
-        store.sset('nx_warp', '1');
-        setTimeout(function () { location.href = href; }, 950);
+        store.sset('nx_warp', String(Date.now()));
+        setTimeout(function () { location.href = href; }, 600);
     }
     window.nxWarpTo = warpTo;
     document.addEventListener('click', function (e) {
@@ -60,7 +93,7 @@
     if (warpIn) {
         try { sessionStorage.removeItem('nx_warp'); } catch (e) {}
         if ($('#preloader')) $('#preloader').remove();
-        setTimeout(function () { document.documentElement.classList.remove('warp-in'); }, 160);
+        warpExit();
     }
 
     /* ---------- Text decode effect ---------- */

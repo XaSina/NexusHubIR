@@ -24,13 +24,46 @@
     }
 
     /* ---------- page warp (shared with site) ---------- */
+    /* Warp hand-off helpers.
+       Leaving: restart the loader loops at 0, remember when the warp started, start loading the next page while the
+       iris is still closing (the old page stays on screen until the new one paints).
+       Arriving: keep the cover until fonts + logo are ready (and at least ~0.9s since the warp began), then exit. */
+    function warpRestart(w) { w.classList.add('rs'); void w.offsetWidth; w.classList.remove('rs'); document.documentElement.style.removeProperty('--wt'); }
+    function warpExit() {
+        var root = document.documentElement, t = parseFloat(root.style.getPropertyValue('--wt')) || 0;
+        var hold = Math.max(0, 900 + t);                 // --wt is negative: time already spent covered
+        var ready = [];
+        if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
+        var logo = document.querySelector('.nx-warp-core img');
+        if (logo && logo.decode) ready.push(logo.decode().catch(function () {}));
+        ready.push(new Promise(function (r) { setTimeout(r, hold); }));
+        return Promise.race([Promise.all(ready), new Promise(function (r) { setTimeout(r, 1600); })]).then(function () {
+            return new Promise(function (res) {
+                requestAnimationFrame(function () { requestAnimationFrame(function () {
+                    root.classList.add('warp-out'); root.classList.remove('warp-in');
+                    setTimeout(function () { root.classList.remove('warp-out'); root.style.removeProperty('--wt'); }, 1300);
+                    res();
+                }); });
+            });
+        });
+    }
+    var warpPrefetched = {};
+    function warpPrefetch(a) {
+        if (!a || !a.href || warpPrefetched[a.href] || a.origin !== location.origin) return;
+        warpPrefetched[a.href] = 1;
+        var l = document.createElement('link'); l.rel = 'prefetch'; l.href = a.href; document.head.appendChild(l);
+    }
+    ['pointerenter', 'touchstart', 'focusin'].forEach(function (ev) {
+        document.addEventListener(ev, function (e) { var a = e.target.closest && e.target.closest('a[data-warp]'); if (a) warpPrefetch(a); }, { passive: true, capture: true });
+    });
     var warp = $('#nxWarp');
     function warpTo(href) {
         if (!warp || reduce) { location.href = href; return; }
         warp.style.setProperty('--wx', '50%'); warp.style.setProperty('--wy', '50%');
+        warpRestart(warp);
         warp.classList.add('cover');
-        try { sessionStorage.setItem('nx_warp', '1'); } catch (e) {}
-        setTimeout(function () { location.href = href; }, 950);
+        try { sessionStorage.setItem('nx_warp', String(Date.now())); } catch (e) {}
+        setTimeout(function () { location.href = href; }, 600);
     }
     document.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-warp]');
@@ -38,10 +71,10 @@
         e.preventDefault(); warpTo(a.href);
     });
     window.addEventListener('pageshow', function (e) { if (e.persisted && warp) warp.classList.remove('cover'); });
-    var arrivedByWarp = root.classList.contains('warp-in');
+    var arrivedByWarp = root.classList.contains('warp-in'), warpGone = Promise.resolve();
     if (arrivedByWarp) {
         try { sessionStorage.removeItem('nx_warp'); } catch (e) {}
-        setTimeout(function () { root.classList.remove('warp-in'); }, 140);
+        warpGone = warpExit();
     }
 
     /* ---------- timecode HUD ---------- */
@@ -87,16 +120,23 @@
             ctx.fillStyle = 'rgba(255,' + (190 + (e.c === SC ? 40 : 0)) + ',170,' + e.a + ')';
             ctx.beginPath(); ctx.arc(e.x, e.y, e.r * .8, 0, 6.28); ctx.fill();
         }
-        // hyperspace streaks
-        if (warping && !reduce) for (var s = 0; s < (small ? 7 : 14); s++) {
-            var ang = Math.random() * 6.283;
-            streaks.push({ x: W / 2 + Math.cos(ang) * 20, y: H / 2 + Math.sin(ang) * 20, a: ang, v: 4 + Math.random() * 6, l: 0, c: Math.random() < .5 ? PC : [255, 255, 255] });
+        // hyperspace: soft streaks that fade in as they accelerate, plus a light core that blooms and fades
+        var wp = warping ? (now - warpStart) / (warpUntil - warpStart) : 1;
+        if (warping && !reduce) {
+            var bloom = Math.sin(Math.min(1, wp) * Math.PI);
+            var g = ctx.createRadialGradient(W / 2, H * .55, 0, W / 2, H * .55, Math.max(W, H) * .55);
+            g.addColorStop(0, 'rgba(255,236,225,' + (.32 * bloom) + ')'); g.addColorStop(.35, 'rgba(' + PC.join(',') + ',' + (.14 * bloom) + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+            if (wp < .72) for (var s = 0; s < (small ? 4 : 8); s++) {
+                var ang = Math.random() * 6.283, d0 = 30 + Math.random() * 60;
+                streaks.push({ x: W / 2 + Math.cos(ang) * d0, y: H * .55 + Math.sin(ang) * d0, a: ang, v: 2.5 + Math.random() * 3.5, l: 0, c: Math.random() < .55 ? PC : [255, 245, 238] });
+            }
         }
         for (var j = streaks.length - 1; j >= 0; j--) {
             var st = streaks[j];
-            st.v *= 1.075; st.l = Math.min(260, st.l + st.v * .9);
+            st.v *= 1.06; st.l = Math.min(220, st.l + st.v * .8);
             st.x += Math.cos(st.a) * st.v; st.y += Math.sin(st.a) * st.v;
-            ctx.strokeStyle = 'rgba(' + st.c.join(',') + ',.75)'; ctx.lineWidth = 1.6;
+            ctx.strokeStyle = 'rgba(' + st.c.join(',') + ',' + (Math.min(1, st.l / 90) * .6).toFixed(3) + ')'; ctx.lineWidth = Math.min(2.2, .8 + st.v * .05);
             ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(st.x - Math.cos(st.a) * st.l, st.y - Math.sin(st.a) * st.l); ctx.stroke();
             if (st.x < -300 || st.x > W + 300 || st.y < -300 || st.y > H + 300) streaks.splice(j, 1);
         }
@@ -120,7 +160,7 @@
             confetti.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5, r: Math.random() * 6, vr: (Math.random() - .5) * .4, s: 6 + Math.random() * 8, c: cols[i % cols.length], life: 110 + Math.random() * 60 });
         }
     }
-    function flash() { var f = $('.au-flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+    function flash(soft) { var f = $('.au-flash'); f.classList.remove('go'); f.classList.toggle('soft', !!soft); void f.offsetWidth; f.classList.add('go'); }
 
     /* ---------- text effects ---------- */
     function scramble(el, text, dur) {
@@ -154,7 +194,7 @@
         return Promise.race([done.catch(function () {}), new Promise(function (r) { setTimeout(r, 2500); })]);
     })();
     (async function intro() {
-        await wait(arrivedByWarp ? 380 : 150);
+        await warpGone; await wait(arrivedByWarp ? 260 : 150);
         body.classList.add('s1'); setHud('BOOTING');
         await Promise.all([wait(650), logoReady]);
         body.classList.add('s2'); setHud('SIGNAL LOCKED');
@@ -174,15 +214,19 @@
     var current = 'identify', identity = { value: '', type: '' };
 
     $('#auStart').addEventListener('click', async function () {
+        var btn = this; if (btn.disabled) return; btn.disabled = true;
+        btn.classList.add('fired');
+        await wait(140);
         body.classList.add('warping'); setHud('WARP DRIVE');
-        doWarp(1300); flash();
-        await wait(950);
+        doWarp(1150);
+        setTimeout(function () { flash(true); }, 520);
+        await wait(900);
         $('#auIntro').hidden = true;
         stage.hidden = false;
-        body.classList.remove('warping');
+        body.classList.remove('warping');            // the scene eases back while the card rises
         setHud('IDENTIFY');
         steps.identify.classList.add('in');
-        setTimeout(function () { $('#auIdentifier').focus(); }, 500);
+        setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
     });
 
     function setDots(n) { dots.forEach(function (d, i) { d.classList.toggle('on', i < n); }); }
@@ -208,11 +252,24 @@
     backBtn.addEventListener('click', function () { show('identify'); });
     $$('[data-goto]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.goto); }); });
 
+    var canTranslate = window.CSS && CSS.supports && CSS.supports('translate', '1px');
+    /* one tight, damped shake; dy glides the card from where it was (the error line makes it taller and it is centred) */
+    function shake(el, dy) {
+        if (reduce || !el || !el.animate) return;
+        dy = dy || 0;
+        var xs = [0, -10, 9, -6, 4, -2, 0], n = xs.length - 1;
+        var k = xs.map(function (x, i) { var y = (dy * Math.pow(1 - i / n, 2)).toFixed(1); return canTranslate ? { translate: x + 'px ' + y + 'px' } : { transform: 'translate(' + x + 'px,' + y + 'px)' }; });
+        el.animate(k, { duration: dy ? 560 : 480, easing: 'cubic-bezier(.36,.07,.19,.97)' });
+    }
     function errorOn(form, msg) {
-        var box = $('.au-error', form);
+        var box = $('.au-error', form), top0 = card.getBoundingClientRect().top;
+        box.classList.remove('on'); void box.offsetWidth;
         box.textContent = msg; box.classList.add('on');
-        card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
-        setTimeout(function () { card.classList.remove('shake'); }, 520);
+        var dy = top0 - card.getBoundingClientRect().top;
+        shake(canTranslate ? card : form, canTranslate && Math.abs(dy) > 1 ? dy : 0);
+        card.classList.add('bad'); clearTimeout(card._bad); card._bad = setTimeout(function () { card.classList.remove('bad'); }, 650);
+        $$('.au-field.err input', form).forEach(function (i) { i.style.animation = 'none'; void i.offsetWidth; i.style.animation = ''; });
+        if (navigator.vibrate) try { navigator.vibrate(35); } catch (e) {}
     }
     function clearErrors(form) {
         var box = $('.au-error', form); if (box) { box.classList.remove('on'); box.textContent = ''; }
@@ -240,15 +297,40 @@
         return null;
     }
     var idInput = $('#auIdentifier'), idIcon = $('#auIdIcon'), idType = $('#auIdType'), lastType = 'x';
+    var idField = idInput.closest('.au-id-field'), idLine = $('.au-id-line', idField), idRing = $('.au-id-ring', idField), idSparks = $('.au-id-sparks', idField);
+    var idBtn = $('.au-btn', steps.identify), mctx = document.createElement('canvas').getContext('2d');
     function updateIdType() {
         var t = detect(idInput.value) || 'none';
         if (t !== lastType) {
             idIcon.innerHTML = ICONS[t]; idIcon.classList.remove('pop'); void idIcon.offsetWidth; idIcon.classList.add('pop');
             idType.textContent = LABELS[t] || ''; idType.classList.toggle('on', t !== 'none');
+            var valid = t !== 'none';
+            if (valid && lastType !== 'x') { idField.classList.remove('sweep'); void idField.offsetWidth; idField.classList.add('sweep'); }
+            idField.classList.toggle('valid', valid); idBtn.classList.toggle('armed', valid);
             lastType = t;
         }
     }
-    idInput.addEventListener('input', updateIdType); updateIdType();
+    function textW(v) {
+        var cs = getComputedStyle(idInput);
+        mctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+        return mctx.measureText(v).width + (parseFloat(cs.letterSpacing) || 0) * v.length;
+    }
+    function typingFx(e) {
+        var v = idInput.value, cs = getComputedStyle(idInput), pr = parseFloat(cs.paddingRight), pl = parseFloat(cs.paddingLeft);
+        var inner = Math.max(1, idInput.clientWidth - pr - pl), w = Math.min(textW(v), inner);
+        idLine.style.transform = 'scaleX(' + (v ? Math.max(.05, w / inner).toFixed(3) : 0) + ')';
+        if (reduce || !e || !e.data || !idInput.animate) return;     // only real keystrokes / pastes
+        // text is right-aligned, so the caret (end of an LTR value) sits at its left edge
+        var x = idInput.clientWidth - pr - w;
+        for (var i = 0; i < 3; i++) {
+            var s = document.createElement('i'); s.className = 'au-spark'; s.style.left = x + 'px'; idSparks.appendChild(s);
+            var dx = -8 - Math.random() * 22, dy = (Math.random() - .5) * 34;
+            s.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.2)', opacity: 0 }], { duration: 420 + Math.random() * 220, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = (function (n) { return function () { n.remove(); }; })(s);
+        }
+        idRing.animate([{ opacity: .55, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.035, 1.12)' }], { duration: 480, easing: 'cubic-bezier(.16,1,.3,1)' });
+    }
+    idInput.addEventListener('input', function (e) { updateIdType(); typingFx(e); });
+    updateIdType(); typingFx(null);
 
     /* step 1: identify */
     steps.identify.addEventListener('submit', async function (e) {
@@ -284,6 +366,8 @@
         var j = await api('auth-login', { identifier: identity.value, password: pw });
         loading(this, false);
         if (!j.ok) { setHud('VERIFY'); $('#auPassword').closest('.au-field').classList.add('err'); $('#auPassword').select(); return errorOn(this, j.error || 'خطا'); }
+        var lb = $('.au-btn', this); lb.disabled = true; lb.classList.add('done');
+        await wait(420);
         enterSequence(j);
     });
 
@@ -356,28 +440,50 @@
     async function enterSequence(j) {
         if (j.csrf) C.csrf = j.csrf;
         setHud('ACCESS GRANTED');
+        var ov = $('#auEnter'), pct = $('#auPct'), term = $('#auTerm'), prog = $('#auProg'), core = $('#auCore'), av = $('#auEnterAvatar');
+        var letter = (j.name || $('#auHelloName').textContent || 'N').trim().charAt(0) || 'N';
+        av.textContent = letter;
+        // shared-element flight: the avatar (or the button) travels into the centre of the ring
+        var src = $('#auAvatar'); if (!src || !src.offsetParent) src = $('.au-btn.done') || $('#auFinish');
+        var from = src ? src.getBoundingClientRect() : null, fly = null;
+        if (from && !reduce && document.body.animate) {
+            fly = document.createElement('div'); fly.className = 'au-fly'; fly.textContent = letter;
+            var sz = Math.min(from.width, from.height);
+            fly.style.cssText = 'left:' + (from.left + from.width / 2 - sz / 2) + 'px;top:' + (from.top + from.height / 2 - sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;font-size:' + (sz * .42) + 'px';
+            document.body.appendChild(fly);
+        }
         card.classList.add('leaving');
-        await wait(650);
+        await wait(380);
         stage.hidden = true;
-        var ov = $('#auEnter'), pct = $('#auPct'), term = $('#auTerm');
         ov.hidden = false; body.classList.add('entering');
-        doWarp(400);
-        var lines = ['> handshake with nexus core ... <b>OK</b>', '> verifying identity [' + (j.code || 'NX') + '] ... <b>OK</b>', '> decrypting member profile ... <b>OK</b>', '> syncing preferences ... <b>OK</b>', '> access level: MEMBER'];
-        var start = performance.now(), dur = reduce ? 1 : 1700, shown = 0;
+        doWarp(420);
+        if (fly) {
+            var to = av.getBoundingClientRect(), fr = fly.getBoundingClientRect();
+            var dx = (to.left + to.width / 2) - (fr.left + fr.width / 2), dy = (to.top + to.height / 2) - (fr.top + fr.height / 2), sc = to.width / fr.width;
+            await new Promise(function (res) {
+                var an = fly.animate([{ transform: 'none' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')' }], { duration: 720, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' });
+                an.onfinish = res; setTimeout(res, 900);
+            });
+            av.classList.add('on'); fly.remove();
+        } else { av.classList.add('on'); }
+        var lines = ['> handshake with nexus core ... <b>OK</b>', '> verifying identity [' + (j.code || 'NX') + '] ... <b>OK</b>', '> decrypting member profile ... <b>OK</b>', '> syncing preferences ... <b>OK</b>', '> access level: <b>MEMBER</b>'];
+        var start = performance.now(), dur = reduce ? 1 : 1800, shown = 0;
         await new Promise(function (res) {
             (function tick(t) {
-                var p = Math.min(1, (t - start) / dur), eased = 1 - Math.pow(1 - p, 3);
-                pct.textContent = fa(Math.round(eased * 100)) + '٪';
-                while (shown < Math.floor(p * lines.length)) { var d = document.createElement('div'); d.innerHTML = lines[shown++]; term.appendChild(d); }
+                var p = Math.min(1, (t - start) / dur), eased = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+                pct.textContent = Math.round(eased * 100) + '%';
+                prog.style.strokeDashoffset = (100 - eased * 100).toFixed(2);
+                while (shown < Math.min(lines.length, Math.floor(p * lines.length + .35))) { var d = document.createElement('div'); d.innerHTML = lines[shown++]; term.appendChild(d); }
                 if (p < 1) requestAnimationFrame(tick); else res();
             })(start);
         });
         $('#auWelcomeName').textContent = j.name || '';
         body.classList.add('granted');
         $('#auGranted').classList.add('on');
-        flash();
-        burst(window.innerWidth / 2, window.innerHeight / 2, 120);
-        await wait(1500);
+        flash(true);
+        var r = core.getBoundingClientRect();
+        burst(r.left + r.width / 2, r.top + r.height / 2, small ? 60 : 90);
+        await wait(1600);
         warpTo(j.redirect || C.home);
     }
 })();

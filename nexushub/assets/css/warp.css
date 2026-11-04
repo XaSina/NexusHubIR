@@ -75,3 +75,15 @@
 /* the loader animates only while it is on screen (otherwise its rings/scan would tick forever in the background) */
 html .nx-warp:not(.cover) *, html .nx-warp:not(.cover) *::before, html .nx-warp:not(.cover) *::after { animation-play-state: paused; }
 html.warp-in .nx-warp *, html.warp-in .nx-warp *::before, html.warp-in .nx-warp *::after { animation-play-state: running; }
+
+/* ---------- seamless hand-off between pages ----------
+   --wt (set in <head> on the next page) is minus the time since the warp started, so the rings, glow, scan and bar
+   continue from exactly where they were instead of restarting (that restart was the visible "jolt"). */
+.wc-ring.r1, .wc-ring.r2, .wc-ring.r3, .wc-glow, .wc-bar i, .wf-scan { animation-delay: var(--wt, 0ms); }
+/* exit: the loader zooms gently toward the viewer and fades while the iris closes */
+html.warp-out .nx-warp-core { opacity: 0; transform: scale(1.14); transition: opacity .5s ease, transform .9s cubic-bezier(.16,1,.3,1); }
+html.warp-out .nx-warp-fx { opacity: 0; transition: opacity .45s ease; }
+html.warp-out .nx-warp-disc { transition: transform 1.05s cubic-bezier(.7,0,.2,1) .08s; }
+@media (prefers-reduced-motion: reduce) { html.warp-out .nx-warp-core, html.warp-out .nx-warp-disc, html.warp-out .nx-warp-fx { transition-duration: .01ms !important; } }
+
+.nx-warp.rs *, .nx-warp.rs *::before, .nx-warp.rs *::after { animation: none !important; }
