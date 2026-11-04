@@ -9,7 +9,7 @@ if (is_post()) {
     csrf_check();
     $ids = array_map('intval', (array) ($_POST['ids'] ?? []));
     if (!empty($_POST['delete_id'])) $ids = [(int) $_POST['delete_id']];
-    $act = $_POST['bulk'] ?? (!empty($_POST['delete_id']) ? 'delete' : '');
+    $act = !empty($_POST['delete_id']) ? 'delete' : (string) ($_POST['bulk'] ?? '');
     if ($ids && $act) {
         $where = 'id IN (' . implode(',', $ids) . ')' . ($own ? ' AND author_id = ' . (int) $me['id'] : '');
         switch ($act) {

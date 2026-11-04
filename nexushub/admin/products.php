@@ -104,7 +104,7 @@ adm_head('محصولات فروشگاه', 'products');
                 <a class="adm-ib" href="product-edit.php?id=<?= (int) $p['id'] ?>" title="ویرایش"><?= adm_icon('edit', 16) ?></a>
                 <a class="adm-ib" href="<?= e(product_url($p)) ?>" target="_blank" title="مشاهده"><?= icon('eye', 16) ?></a>
                 <form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="adm-ib" name="act" value="duplicate" title="کپی محصول"><?= icon('copy', 16) ?></button></form>
-                <form method="post" onsubmit="return confirm('محصول حذف شود؟')"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="adm-ib danger" name="act" value="delete" title="حذف"><?= adm_icon('trash', 16) ?></button></form>
+                <form method="post" data-confirm="محصول حذف شود؟"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="adm-ib danger" name="act" value="delete" title="حذف"><?= adm_icon('trash', 16) ?></button></form>
             </div>
         </div>
         <?php endforeach; ?>

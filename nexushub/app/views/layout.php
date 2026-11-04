@@ -311,6 +311,7 @@ $jsCfg['cart'] = $cartN;
 <?= ad_slot('floating') ?>
 
 <script>window.NX = <?= json_encode($jsCfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
+<script src="<?= e(asset('js/confirm.js')) ?>" defer></script>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <?php if ($shopOn || $me): ?><script src="<?= e(asset('js/shop.js')) ?>" defer></script><?php endif; ?>
 <?php if (str_contains((string) ($bodyClass ?? ''), 'page-account')): ?><script src="<?= e(asset('js/pw.js')) ?>" defer></script><?php endif; ?>

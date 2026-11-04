@@ -169,6 +169,7 @@ window.NXA = <?= json_encode([
     'uploadLimit' => server_upload_limit(),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
+<script src="<?= e(asset('js/confirm.js')) ?>"></script>
 <script src="<?= e(asset('js/admin.js')) ?>"></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 <?php foreach ($scripts as $s): ?><script src="<?= e(asset('js/' . $s)) ?>"></script><?php endforeach; ?>

@@ -95,6 +95,13 @@ switch ($seg[1] ?? '') {
         if ($e !== '') json_out(['ok' => false, 'error' => $e], 422);
         json_out(['ok' => true, 'count' => cart_count(), 'count_fa' => fa_num((string) cart_count())]);
 
+    case 'market':  // live market board (shop page): refreshes the cache in the background of the visitor's page
+        if (!setting_on('shop_tickers_on')) json_out(['ok' => false], 404);
+        $b = market_board(true);
+        foreach ($b['items'] as &$it) { $it['fa'] = $it['toman'] ? money($it['toman']) : '—'; $it['usd_fa'] = market_usd($it['usd']); }
+        unset($it);
+        json_out(['ok' => true, 'items' => $b['items'], 'src' => $b['src'] ?? '']);
+
     case 'price':   // live price for a custom amount (product page)
         $p = row("SELECT * FROM products WHERE id = ? AND status = 'active'", [(int) ($_POST['pid'] ?? 0)]);
         if (!$p) json_out(['ok' => false], 404);

@@ -323,4 +323,29 @@
         requestAnimationFrame(function () { t.classList.add('in'); });
         setTimeout(function () { t.classList.remove('in'); setTimeout(function () { t.remove(); }, 500); }, 6000);
     }
+
+    /* ---------- live market board (shop page): refresh now, then every 60s while visible ---------- */
+    var mkt = document.getElementById('mktBoard');
+    if (mkt) {
+        var fa = function (s) { return String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
+        var pull = function () {
+            if (document.hidden) return;
+            api('api/market', {}).then(function (j) {
+                if (!j || !j.ok) return;
+                var src = document.getElementById('mktSrc'); if (src && j.src) src.textContent = j.src;
+                j.items.forEach(function (it) {
+                    var el = mkt.querySelector('[data-k="' + it.k + '"]'); if (!el) return;
+                    var t = el.querySelector('.mkt-t'), old = t.textContent;
+                    if (it.toman) { t.textContent = it.fa; el.classList.remove('wait'); } else if (old === '…') t.textContent = '—';
+                    var u = el.querySelector('.mkt-usd'); if (u && it.usd_fa) u.textContent = fa(it.usd_fa);
+                    var c = el.querySelector('.mkt-ch');
+                    if (c && it.chg !== null && it.chg !== undefined) { c.className = 'mkt-ch ' + (it.chg >= 0 ? 'up' : 'dn'); c.textContent = (it.chg >= 0 ? '▲ ' : '▼ ') + fa(Math.abs(it.chg).toFixed(2)) + '٪'; }
+                    if (old !== t.textContent && old !== '…') { el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
+                });
+            }).catch(function () {});
+        };
+        setTimeout(pull, 400);
+        setInterval(pull, 60000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) pull(); });
+    }
 })();

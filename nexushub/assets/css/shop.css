@@ -584,3 +584,43 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
 .xsel-opt.sel { background: var(--grad); color: #fff; font-weight: 700; }
 .xsel-opt.sel::after { content: "✓"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 900; }
 .xsel-opt.dis { opacity: .4; pointer-events: none; }
+
+/* ---------- live market board ---------- */
+.mkt { position: relative; padding: 14px; border-radius: 20px; background: linear-gradient(160deg, rgba(var(--surface-rgb), .55), rgba(var(--surface-rgb), .35)); border: 1px solid var(--line); }
+.mkt-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; padding: 0 2px; }
+.mkt-live { display: inline-flex; align-items: center; gap: 7px; font-size: .8rem; font-weight: 800; }
+.mkt-live i { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 0 rgba(61,220,132,.6); animation: mktPulse 2s ease-out infinite; }
+@keyframes mktPulse { 70% { box-shadow: 0 0 0 7px rgba(61,220,132,0); } 100% { box-shadow: 0 0 0 0 rgba(61,220,132,0); } }
+.mkt-head small { font-size: .66rem; color: var(--muted); direction: ltr; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+.mkt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mkt-it { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; row-gap: 4px; align-items: center; padding: 10px 12px; border-radius: 14px;
+    background: rgba(var(--text-rgb), .035); border: 1px solid rgba(var(--text-rgb), .06); overflow: hidden; transition: border-color .3s, transform .3s; }
+.mkt-it:hover { border-color: rgba(var(--primary-rgb), .35); transform: translateY(-1px); }
+.mkt-ic { grid-row: span 2; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; font-size: 1.1rem; font-weight: 900; color: var(--primary);
+    background: rgba(var(--primary-rgb), .1); border: 1px solid rgba(var(--primary-rgb), .22); }
+.mkt-nm { display: flex; flex-direction: column; min-width: 0; }
+.mkt-nm b { font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkt-nm small { font-size: .64rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.mkt-pr { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+.mkt-pr b { font-size: .95rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.mkt-pr small { font-size: .62rem; color: var(--muted); }
+.mkt-ch { position: absolute; top: 9px; left: 10px; font-style: normal; font-size: .64rem; font-weight: 800; padding: 1px 6px; border-radius: 8px; }
+.mkt-ch.up { color: #3ddc84; background: rgba(61,220,132,.1); } .mkt-ch.dn { color: #ff6b7d; background: rgba(255,90,110,.1); } .mkt-ch.n { display: none; }
+.mkt-it.wait .mkt-t { color: var(--muted); }
+.mkt-it.tick::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgba(var(--primary-rgb), .18) 50%, transparent 70%); animation: mktTick 1s ease forwards; }
+@keyframes mktTick { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (max-width: 560px) {
+    .mkt { padding: 10px; }
+    .mkt-grid { gap: 6px; }
+    .mkt-it { grid-template-columns: minmax(0, 1fr); padding: 9px 10px 8px; row-gap: 3px; }
+    .mkt-ic { grid-row: auto; width: 26px; height: 26px; border-radius: 8px; font-size: .85rem; }
+    .mkt-nm b { font-size: .74rem; } .mkt-nm small { font-size: .6rem; }
+    .mkt-pr b { font-size: .82rem; }
+    .mkt-ch { top: 8px; left: 8px; font-size: .58rem; }
+}
+@media (hover: none), (max-width: 900px) { .mkt-live i { animation: none; } }
+@media (max-width: 560px) {
+    .mkt-pr { flex-wrap: wrap; row-gap: 0; }
+    .mkt-pr b { font-size: clamp(.68rem, 3.35vw, .82rem); overflow: visible; text-overflow: clip; letter-spacing: -.2px; }
+    .mkt-pr small { flex-basis: 100%; line-height: 1.2; }
+}

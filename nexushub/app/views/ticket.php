@@ -39,7 +39,7 @@ $last = $msgs ? (int) end($msgs)['id'] : 0;
             <button class="btn btn-primary" type="submit"><?= icon('send', 17) ?> ارسال</button>
         </div>
     </form>
-    <form method="post" class="op-cancel" onsubmit="return confirm('تیکت بسته شود؟')"><?= csrf_field() ?><input type="hidden" name="act" value="close"><button type="submit" class="link-btn">مشکلم حل شد — بستن تیکت</button></form>
+    <form method="post" class="op-cancel" data-confirm="تیکت بسته شود؟"><?= csrf_field() ?><input type="hidden" name="act" value="close"><button type="submit" class="link-btn">مشکلم حل شد — بستن تیکت</button></form>
     <?php elseif ($t['status'] === 'closed'): ?>
         <p class="muted center" data-reveal>این تیکت بسته شده است. برای سوال جدید <a href="<?= e(url('support')) ?>">تیکت جدید</a> ثبت کنید.</p>
     <?php endif; ?>

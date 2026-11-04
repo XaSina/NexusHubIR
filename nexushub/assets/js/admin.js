@@ -100,14 +100,7 @@
     if (ov) ov.addEventListener('click', function () { side.classList.remove('open'); ov.classList.remove('open'); });
 
     /* ---------- Confirm ---------- */
-    document.addEventListener('click', function (e) {
-        var el = e.target.closest('[data-confirm]');
-        if (el && !confirm(el.dataset.confirm)) { e.preventDefault(); e.stopPropagation(); }
-    }, true);
-    document.addEventListener('submit', function (e) {
-        var f = e.target;
-        if (f.dataset.confirmSubmit && !confirm(f.dataset.confirmSubmit)) e.preventDefault();
-    });
+    /* handled by confirm.js (themed dialog) */
 
     /* ---------- Tabs ---------- */
     $$('[data-tabs]').forEach(function (wrap) {

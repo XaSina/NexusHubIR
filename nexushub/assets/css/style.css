@@ -18,7 +18,7 @@
     --surface-rgb: 18,18,24; --glass-a: .55; --blur: 18px;
     --line: rgba(255,255,255,.08);
     --radius: 20px; --fs: 16px;
-    --shadow: 0 25px 60px rgba(0,0,0,.55);
+    --shadow: 0 10px 24px -12px rgba(0,0,0,.6);
     --grad: linear-gradient(135deg, var(--primary), var(--secondary));
     --ease: cubic-bezier(.22,1,.36,1); --ease-out: cubic-bezier(.16,1,.3,1); --ease-spring: cubic-bezier(.34,1.56,.64,1);
     --header-h: 76px;
@@ -1124,3 +1124,8 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
     -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface-rgb)) inset; box-shadow: 0 0 0 1000px rgb(var(--surface-rgb)) inset;
     transition: background-color 9999s ease 0s;
 }
+
+/* no dark clouds under cards: shadows stay tight under the card instead of a big blurred halo */
+body.cards-elevated .glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 14px 26px -16px rgba(0, 0, 0, .85), 0 8px 22px -16px rgba(var(--primary-rgb), .35); }
+body.cards-elevated .glass:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 18px 30px -18px rgba(0, 0, 0, .9), 0 12px 30px -16px rgba(var(--primary-rgb), .5); }
+.pcard-card:hover { box-shadow: 0 18px 40px -22px rgba(var(--primary-rgb), .55), var(--shadow); }

@@ -10,7 +10,7 @@ $keys = ['shop_enabled', 'shop_title', 'shop_tagline', 'shop_notice', 'shop_term
     'shop_usd_mode', 'shop_usd_rate', 'shop_ton_mode', 'shop_ton_usd', 'shop_margin', 'shop_round',
     'shop_in_header', 'shop_in_mobile', 'shop_in_footer', 'shop_menu_label',
     'shop_banner_on', 'shop_banner_title', 'shop_banner_text', 'shop_banner_btn', 'shop_banner_emoji', 'shop_banner_badge', 'shop_banner_style', 'shop_banner_accent', 'shop_banner_image',
-    'shop_tg_admin_chat'];
+    'shop_tg_admin_chat', 'shop_tickers_on'];
 
 if (is_post()) {
     csrf_check();
@@ -27,6 +27,7 @@ if (is_post()) {
     if (!array_key_exists($save['shop_banner_style'] ?? '', ad_themes())) $save['shop_banner_style'] = 'flow';
     $save['shop_banner_accent'] = ($save['shop_banner_accent'] ?? '') !== '' ? valid_hex($save['shop_banner_accent'], '') : '';
     $save['shop_banner_places'] = implode(',', array_values(array_intersect((array) ($_POST['places'] ?? []), array_keys(shop_banner_places()))));
+    if (isset($_POST['tickers_sent'])) $save['shop_tickers'] = implode(',', array_values(array_intersect((array) ($_POST['tickers'] ?? []), array_keys(market_assets()))));
     save_settings($save);
     // the home banner section follows its switch
     flash('تنظیمات فروشگاه ذخیره شد ✅');
@@ -117,6 +118,18 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
             <button type="button" class="abtn abtn-ghost abtn-sm" id="rateTest"><?= icon('bolt', 15) ?> تست اتصال به منابع قیمت</button>
             <div class="rate-test" id="rateOut" hidden></div>
         </div>
+    </div>
+    <div class="card mt">
+        <div class="card-head"><h3>📈 بازار لحظه‌ای در صفحه فروشگاه</h3><span class="muted small">قیمت‌ها خودکار و رایگان از نوبیتکس، CoinGecko و KuCoin گرفته می‌شوند</span></div>
+        <?= f_switch('shop_tickers_on', 'نمایش بازار لحظه‌ای', setting_on('shop_tickers_on'), 'بالای قیمت TON در صفحه فروشگاه') ?>
+        <input type="hidden" name="tickers_sent" value="1">
+        <?php $tsel = market_selected(); $groups = ['fiat' => '💱 ارزها', 'gold' => '🪙 طلا', 'coin' => '₿ ارزهای دیجیتال']; ?>
+        <div class="af mt"><span class="af-label">کدام قیمت‌ها نمایش داده شوند؟</span>
+            <select name="tickers[]" multiple data-multi data-placeholder="هیچ قیمتی انتخاب نشده">
+                <?php foreach ($groups as $g => $gl): ?><optgroup label="<?= e($gl) ?>"><?php foreach (market_assets() as $k => $a): if (($a[3] === 'fiat' ? 'fiat' : $a[3]) !== $g) continue; ?><option value="<?= e($k) ?>" <?= in_array($k, $tsel, true) ? 'selected' : '' ?>><?= e($a[2] . ' ' . $a[0] . ' (' . $a[1] . ')') ?></option><?php endforeach; ?></optgroup><?php endforeach; ?>
+            </select>
+        </div>
+        <p class="muted small mt">قیمت تومانی با نرخ دلار (تتر) همین صفحه حساب می‌شود؛ برای قیمت‌های تومانی، حالت دلار را روی «خودکار» بگذارید. طلای ۱۸ عیار بر اساس انس جهانی (PAXG) محاسبه می‌شود و ممکن است کمی با بازار داخلی فرق داشته باشد.</p>
     </div>
     <div class="card mt">
         <div class="card-head"><h3>🧮 ماشین‌حساب قیمت</h3><span class="muted small">قیمت نهایی را قبل از تعریف بسته ببینید</span></div>

@@ -84,7 +84,7 @@ $steps = [
                 <button class="btn btn-primary btn-lg btn-block" type="submit"><?= icon('send', 18) ?> ارسال فیش و پیگیری سفارش</button>
             </form>
             <?php if ($st === 'pending_payment'): ?>
-            <form method="post" class="op-cancel" onsubmit="return confirm('سفارش لغو شود؟')"><?= csrf_field() ?><input type="hidden" name="act" value="cancel"><button type="submit" class="link-btn">لغو سفارش</button></form>
+            <form method="post" class="op-cancel" data-confirm="سفارش لغو شود؟"><?= csrf_field() ?><input type="hidden" name="act" value="cancel"><button type="submit" class="link-btn">لغو سفارش</button></form>
             <?php endif; ?>
 
         <?php elseif ($st === 'reviewing'): ?>

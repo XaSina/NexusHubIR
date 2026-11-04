@@ -23,6 +23,21 @@ $member = current_member();
         </div>
     </div>
     <div class="sh-side">
+        <?php $mkt = setting_on('shop_tickers_on') ? market_board(false) : ['items' => []]; if ($mkt['items']): ?>
+        <div class="mkt" id="mktBoard" aria-live="polite">
+            <div class="mkt-head"><span class="mkt-live"><i></i> بازار لحظه‌ای</span><small id="mktSrc"><?= e($mkt['src'] ?? '') ?></small></div>
+            <div class="mkt-grid">
+                <?php foreach ($mkt['items'] as $it): $c = $it['chg']; ?>
+                <div class="mkt-it<?= $it['toman'] === null ? ' wait' : '' ?>" data-k="<?= e($it['k']) ?>">
+                    <span class="mkt-ic"><?= e($it['icon']) ?></span>
+                    <span class="mkt-nm"><b><?= e($it['name']) ?></b><small dir="ltr"><?= e($it['short']) ?><?php if ($it['usd'] !== null && !in_array($it['k'], ['usd', 'usdt'], true)): ?> · $<span class="mkt-usd"><?= e(fa_num(market_usd($it['usd']))) ?></span><?php endif; ?></small></span>
+                    <span class="mkt-pr"><b class="mkt-t"><?= $it['toman'] ? money($it['toman']) : '…' ?></b><small>تومان</small></span>
+                    <em class="mkt-ch <?= $c === null ? 'n' : ($c >= 0 ? 'up' : 'dn') ?>" dir="ltr"><?= $c === null ? '' : ($c >= 0 ? '▲ ' : '▼ ') . e(fa_num(number_format(abs($c), 2))) . '٪' ?></em>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php if ($r['ton']): ?>
         <div class="rate-chip" title="قیمت لحظه‌ای تون — منبع: <?= e($r['ton_src']) ?>">
             <span class="rc-ic">💎</span>

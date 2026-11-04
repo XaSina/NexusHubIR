@@ -96,7 +96,7 @@ adm_head('سفارش ' . $o['code'], 'orders');
             <form method="post" class="ov-complete"><?= csrf_field() ?><input type="hidden" name="act" value="complete">
                 <label class="af"><span class="af-label">🎁 اطلاعات تحویل برای مشتری (اختیاری — مثل کد گیفت کارت، لینک، توضیح)</span>
                     <textarea name="delivery" rows="3" placeholder="مثلاً: کد گیفت کارت: XXXX-XXXX-XXXX&#10;یا: پریمیوم روی اکانت @username فعال شد ✅"><?= e((string) $o['delivery']) ?></textarea></label>
-                <button class="abtn abtn-primary abtn-block ov-big" type="submit" onclick="return confirm('سفارش «انجام شد» ثبت شود؟')">🎉 سفارش انجام شد</button>
+                <button class="abtn abtn-primary abtn-block ov-big" type="submit" data-confirm="سفارش «انجام شد» ثبت شود؟">🎉 سفارش انجام شد</button>
             </form>
             <?php endif; ?>
             <?php if (in_array($o['status'], ['pending_payment', 'rejected'], true)): ?>
@@ -181,7 +181,7 @@ adm_head('سفارش ' . $o['code'], 'orders');
                 <select name="status" style="flex:1"><?php foreach ($S as $k => $s): ?><option value="<?= $k ?>" <?= $o['status'] === $k ? 'selected' : '' ?>><?= e($s['icon'] . ' ' . $s['name']) ?></option><?php endforeach; ?></select>
                 <button class="abtn abtn-ghost abtn-sm" type="submit">اعمال</button></form>
             <?php if (!in_array($o['status'], ['completed', 'canceled', 'expired'], true)): ?>
-            <form method="post" class="mt" onsubmit="return confirm('سفارش لغو شود؟')"><?= csrf_field() ?><input type="hidden" name="act" value="cancel">
+            <form method="post" class="mt" data-confirm="سفارش لغو شود؟"><?= csrf_field() ?><input type="hidden" name="act" value="cancel">
                 <input name="reason" placeholder="دلیل لغو (اختیاری، برای مشتری)" class="w100 input">
                 <button class="abtn abtn-danger abtn-sm mt" type="submit">لغو سفارش</button></form>
             <?php endif; ?>

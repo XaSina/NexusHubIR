@@ -102,12 +102,12 @@ function theme_css_vars(): string
     if ($c['light']) {
         $vars += [
             '--text' => '#12131a', '--text-rgb' => '18,19,26', '--muted' => '#5b5e6e',
-            '--surface-rgb' => '255,255,255', '--line' => 'rgba(18,19,26,.10)', '--shadow' => '0 20px 50px rgba(30,30,60,.12)',
+            '--surface-rgb' => '255,255,255', '--line' => 'rgba(18,19,26,.10)', '--shadow' => '0 10px 26px -14px rgba(30,30,60,.22)',
         ];
     } else {
         $vars += [
             '--text' => '#f4f4f7', '--text-rgb' => '244,244,247', '--muted' => '#9d9dab',
-            '--surface-rgb' => '18,18,24', '--line' => 'rgba(255,255,255,.08)', '--shadow' => '0 25px 60px rgba(0,0,0,.55)',
+            '--surface-rgb' => '18,18,24', '--line' => 'rgba(255,255,255,.08)', '--shadow' => '0 10px 24px -12px rgba(0,0,0,.6)',
         ];
     }
     $css = ':root{';
