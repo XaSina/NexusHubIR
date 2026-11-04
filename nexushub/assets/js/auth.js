@@ -93,7 +93,7 @@
        Everything is batched into a few paths per frame so phones stay at 60fps.
        ========================================================================== */
     var small = window.innerWidth < 760;
-    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, small ? 1 : 2);
+    var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
     var hex = function (h) { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
     var PC = hex(cssVar('--primary', '#ff1f3d')), SC = hex(cssVar('--secondary', '#ff7a3d'));
     var mix = function (a, b, t) { return [0, 1, 2].map(function (i) { return Math.round(a[i] + (b[i] - a[i]) * t); }); };
@@ -110,7 +110,7 @@
         W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         placeLogo();
     }
-    function star() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .12 ? 1.6 : (Math.random() < .5 ? 1.1 : .7), ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.8, v: .02 + Math.random() * .06 }; }
+    function star() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .1 ? 1.5 : (Math.random() < .45 ? 1 : .6), ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.8, v: .02 + Math.random() * .06 }; }
 
     /* ---------- particle logo ---------- */
     var LOGO = { parts: [], state: 'none', t0: 0, cx: 0, cy: 0, sz: 0, formAt: 0, orbitA: 0 };
@@ -122,11 +122,12 @@
     function placeLogo() {
         var em = $('#auEmblem'); if (!em) return;
         var r = em.getBoundingClientRect();
+        if (LOGO.sz && Math.abs(LOGO.sz - r.width) > 1) glowCv = dotsCv = brightCv = comboCv = null;
         LOGO.cx = r.left + r.width / 2; LOGO.cy = r.top + r.height / 2; LOGO.sz = r.width;
     }
     // sample the real logo: keep pixels that stand out from the background colour (works for any uploaded logo)
     function sampleLogo(img) {
-        var S = small ? 120 : 150, oc = document.createElement('canvas'); oc.width = oc.height = S;
+        var S = small ? 190 : 230, oc = document.createElement('canvas'); oc.width = oc.height = S;
         var g = oc.getContext('2d'); g.drawImage(img, 0, 0, S, S);
         var d = g.getImageData(0, 0, S, S).data, bg = [d[0], d[1], d[2]], pts = [];
         for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
@@ -137,7 +138,7 @@
             pts.push([x / S - .5, y / S - .5, Math.max(d[i], d[i + 1], d[i + 2]) / 255]);
         }
         for (var k = pts.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = pts[k]; pts[k] = pts[j]; pts[j] = t; }
-        return pts.slice(0, small ? 1200 : 2600);
+        return pts.slice(0, small ? 1900 : 3300);
     }
     // returns ms until the logo is formed (0 = particles unavailable → show the image instead)
     function startLogo() {
@@ -153,7 +154,7 @@
             return { nx: p[0], ny: p[1], sx: Math.cos(a) * rr, sy: Math.sin(a) * rr * .7, d: Math.random() * 650, du: 1250 + Math.random() * 650,
                 b: lum > .72 ? 3 : lum > .48 ? 2 : lum > .26 ? 1 : 0, ph: Math.random() * 6.28, ox: 0, oy: 0, spark: Math.random() < .045, x: 0, y: 0, vx: 0, vy: 0 };
         });
-        LOGO.state = reduce ? 'formed' : 'forming'; LOGO.t0 = now; LOGO.formAt = now + (reduce ? 0 : 1950);
+        LOGO.state = reduce ? 'formed' : 'forming'; LOGO.t0 = now; LOGO.formAt = now + (reduce ? 0 : 1950); LOGO.doneAt = now + (reduce ? 0 : 2650);
         return reduce ? 1 : 1950;
     }
     function explodeLogo() {
@@ -164,15 +165,77 @@
         });
         LOGO.state = 'explode'; LOGO.t0 = performance.now();
     }
-    var BUCKET = [rgba(PC, .78), rgba(mix(PC, [255, 255, 255], .18), 1), rgba(mix(PC, [255, 255, 255], .5), 1), 'rgba(255,250,244,1)'];
+    var BUCKET = [rgba(mix(PC, [255, 255, 255], .08), .8), rgba(mix(PC, [255, 255, 255], .32), 1), rgba(mix(PC, [255, 255, 255], .62), 1), 'rgba(255,252,248,1)'];
     var ease = function (t) { return 1 - Math.pow(1 - t, 4); };
+    var glowCv = null, dotsCv = null, brightCv = null, comboCv = null;
+    function buildDots() {
+        var L = LOGO, n = Math.ceil(L.sz * 1.1 * dpr), o = L.sz * .55, s2 = small ? 1.05 : 1.15;
+        var mk = function (bright) {
+            var g = document.createElement('canvas'); g.width = g.height = n;
+            var c = g.getContext('2d'); c.scale(dpr, dpr);
+            var paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+            for (var i = 0; i < L.parts.length; i++) { var p = L.parts[i]; paths[bright ? Math.min(3, p.b + 1) : p.b].rect(p.nx * L.sz + o - s2 / 2, p.ny * L.sz + o - s2 / 2, s2, s2); }
+            for (var k = 0; k < 4; k++) { c.fillStyle = BUCKET[k]; c.fill(paths[k]); }
+            return g;
+        };
+        dotsCv = mk(false); brightCv = mk(true);
+        if (!glowCv) buildGlow();
+        var gsz = L.sz * 1.3, m = Math.ceil(gsz * dpr), cb = document.createElement('canvas'); cb.width = cb.height = m;
+        var cc = cb.getContext('2d'); cc.scale(dpr, dpr);
+        cc.globalCompositeOperation = 'lighter'; cc.globalAlpha = .55; cc.drawImage(glowCv, 0, 0, gsz, gsz);
+        cc.globalCompositeOperation = 'source-over'; cc.globalAlpha = 1; cc.drawImage(dotsCv, (gsz - L.sz * 1.1) / 2, (gsz - L.sz * 1.1) / 2, L.sz * 1.1, L.sz * 1.1);
+        comboCv = cb;
+    }
+    function buildGlow() {
+        var L = LOGO, hasF = 'filter' in CanvasRenderingContext2D.prototype, k = hasF ? 2 : 5, n = Math.ceil(L.sz * 1.3 / k), g = document.createElement('canvas'); g.width = g.height = n;
+        var c = g.getContext('2d'), o = L.sz * .65;
+        if (hasF) c.filter = 'blur(' + (7 / k) + 'px)';
+        c.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < L.parts.length; i++) {
+            var p = L.parts[i]; c.fillStyle = p.b >= 2 ? rgba(mix(PC, [255, 255, 255], .5), .35) : rgba(PC, .3);
+            c.fillRect((p.nx * L.sz + o) / k - .6, (p.ny * L.sz + o) / k - .6, 1.2, 1.2);
+        }
+        glowCv = g;
+    }
+    // orbit ring with depth: back half is drawn behind the logo (dim), front half in front (brighter)
+    function drawOrbit(now, front, oa) {
+        var L = LOGO, sz = L.sz, rx = sz * .84, ry = sz * .24, rot = -.28, ocy = L.cy + sz * .05;
+        ctx.globalAlpha = oa * (front ? .55 : .2); ctx.strokeStyle = rgba(mix(PC, [255, 255, 255], .45), 1); ctx.lineWidth = front ? 1 : .8;
+        ctx.beginPath(); ctx.ellipse(L.cx, ocy, rx, ry, rot, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2); ctx.stroke();
+        var a0 = now * .0008;
+        for (var c = 0, cn = small ? 10 : 18; c < cn; c++) {
+            var aa = a0 - c * (small ? .07 : .04), inFront = Math.sin(aa) > 0;
+            if (inFront !== front) continue;
+            var ex = Math.cos(aa) * rx, ey = Math.sin(aa) * ry;
+            var x = L.cx + ex * Math.cos(rot) - ey * Math.sin(rot), y = ocy + ex * Math.sin(rot) + ey * Math.cos(rot);
+            var gs = (c ? 8 : 20) * (1 - c / 20) * (front ? 1 : .7);
+            ctx.globalAlpha = oa * (1 - c / 18) * (c ? .5 : 1) * (front ? 1 : .45); ctx.drawImage(c ? spP : spW, x - gs / 2, y - gs / 2, gs, gs);
+        }
+    }
     function drawLogo(now) {
         var L = LOGO; if (L.state === 'none' || L.state === 'gone') return;
         var paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], sparks = [];
-        var ps = small ? 1.6 : 1.7, alpha = 1, sz = L.sz;
+        var ps = small ? 1.05 : 1.15, alpha = 1, sz = L.sz;
         var sweep = L.cx - sz * .8 + (((now - L.formAt) % 4200) / 4200) * sz * 2.2;     // shine band passing across
         if (L.state === 'explode') { alpha = Math.max(0, 1 - (now - L.t0) / 900); if (!alpha) { L.state = 'gone'; return; } }
         var near = pointer.x > L.cx - sz && pointer.x < L.cx + sz && pointer.y > L.cy - sz && pointer.y < L.cy + sz;
+        var settledAll = L.state !== 'explode' && now > L.doneAt;
+        if (settledAll && !near && !L.parts.some(function (p) { return Math.abs(p.ox) > .05 || Math.abs(p.oy) > .05; })) {
+            if (!comboCv) buildDots();
+            var gsz = sz * 1.3, dsz = sz * 1.1;
+            drawOrbit(now, false, 1);
+            ctx.globalAlpha = 1; ctx.drawImage(comboCv, Math.round((L.cx - gsz / 2) * dpr) / dpr, Math.round((L.cy - gsz / 2) * dpr) / dpr, gsz, gsz);
+            // shine band: the bright sprite seen through a moving clip
+            ctx.save(); ctx.beginPath(); ctx.rect(sweep - 12, L.cy - dsz / 2, 24, dsz); ctx.clip(); ctx.drawImage(brightCv, L.cx - dsz / 2, L.cy - dsz / 2, dsz, dsz); ctx.restore();
+            for (var q2 = 0, lim = small ? 70 : 200, cnt = 0; q2 < L.parts.length && cnt < lim; q2++) {
+                var sp2 = L.parts[q2]; if (!sp2.spark) continue; cnt++;
+                var tw2 = Math.sin(now * .003 + sp2.ph * 3);
+                if (tw2 > .55) { var g2 = 5 + (tw2 - .55) * 18; ctx.globalAlpha = (tw2 - .55) * 2; ctx.drawImage(spW, L.cx + sp2.nx * sz - g2 / 2, L.cy + sp2.ny * sz - g2 / 2, g2, g2); }
+            }
+            drawOrbit(now, true, 1);
+            ctx.globalAlpha = 1;
+            return;
+        }
         for (var i = 0; i < L.parts.length; i++) {
             var p = L.parts[i], tx = L.cx + p.nx * sz, ty = L.cy + p.ny * sz, x, y, b = p.b, s = ps;
             if (L.state === 'explode') {
@@ -197,26 +260,23 @@
             paths[b].rect(x - s / 2, y - s / 2, s, s);
             if (p.spark && L.state !== 'explode') sparks.push(p);
         }
+        var oa = L.state !== 'explode' && now > L.formAt - 400 ? Math.min(1, (now - L.formAt + 400) / 900) : 0;
+        if (L.state !== 'explode' && now > L.formAt && !glowCv) buildGlow();
+        if (glowCv) {
+            var ga = L.state === 'explode' ? alpha : Math.min(1, (now - L.formAt) / 700), gsz = sz * 1.3;
+            ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * .55;
+            ctx.drawImage(glowCv, L.cx - gsz / 2, L.cy - gsz / 2, gsz, gsz);
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        if (oa) drawOrbit(now, false, oa);
         ctx.globalAlpha = alpha;
         for (var k = 0; k < 4; k++) { ctx.fillStyle = BUCKET[k]; ctx.fill(paths[k]); }
         // twinkling sparks
         for (var q = 0; q < sparks.length; q++) {
             var sp = sparks[q], tw = Math.sin(now * .003 + sp.ph * 3);
-            if (tw > .55) { var g = 6 + (tw - .55) * 22; ctx.globalAlpha = alpha * (tw - .55) * 2; ctx.drawImage(spW, sp.x - g / 2, sp.y - g / 2, g, g); }
+            if (tw > .55) { var g = 5 + (tw - .55) * 18; ctx.globalAlpha = alpha * (tw - .55) * 2; ctx.drawImage(spW, sp.x - g / 2, sp.y - g / 2, g, g); }
         }
-        // orbit ring + comet once formed
-        if (L.state !== 'explode' && now > L.formAt - 400) {
-            var oa = Math.min(1, (now - L.formAt + 400) / 900), rx2 = sz * .82, ry2 = sz * .25, rot = -.28, ocy = L.cy + sz * .06;
-            ctx.globalAlpha = .32 * oa; ctx.strokeStyle = rgba(mix(PC, [255, 255, 255], .25), 1); ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.ellipse(L.cx, ocy, rx2, ry2, rot, 0, 6.283); ctx.stroke();
-            L.orbitA = now * .0009;
-            for (var c = 0; c < 16; c++) {
-                var aa = L.orbitA - c * .045, ex = Math.cos(aa) * rx2, ey = Math.sin(aa) * ry2;
-                var px2 = L.cx + ex * Math.cos(rot) - ey * Math.sin(rot), py2 = ocy + ex * Math.sin(rot) + ey * Math.cos(rot);
-                var gs = (c ? 9 : 18) * (1 - c / 18);
-                ctx.globalAlpha = oa * (1 - c / 16) * (c ? .55 : 1); ctx.drawImage(c ? spP : spW, px2 - gs / 2, py2 - gs / 2, gs, gs);
-            }
-        }
+        if (oa) drawOrbit(now, true, oa);
         ctx.globalAlpha = 1;
     }
 
@@ -324,9 +384,9 @@
         if (!formIn) setTimeout(function () { flash(true); }, reduce ? 0 : 1050);
         await wait(formIn ? 550 : 1300);
         body.classList.add('s3');
-        scramble(title, titleText, 1100);
-        await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 45);
-        body.classList.add('s4'); setHud('READY');
+        scramble(title, titleText, 900);
+        setTimeout(function () { body.classList.add('s4'); setHud('READY'); }, reduce ? 0 : 750);   // the button doesn't wait for the typing
+        await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 34);
     })();
 
     /* ==========================================================================
@@ -339,6 +399,8 @@
     $('#auStart').addEventListener('click', async function () {
         var btn = this; if (btn.disabled) return; btn.disabled = true;
         btn.classList.add('fired');
+        if (btn.animate && !reduce) { var ring = document.createElement('span'); ring.className = 'au-start-ring'; btn.appendChild(ring);
+            ring.animate([{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.5, 2)' }], { duration: 700, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = function () { ring.remove(); }; }
         await wait(140);
         body.classList.add('warping'); setHud('WARP DRIVE');
         explodeLogo();
