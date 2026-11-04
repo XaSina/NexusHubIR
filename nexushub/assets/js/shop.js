@@ -328,11 +328,17 @@
     var mkt = document.getElementById('mktBoard');
     if (mkt) {
         var fa = function (s) { return String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
-        var pull = function () {
-            if (document.hidden) return;
-            api('api/market', {}).then(function (j) {
+        var rf = document.getElementById('mktRefresh'), busy = false;
+        var pull = function (force) {
+            if (document.hidden || busy) return;
+            busy = true; if (force && rf) rf.classList.add('spin');
+            var t0 = Date.now();
+            api('api/market', force ? { force: 1 } : {}).then(function (j) {
+                setTimeout(function () { busy = false; if (rf) rf.classList.remove('spin'); }, Math.max(0, 600 - (Date.now() - t0)));
                 if (!j || !j.ok) return;
                 var src = document.getElementById('mktSrc'); if (src && j.src) src.textContent = j.src;
+                var at = document.getElementById('mktAt'); if (at && j.at) at.textContent = 'به‌روزرسانی ' + fa(j.at);
+                if (force && window.nxToast) window.nxToast('✅ قیمت‌ها به‌روز شدند');
                 j.items.forEach(function (it) {
                     var el = mkt.querySelector('[data-k="' + it.k + '"]'); if (!el) return;
                     var t = el.querySelector('.mkt-t'), old = t.textContent;
@@ -342,8 +348,9 @@
                     if (c && it.chg !== null && it.chg !== undefined) { c.className = 'mkt-ch ' + (it.chg >= 0 ? 'up' : 'dn'); c.textContent = (it.chg >= 0 ? '▲ ' : '▼ ') + fa(Math.abs(it.chg).toFixed(2)) + '٪'; }
                     if (old !== t.textContent && old !== '…') { el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
                 });
-            }).catch(function () {});
+            }).catch(function () { busy = false; if (rf) rf.classList.remove('spin'); });
         };
+        if (rf) rf.addEventListener('click', function () { pull(true); });
         setTimeout(pull, 400);
         setInterval(pull, 60000);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) pull(); });

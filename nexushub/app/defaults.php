@@ -132,6 +132,7 @@ function default_settings(): array
         'shop_banner_image' => '',
         'shop_banner_badge' => 'جدید',
         'shop_support_on' => '1',
+        'auth_logo_style' => 'particles',   // particles | laser | glass (صفحه ورود)
         'shop_tickers_on' => '1',
         'shop_tickers' => 'usd,gold18,btc,eth',
         'shop_tg_admin_chat' => '',

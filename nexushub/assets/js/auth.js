@@ -179,9 +179,18 @@
         setTimeout(buildSprites, reduce ? 0 : 120);
         return reduce ? 1 : 1950;
     }
+    var logoStyle = ($('#auEmblem') || {}).dataset ? $('#auEmblem').dataset.style || 'particles' : 'particles';
+    function startShell(mark, formMs) {
+        placeLogo();
+        var pts = null; try { pts = mark ? sampleMark(mark, true) : null; } catch (e) {}
+        var now = performance.now();
+        LOGO.parts = (pts || []).map(function (p) { return { nx: p[0], ny: p[1], b: p[2], k: p[3], ox: 0, oy: 0, x: LOGO.cx + p[0] * LOGO.sz, y: LOGO.cy + p[1] * LOGO.sz, keep: Math.random() < (small ? .4 : .45) }; });
+        LOGO.state = 'shell'; LOGO.t0 = now; LOGO.formAt = now + formMs; LOGO.doneAt = now + formMs; LOGO.settled = true;
+    }
     // start: the logo breaks up and its particles drift slowly across the screen, then float as dust behind the card
     function disperseLogo() {
         if (LOGO.state === 'none' || LOGO.state === 'gone' || LOGO.state === 'dust') return;
+        if (LOGO.state === 'shell' && !LOGO.parts.length) { LOGO.state = 'gone'; return; }
         var now = performance.now();
         LOGO.parts.forEach(function (p) {
             if (LOGO.settled || !p.x) { p.x = LOGO.cx + p.nx * LOGO.sz + p.ox; p.y = LOGO.cy + p.ny * LOGO.sz + p.oy; }
@@ -235,6 +244,7 @@
         var L = LOGO; if (L.state === 'none' || L.state === 'gone') return;
         var sz = L.sz, ps = small ? 1.1 : 1.2;
         if (L.state === 'dust') return drawDust(now);
+        if (L.state === 'shell') { drawOrbit(now, false); drawOrbit(now, true); return; }
         var near = pointer.x > L.cx - sz && pointer.x < L.cx + sz && pointer.y > L.cy - sz && pointer.y < L.cy + sz;
         if (near) L.disturbed = true;
         if (!near && L.disturbed && !L.parts.some(function (p) { return Math.abs(p.ox) > .05 || Math.abs(p.oy) > .05; })) L.disturbed = false;
@@ -372,7 +382,13 @@
         await warpGone; await wait(arrivedByWarp ? 260 : 150);
         body.classList.add('s1'); setHud('BOOTING');
         var mark = await Promise.all([logoReady, markReady]).then(function (r) { return r[1]; });
-        var formIn = startLogo(mark);                   // particles swirl in and assemble the NX
+        var formIn;
+        if (logoStyle === 'laser' && mark) {                 // the outline is drawn by a beam, then fills and glows
+            var lx = $('.lx'); lx.classList.add('go'); startShell(mark, reduce ? 0 : 1900); formIn = reduce ? 1 : 1900;
+        } else if (logoStyle === 'glass' && mark) {          // a red glass NX swings in and floats
+            var gl = $('#auGlass'); gl.classList.add('go'); startShell(mark, reduce ? 0 : 1300); formIn = reduce ? 1 : 1500;
+            setTimeout(function () { gl.classList.add('idle'); glassTilt(gl); }, reduce ? 0 : 1400);
+        } else formIn = startLogo(mark);                     // particles swirl in and assemble the NX
         await wait(formIn ? Math.max(0, formIn - 250) : 650);
         body.classList.add('s2'); setHud('SIGNAL LOCKED');
         if (!formIn) setTimeout(function () { flash(true); }, reduce ? 0 : 1050);
@@ -384,6 +400,32 @@
         await wait(650);
         await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 34);
     })();
+
+    function glassTilt(gl) {
+        if (reduce) return;
+        var obj = $('.gl-obj', gl), tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, last = 0;
+        function run() {
+            cx += (tx - cx) * .08; cy += (ty - cy) * .08;
+            obj.style.setProperty('--rx', cy.toFixed(2) + 'deg'); obj.style.setProperty('--ry', cx.toFixed(2) + 'deg');
+            obj.parentNode.style.setProperty('--sx', (50 - cx * 2.2).toFixed(1) + '%');
+            if (Math.abs(tx - cx) > .05 || Math.abs(ty - cy) > .05 || performance.now() - last < 200) raf = requestAnimationFrame(run); else raf = 0;
+        }
+        function aim(x, y) {
+            if (gl.classList.contains('idle')) { gl.classList.remove('idle'); gl.classList.add('tilt'); }
+            tx = Math.max(-1, Math.min(1, x)) * 22; ty = Math.max(-1, Math.min(1, y)) * -16; last = performance.now();
+            if (!raf) raf = requestAnimationFrame(run);
+        }
+        if (!window.matchMedia('(hover: none)').matches) {
+            window.addEventListener('pointermove', function (e) { if (!stage.hidden) return; aim(e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1); }, { passive: true });
+        } else if (window.DeviceOrientationEvent) {
+            var b0 = null;
+            window.addEventListener('deviceorientation', function (e) {
+                if (e.gamma == null || !stage.hidden) return;
+                if (b0 === null) b0 = e.beta;
+                aim(e.gamma / 30, (e.beta - b0) / 30);
+            }, { passive: true });
+        }
+    }
 
     /* ==========================================================================
        Auth card / steps
@@ -399,6 +441,7 @@
             ring.animate([{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.5, 2)' }], { duration: 700, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = function () { ring.remove(); }; }
         await wait(140);
         body.classList.add('warping'); setHud('WARP DRIVE');
+        var dom = $('.lx') || $('#auGlass'); if (dom) dom.classList.add('out');
         disperseLogo();
         await wait(900);
         $('#auIntro').hidden = true;

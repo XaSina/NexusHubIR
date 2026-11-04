@@ -86,6 +86,30 @@ switch ($_POST['action'] ?? '') {
         $r = shop_rates(true);
         json_out(['ok' => true, 'lines' => $lines, 'ton' => $r['ton'], 'usd' => $r['usd'], 'ton_src' => $r['ton_src'], 'usd_src' => $r['usd_src']]);
 
+    case 'market_test':   // checks every price source on its own, then refreshes the board
+        if (!can('*')) json_out(['ok' => false], 403);
+        $sel = market_selected(); $A = market_assets();
+        $coins = array_values(array_unique(array_merge(array_filter($sel, fn($k) => ($A[$k][3] ?? '') === 'coin'), array_intersect($sel, ['gold18', 'ounce']) ? ['paxg'] : [])));
+        $lines = [];
+        if ($coins) foreach (['Nobitex', 'CoinGecko', 'KuCoin'] as $src) {
+            $lg = []; $t = microtime(true); [$got] = fetch_coins_usd($coins, $lg, [$src]);
+            $ms = (int) round((microtime(true) - $t) * 1000);
+            $lines[] = ($got ? '✅ ' : '❌ ') . 'ارز دیجیتال — ' . $src . ': ' . ($got ? fa_num((string) count($got)) . ' از ' . fa_num((string) count($coins)) . ' قیمت' : 'پاسخ نداد') . ' (' . fa_num((string) $ms) . 'ms)';
+        }
+        if (array_intersect($sel, ['eur', 'gbp', 'try', 'aed'])) {
+            $lg = []; fetch_fiat_rates($lg);
+            foreach ($lg as [$n, $ok, $cnt, $ms]) $lines[] = ($ok ? '✅ ' : '❌ ') . 'ارزها — ' . $n . ($ok ? ': ' . fa_num((string) $cnt) . ' نرخ' : ': پاسخ نداد') . ' (' . fa_num((string) $ms) . 'ms)';
+        }
+        $lg = []; [$usd] = fetch_usdt_toman($lg);
+        $first = $lg ? end($lg) : null;
+        $lines[] = ($usd ? '✅ ' : '❌ ') . 'دلار (تتر): ' . ($usd ? money((int) $usd) . ' تومان — ' . $first[0] : 'هیچ صرافی ایرانی جواب نداد') . (setting('shop_usd_mode') !== 'auto' ? ' · ℹ️ حالت دلار «دستی» است؛ قیمت‌های تومانی با نرخ دستی حساب می‌شوند' : '');
+        // refresh the board now with fresh values
+        $c = json_decode((string) setting('shop_market_cache'), true) ?: []; unset($c['forced_at'], $c['coins_fail'], $c['fiat_fail']); save_settings(['shop_market_cache' => json_encode($c)]);
+        settings_all(true);
+        $b = market_board(true, true);
+        $rows = array_map(fn($it) => ['icon' => $it['icon'], 'name' => $it['name'], 'fa' => $it['toman'] ? money($it['toman']) . ' تومان' : '—', 'usd' => $it['usd'] !== null ? '$' . market_usd($it['usd']) : '—', 'chg' => $it['chg']], $b['items']);
+        json_out(['ok' => true, 'lines' => $lines, 'rows' => $rows]);
+
     case 'slug':
         json_out(['ok' => true, 'slug' => slugify((string) input('text'))]);
 

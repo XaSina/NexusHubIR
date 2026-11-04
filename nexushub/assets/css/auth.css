@@ -659,3 +659,46 @@ button { cursor: pointer; border: 0; background: none; }
 /* button rises in */
 .au-start { transition: opacity .7s ease, transform .9s var(--ease-out), box-shadow .3s; }
 @media (prefers-reduced-motion: reduce) { .au-title .lt { animation: none; opacity: 1; transform: none; } }
+
+/* ======================================================================
+   Logo styles: laser (line-drawn) · glass (3D layered)
+   ====================================================================== */
+.au-emblem.st-laser img, .au-emblem.st-glass img { display: none; }
+.au-emblem.st-laser::before, .au-emblem.st-glass::before { background: radial-gradient(circle, rgba(var(--primary-rgb), .3), transparent 68%); }
+
+/* ---- laser ---- */
+.lx { position: absolute; inset: 6%; width: 88%; height: 88%; overflow: visible; }
+.lx path { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.lx-line { stroke: color-mix(in srgb, var(--primary) 55%, #fff); stroke-width: 2.2; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+.lx-glow { stroke: var(--primary); stroke-width: 9; opacity: 0; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+.lx-fill { fill: url(#lxFill); stroke: none; opacity: 0; }
+.lx-shine { opacity: 0; }
+.lx.go .lx-line { animation: lxDraw 1.8s cubic-bezier(.45,0,.2,1) forwards; }
+.lx.go .lx-glow { animation: lxDraw 1.8s cubic-bezier(.45,0,.2,1) forwards, lxGlowIn .6s ease forwards; }
+.lx.go .lx-fill { animation: lxFill .9s ease 1.45s forwards; }
+.lx.go .lx-shine { animation: lxShine 4.5s ease-in-out 2.3s infinite; }
+.lx.done .lx-line { stroke-dashoffset: 0; }
+@keyframes lxDraw { to { stroke-dashoffset: 0; } }
+@keyframes lxGlowIn { to { opacity: .22; } }
+@keyframes lxFill { to { opacity: 1; } }
+@keyframes lxShine { 0% { opacity: 1; transform: translateX(0); } 55%, 100% { opacity: 1; transform: translateX(760px); } }
+.lx.go .lx-line { filter: drop-shadow(0 0 3px var(--primary)); }
+.lx.out { transition: opacity .35s ease, transform .5s ease; opacity: 0; transform: scale(1.08); }
+
+/* ---- glass 3D ---- */
+.gl { position: absolute; inset: 6%; perspective: 700px; opacity: 0; transform: scale(.7) rotateY(-70deg); transition: opacity .8s ease, transform 1.4s cubic-bezier(.34,1.4,.5,1); }
+.gl.go { opacity: 1; transform: none; }
+.gl-obj { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
+.gl.idle .gl-obj { animation: glFloat 7s ease-in-out infinite; }
+@keyframes glFloat { 0%, 100% { transform: rotateX(6deg) rotateY(-14deg); } 50% { transform: rotateX(-5deg) rotateY(14deg); } }
+.gl-l, .gl-f, .gl-spec { position: absolute; inset: 0; -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
+.gl-l { transform: translateZ(calc(var(--z) * -2.2px)); background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 45%, #000), color-mix(in srgb, var(--primary) 22%, #000)); }
+.gl-f { transform: translateZ(1px); background: linear-gradient(150deg, color-mix(in srgb, var(--primary) 60%, #fff) 0%, var(--primary) 30%, color-mix(in srgb, var(--primary) 70%, #000) 70%, var(--primary) 100%); opacity: .96; }
+.gl-spec { transform: translateZ(2px); background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 45%, transparent 58%); background-size: 260% 100%; background-position: var(--sx, 50%) 0; opacity: .7; }
+.gl.go .gl-spec { animation: glSpec 5s ease-in-out 1.4s infinite; }
+.gl.tilt .gl-spec { animation: none; }
+@keyframes glSpec { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0% 0; } }
+.gl-shadow { position: absolute; left: 18%; right: 18%; bottom: -10%; height: 14%; border-radius: 50%; background: radial-gradient(closest-side, rgba(var(--primary-rgb), .35), transparent); }
+.gl.out { transition: opacity .35s ease, transform .5s ease; opacity: 0; transform: scale(1.1); }
+@media (prefers-reduced-motion: reduce) { .lx path { animation: none !important; stroke-dashoffset: 0 !important; } .lx-fill { opacity: 1 !important; } .gl { opacity: 1; transform: none; transition: none; } .gl-obj, .gl-spec { animation: none !important; } }
+.lx .lx-fill { fill: url(#lxFill); }

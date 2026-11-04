@@ -40,44 +40,45 @@ function market_selected(): array
 }
 
 /** coins in USD with 24h change %: [sym => [usd, change]] from Nobitex → CoinGecko → KuCoin */
-function fetch_coins_usd(array $keys, ?array &$log = null): array
+function fetch_coins_usd(array $keys, ?array &$log = null, array $only = []): array
 {
+    $use = fn($n) => !$only || in_array($n, $only, true);
     $A = market_assets(); $want = [];
     foreach ($keys as $k) if (($A[$k][3] ?? '') === 'coin') $want[$k] = $A[$k];
     if (!$want) return [[], 'none'];
     $out = [];
     // 1) Nobitex (answers Iranian servers)
     $t = microtime(true);
-    $j = http_json('https://api.nobitex.ir/market/stats?srcCurrency=' . implode(',', array_map(fn($a) => $a[4], $want)) . '&dstCurrency=usdt', 4);
+    $j = !$use('Nobitex') ? null : http_json('https://api.nobitex.ir/market/stats?srcCurrency=' . implode(',', array_map(fn($a) => $a[4], $want)) . '&dstCurrency=usdt', 4);
     foreach ($want as $k => $a) {
         $s = $j['stats'][$a[4] . '-usdt'] ?? null;
         $v = (float) str_replace(',', '', (string) ($s['latest'] ?? 0));
         if ($v > 0 && empty($s['isClosed'])) $out[$k] = [$v, isset($s['dayChange']) ? (float) $s['dayChange'] : null];
     }
-    $log[] = ['Nobitex', count($out) > 0, count($out), (int) round((microtime(true) - $t) * 1000)];
+    if ($use('Nobitex')) $log[] = ['Nobitex', count($out) > 0, count($out), (int) round((microtime(true) - $t) * 1000)];
     if (count($out) === count($want)) return [$out, 'Nobitex'];
     $src = $out ? 'Nobitex' : '';
     // 2) CoinGecko for the rest
     $rest = array_diff_key($want, $out);
     $t = microtime(true);
-    $j = http_json('https://api.coingecko.com/api/v3/simple/price?ids=' . implode(',', array_map(fn($a) => $a[5], $rest)) . '&vs_currencies=usd&include_24hr_change=true', 4);
+    $j = !$use('CoinGecko') || !$rest ? null : http_json('https://api.coingecko.com/api/v3/simple/price?ids=' . implode(',', array_map(fn($a) => $a[5], $rest)) . '&vs_currencies=usd&include_24hr_change=true', 4);
     $n = 0;
     foreach ($rest as $k => $a) {
         $v = (float) ($j[$a[5]]['usd'] ?? 0);
         if ($v > 0) { $out[$k] = [$v, isset($j[$a[5]]['usd_24h_change']) ? (float) $j[$a[5]]['usd_24h_change'] : null]; $n++; }
     }
-    $log[] = ['CoinGecko', $n > 0, $n, (int) round((microtime(true) - $t) * 1000)];
+    if ($use('CoinGecko')) $log[] = ['CoinGecko', $n > 0, $n, (int) round((microtime(true) - $t) * 1000)];
     if ($n) $src = $src ? $src . ' + CoinGecko' : 'CoinGecko';
     if (count($out) === count($want)) return [$out, $src];
     // 3) KuCoin, one ticker each (only what is still missing)
     $rest = array_diff_key($want, $out); $n = 0; $t = microtime(true);
-    foreach ($rest as $k => $a) {
+    foreach ($use('KuCoin') ? $rest : [] as $k => $a) {
         $j = http_json('https://api.kucoin.com/api/v1/market/stats?symbol=' . $a[6], 3);
         $v = (float) ($j['data']['last'] ?? 0);
         if ($v > 0) { $out[$k] = [$v, isset($j['data']['changeRate']) ? (float) $j['data']['changeRate'] * 100 : null]; $n++; }
         if (microtime(true) - $t > 6) break;
     }
-    $log[] = ['KuCoin', $n > 0, $n, (int) round((microtime(true) - $t) * 1000)];
+    if ($use('KuCoin')) $log[] = ['KuCoin', $n > 0, $n, (int) round((microtime(true) - $t) * 1000)];
     if ($n) $src = $src ? $src . ' + KuCoin' : 'KuCoin';
     return [$out, $src ?: 'none'];
 }
@@ -103,7 +104,7 @@ function fetch_fiat_rates(?array &$log = null): array
 }
 
 /** Rows for the board: [key, name, short, icon, toman|null, usd|null, change|null] */
-function market_board(bool $refresh = false): array
+function market_board(bool $refresh = false, bool $force = false): array
 {
     $sel = market_selected();
     if (!$sel) return ['items' => [], 'at' => null];
@@ -112,24 +113,28 @@ function market_board(bool $refresh = false): array
     $now = time(); $dirty = false;
     $needCoins = array_values(array_unique(array_merge(array_filter($sel, fn($k) => ($A[$k][3] ?? '') === 'coin'), array_intersect($sel, ['gold18', 'ounce']) ? ['paxg'] : [])));
     $needFiat = (bool) array_intersect($sel, ['eur', 'gbp', 'try', 'aed']);
+    if ($force) {
+        if ($now - (int) ($cache['forced_at'] ?? 0) < 20) $force = false;   // someone just refreshed: reuse it
+        else { $cache['forced_at'] = $now; unset($cache['coins_fail'], $cache['fiat_fail']); $refresh = true; $dirty = true; }
+    }
     if ($refresh) {
         $c = $cache['coins'] ?? null;
         $missing = $needCoins && (!$c || array_diff($needCoins, array_keys((array) ($c['v'] ?? []))));
-        if ($needCoins && ($missing || $now - (int) ($c['at'] ?? 0) > 180) && $now - (int) ($cache['coins_fail'] ?? 0) > 180) {
+        if ($needCoins && ($force || $missing || $now - (int) ($c['at'] ?? 0) > 180) && $now - (int) ($cache['coins_fail'] ?? 0) > 180) {
             $l = null; [$v, $src] = fetch_coins_usd($needCoins, $l);
             if ($v) { $cache['coins'] = ['v' => array_merge((array) ($c['v'] ?? []), $v), 'src' => $src, 'at' => $now]; unset($cache['coins_fail']); }
             else $cache['coins_fail'] = $now;
             $dirty = true;
         }
         $f = $cache['fiat'] ?? null;
-        if ($needFiat && (!$f || $now - (int) $f['at'] > 21600) && $now - (int) ($cache['fiat_fail'] ?? 0) > 180) {
+        if ($needFiat && ($force || !$f || $now - (int) $f['at'] > 21600) && $now - (int) ($cache['fiat_fail'] ?? 0) > 180) {
             $l = null; [$v, $src] = fetch_fiat_rates($l);
             if ($src !== 'none') { $cache['fiat'] = ['v' => $v, 'src' => $src, 'at' => $now]; unset($cache['fiat_fail']); } else $cache['fiat_fail'] = $now;
             $dirty = true;
         }
         if ($dirty) save_settings(['shop_market_cache' => json_encode($cache)]);
     }
-    $rates = shop_rates(); $usdT = $rates['usd'] ?: null;
+    $rates = shop_rates($force); $usdT = $rates['usd'] ?: null;
     $coins = ($cache['coins']['at'] ?? 0) > $now - 172800 ? (array) $cache['coins']['v'] : [];
     $fiat = ($cache['fiat']['at'] ?? 0) > $now - 172800 ? (array) $cache['fiat']['v'] : ['AED' => 3.6725];
     $items = [];

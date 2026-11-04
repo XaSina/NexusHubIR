@@ -129,6 +129,8 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
                 <?php foreach ($groups as $g => $gl): ?><optgroup label="<?= e($gl) ?>"><?php foreach (market_assets() as $k => $a): if (($a[3] === 'fiat' ? 'fiat' : $a[3]) !== $g) continue; ?><option value="<?= e($k) ?>" <?= in_array($k, $tsel, true) ? 'selected' : '' ?>><?= e($a[2] . ' ' . $a[0] . ' (' . $a[1] . ')') ?></option><?php endforeach; ?></optgroup><?php endforeach; ?>
             </select>
         </div>
+        <button type="button" class="abtn abtn-ghost abtn-sm mt" id="mktTest"><?= icon('bolt', 15) ?> تست منابع و نمایش قیمت‌های فعلی</button>
+        <div class="rate-test" id="mktOut" hidden></div>
         <p class="muted small mt">قیمت تومانی با نرخ دلار (تتر) همین صفحه حساب می‌شود؛ برای قیمت‌های تومانی، حالت دلار را روی «خودکار» بگذارید. طلای ۱۸ عیار بر اساس انس جهانی (PAXG) محاسبه می‌شود و ممکن است کمی با بازار داخلی فرق داشته باشد.</p>
     </div>
     <div class="card mt">
@@ -227,6 +229,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     ['usdIn', 'marginIn', 'roundIn', 'cAmt', 'cType'].forEach(function (id) { var el = document.getElementById(id); el.addEventListener('input', calc); el.addEventListener('change', calc); });
     calc();
+    document.getElementById('mktTest').addEventListener('click', function () {
+        var b = this, out = document.getElementById('mktOut');
+        b.disabled = true; out.hidden = false; out.textContent = '⏳ در حال بررسی منابع قیمت (ممکن است چند ثانیه طول بکشد)...';
+        A.post('market_test', {}).then(function (j) {
+            b.disabled = false;
+            if (!j.ok) { out.textContent = 'خطا'; return; }
+            var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+            out.innerHTML = (j.lines || []).map(function (l) { return '<div>' + esc(l) + '</div>'; }).join('') +
+                (j.rows && j.rows.length ? '<table class="mkt-tbl"><tr><th>قیمت</th><th>تومان</th><th>دلار</th><th>۲۴ ساعت</th></tr>' + j.rows.map(function (r) {
+                    var c = r.chg === null ? '' : '<span style="color:' + (r.chg >= 0 ? '#3ddc84' : '#ff6b7d') + '">' + (r.chg >= 0 ? '▲ ' : '▼ ') + A.fa(Math.abs(r.chg).toFixed(2)) + '٪</span>';
+                    return '<tr><td>' + esc(r.icon + ' ' + r.name) + '</td><td>' + esc(r.fa) + '</td><td dir="ltr">' + esc(r.usd) + '</td><td dir="ltr">' + c + '</td></tr>';
+                }).join('') + '</table><div class="muted small">✅ قیمت‌های صفحه فروشگاه هم همین الان به‌روز شدند.</div>' : '<div>ℹ️ هیچ قیمتی انتخاب نشده است.</div>');
+        }).catch(function () { b.disabled = false; out.textContent = 'خطا در ارتباط'; });
+    });
     document.getElementById('rateTest').addEventListener('click', function () {
         var b = this, out = document.getElementById('rateOut');
         b.disabled = true; out.hidden = false; out.textContent = '⏳ در حال اتصال به منابع قیمت...';

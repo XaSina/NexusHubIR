@@ -25,7 +25,7 @@ $member = current_member();
     <div class="sh-side">
         <?php $mkt = setting_on('shop_tickers_on') ? market_board(false) : ['items' => []]; if ($mkt['items']): ?>
         <div class="mkt" id="mktBoard" aria-live="polite">
-            <div class="mkt-head"><span class="mkt-live"><i></i> بازار لحظه‌ای</span><small id="mktSrc"><?= e($mkt['src'] ?? '') ?></small></div>
+            <div class="mkt-head"><span class="mkt-live"><i></i> بازار لحظه‌ای</span><span class="mkt-meta"><small id="mktSrc"><?= e($mkt['src'] ?? '') ?></small><small class="mkt-at" id="mktAt"><?= $mkt['at'] ? 'به‌روزرسانی ' . e(jdate('H:i', $mkt['at'])) : '' ?></small></span><button type="button" class="mkt-rf" id="mktRefresh" title="به‌روزرسانی قیمت‌ها" aria-label="به‌روزرسانی قیمت‌ها"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
             <div class="mkt-grid">
                 <?php foreach ($mkt['items'] as $it): $c = $it['chg']; ?>
                 <div class="mkt-it<?= $it['toman'] === null ? ' wait' : '' ?>" data-k="<?= e($it['k']) ?>">

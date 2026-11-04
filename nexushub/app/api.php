@@ -97,10 +97,10 @@ switch ($seg[1] ?? '') {
 
     case 'market':  // live market board (shop page): refreshes the cache in the background of the visitor's page
         if (!setting_on('shop_tickers_on')) json_out(['ok' => false], 404);
-        $b = market_board(true);
+        $b = market_board(true, !empty($_POST['force']));
         foreach ($b['items'] as &$it) { $it['fa'] = $it['toman'] ? money($it['toman']) : '—'; $it['usd_fa'] = market_usd($it['usd']); }
         unset($it);
-        json_out(['ok' => true, 'items' => $b['items'], 'src' => $b['src'] ?? '']);
+        json_out(['ok' => true, 'items' => $b['items'], 'src' => $b['src'] ?? '', 'at' => $b['at'] ? jdate('H:i', $b['at']) : '']);
 
     case 'price':   // live price for a custom amount (product page)
         $p = row("SELECT * FROM products WHERE id = ? AND status = 'active'", [(int) ($_POST['pid'] ?? 0)]);

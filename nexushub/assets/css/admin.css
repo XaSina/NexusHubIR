@@ -902,3 +902,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
     -webkit-box-shadow: 0 0 0 1000px var(--a-pop) inset; box-shadow: 0 0 0 1000px var(--a-pop) inset;
     transition: background-color 9999s ease 0s;
 }
+
+.mkt-tbl { width: 100%; margin: 10px 0 6px; border-collapse: collapse; font-size: .8rem; }
+.mkt-tbl th { text-align: right; color: var(--a-muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--a-line); }
+.mkt-tbl td { padding: 6px 8px; border-bottom: 1px dashed var(--a-line); white-space: nowrap; }
