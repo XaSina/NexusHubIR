@@ -65,6 +65,8 @@
 .wc-dot { position: absolute; top: -3px; left: 50%; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 3px var(--primary, #ff1f3d); }
 .wc-ring.r1 .wc-dot { display: none; }
 @keyframes nxWarpSpin { to { transform: rotate(360deg); } }
+.nx-warp-core img { opacity: 0; transition: opacity .35s ease; }
+.nx-warp-core img.ok { opacity: 1; }
 .nx-warp-core img { position: relative; width: 104px; height: 104px; border-radius: 50%; object-fit: cover;
     box-shadow: 0 0 0 1.5px rgba(255,255,255,.75), 0 0 0 7px rgba(var(--primary-rgb, 255,31,61), .18), 0 0 46px rgba(var(--primary-rgb, 255,31,61), .7); }
 .wc-name { margin-top: 18px; font: 900 15px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: 9px; color: #fff; direction: ltr; white-space: nowrap;
@@ -102,6 +104,8 @@ html.warp-in .nx-warp *, html.warp-in .nx-warp *::before, html.warp-in .nx-warp 
 @media (hover: none), (max-width: 900px) {
     .wf-scan { display: none; }            /* thin moving band shimmers on dense phone screens */
     .wf-grid { animation: none; }
+    .wf-aura { animation: none; }
+    .nx-warp-disc { box-shadow: 0 0 0 1px rgba(var(--primary-rgb, 255,31,61), .45); }
 }
 @media (max-width: 600px) {
     .wf-corner { width: 30px; height: 30px; }

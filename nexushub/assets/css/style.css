@@ -1114,3 +1114,13 @@ body.cards-frost .glass { -webkit-backdrop-filter: blur(calc(var(--blur) + 14px)
 @media (prefers-reduced-motion: reduce) {
     .js-reveal [data-reveal], .js-reveal [data-reveal] * { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
+
+/* <picture> wrapper for still SVG copies must not create a box of its own */
+.pic-still { display: contents; }
+
+/* browser autofill keeps the theme (Chrome paints autofilled fields white otherwise) */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill, select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text); caret-color: var(--text);
+    -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface-rgb)) inset; box-shadow: 0 0 0 1000px rgb(var(--surface-rgb)) inset;
+    transition: background-color 9999s ease 0s;
+}

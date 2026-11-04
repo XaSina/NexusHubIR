@@ -895,3 +895,10 @@ html.theme-light .tbl .thumb, html.theme-light .m-item { background: #e9eaf0; }
 .swatch i { overflow: visible; }
 .swatch i::after { border-radius: inherit; transform: none; opacity: 0; background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,.85) 50%, transparent 90%); animation: swGlint 3.4s ease-in-out infinite; }
 @keyframes swGlint { 0%, 55%, 100% { opacity: 0; } 75% { opacity: .9; } }
+
+/* browser autofill keeps the panel theme */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill, select:-webkit-autofill {
+    -webkit-text-fill-color: var(--a-text); caret-color: var(--a-text);
+    -webkit-box-shadow: 0 0 0 1000px var(--a-pop) inset; box-shadow: 0 0 0 1000px var(--a-pop) inset;
+    transition: background-color 9999s ease 0s;
+}

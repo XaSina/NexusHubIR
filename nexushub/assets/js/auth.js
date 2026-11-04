@@ -9,6 +9,8 @@
     var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
     var body = document.body, root = document.documentElement;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;   // phones: no auto-focus (the keyboard would push the page)
+    $$('.nx-warp-core img').forEach(function (i) { if (i.complete && i.naturalWidth) i.classList.add('ok'); });
     var fa = function (s) { return String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
     var en = function (s) { return String(s).replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }); };
     var wait = function (ms) { return new Promise(function (r) { setTimeout(r, reduce ? Math.min(ms, 60) : ms); }); };
@@ -235,7 +237,7 @@
         body.classList.remove('warping');            // the scene eases back while the card rises
         setHud('IDENTIFY');
         steps.identify.classList.add('in');
-        setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
+        if (!touch) setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
     });
 
     function setDots(n) { dots.forEach(function (d, i) { d.classList.toggle('on', i < n); }); }
@@ -255,7 +257,7 @@
         setDots({ identify: 1, login: 2, register: 2, success: 3 }[name] || 1);
         setHud({ identify: 'IDENTIFY', login: 'VERIFY', register: 'NEW MEMBER', success: 'REGISTERED' }[name] || 'READY');
         var first = to.querySelector('input:not([type=hidden]):not(.au-hp)');
-        if (first && name !== 'success') setTimeout(function () { first.focus(); }, 420);
+        if (first && name !== 'success' && !touch) setTimeout(function () { first.focus({ preventScroll: true }); }, 420);
         clearErrors(to);
     }
     backBtn.addEventListener('click', function () { show('identify'); });

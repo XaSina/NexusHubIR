@@ -117,7 +117,7 @@ function cover_html(array $p, string $class = '', bool $eager = false): string
 {
     $color = $p['cat_color'] ?? '#ff1f3d';
     if (!empty($p['cover'])) {
-        return '<img class="cover ' . e($class) . '" src="' . e(media_url($p['cover'])) . '" alt="' . e($p['title']) . '"' . ($eager ? ' fetchpriority="high"' : ' loading="lazy"') . ' decoding="async">';
+        return smart_img((string) $p['cover'], 'class="cover ' . e($class) . '" alt="' . e($p['title']) . '"' . ($eager ? ' fetchpriority="high"' : ' loading="lazy"') . ' decoding="async"');
     }
     return '<div class="cover cover-fallback ' . e($class) . '" style="--c:' . e($color) . '"><span class="cf-icon">' . e($p['cat_icon'] ?? '📰') . '</span><span class="cf-mark">NX</span></div>';
 }

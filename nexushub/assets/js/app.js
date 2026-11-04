@@ -39,6 +39,7 @@
     }
     window.nxApi = api;
 
+    $$('.nx-warp-core img').forEach(function (i) { if (i.complete && i.naturalWidth) i.classList.add('ok'); });
     /* ---------- Cinematic page warp (login / account links) ---------- */
     /* Warp hand-off helpers.
        Leaving: restart the loader loops at 0, remember when the warp started, start loading the next page while the

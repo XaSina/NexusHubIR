@@ -279,7 +279,7 @@ function product_url(array $p): string
 
 function product_image_html(array $p, string $class = 'pd-img'): string
 {
-    if (!empty($p['image'])) return '<img class="' . e($class) . '" src="' . e(media_url((string) $p['image'])) . '" alt="' . e($p['title']) . '" loading="lazy" decoding="async">';
+    if (!empty($p['image'])) return smart_img((string) $p['image'], 'class="' . e($class) . '" alt="' . e($p['title']) . '" loading="lazy" decoding="async"');
     return '<span class="' . e($class) . ' pd-emoji" style="--c:' . e($p['color']) . '"><b>' . e($p['icon']) . '</b></span>';
 }
 

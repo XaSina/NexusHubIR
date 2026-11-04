@@ -344,3 +344,16 @@ function logo_url(): string
     if ($l === '' || in_array($l, ['assets/img/logo-256.png', 'assets/img/logo.jpg'], true)) return url('assets/img/logo-hd.webp');
     return media_url($l);
 }
+
+/**
+ * <img> for a picture. The bundled animated SVG covers / product art get a still copy on phones:
+ * animated SVGs are re-rasterised every frame, which on phone GPUs causes flicker and half-drawn images.
+ */
+function smart_img(string $src, string $attrs): string
+{
+    $img = '<img src="' . e(media_url($src)) . '" ' . $attrs . '>';
+    if (preg_match('~^assets/img/(covers|presets)/([a-z0-9-]+)\.svg$~', $src, $m)) {
+        return '<picture class="pic-still"><source media="(hover: none), (max-width: 900px)" srcset="' . e(url('assets/img/' . $m[1] . '/still/' . $m[2] . '.svg')) . '">' . $img . '</picture>';
+    }
+    return $img;
+}
