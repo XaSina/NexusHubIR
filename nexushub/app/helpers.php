@@ -336,3 +336,11 @@ function icon(string $name, int $size = 20): string
     $p = $icons[$name] ?? $icons['sparkle'];
     return '<svg class="ic ic-' . $name . '" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $p . '</svg>';
 }
+
+/** Logo for on-page display: the bundled default is swapped for a sharp 512px version; custom uploads are used as-is */
+function logo_url(): string
+{
+    $l = (string) setting('logo');
+    if ($l === '' || in_array($l, ['assets/img/logo-256.png', 'assets/img/logo.jpg'], true)) return url('assets/img/logo-hd.webp');
+    return media_url($l);
+}

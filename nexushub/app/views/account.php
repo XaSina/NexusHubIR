@@ -11,7 +11,7 @@ $suggest = get_posts(['limit' => 3]);
         <div class="mcard tilt" id="mcard">
             <span class="mcard-holo" aria-hidden="true"></span><span class="mcard-shine" aria-hidden="true"></span>
             <div class="mcard-top">
-                <span class="mcard-brand"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="">NEXUS</span>
+                <span class="mcard-brand"><img src="<?= e(logo_url()) ?>" alt="">NEXUS</span>
                 <span class="mcard-tag">MEMBER</span>
             </div>
             <span class="mcard-chip" aria-hidden="true"></span>

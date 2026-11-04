@@ -99,7 +99,7 @@ function adm_head(string $title, string $active = ''): void
 <div class="adm">
     <aside class="adm-side" id="admSide">
         <a class="adm-brand" href="<?= e(url('admin/')) ?>">
-            <span class="adm-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></span>
+            <span class="adm-logo"><img src="<?= e(logo_url()) ?>" alt=""></span>
             <span><b><?= e(setting('site_title')) ?></b><small>پنل مدیریت</small></span>
         </a>
         <nav class="adm-nav">

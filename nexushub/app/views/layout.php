@@ -4,7 +4,8 @@ $siteTitle = (string) setting('site_title');
 $title = $meta['title'] ?? $siteTitle;
 $desc = $meta['description'] ?? setting('site_description');
 $image = $meta['image'] ?? '';
-if ($image === '') $image = site_url((string) setting('logo'));
+$ogLogo = in_array((string) setting('logo'), ['', 'assets/img/logo-256.png'], true) ? 'assets/img/logo.jpg' : (string) setting('logo');
+if ($image === '') $image = site_url($ogLogo);
 $colors = theme_colors();
 $bgEffect = (string) setting('bg_effect', 'particles');
 $cardStyle = (string) setting('card_style', 'glass');
@@ -96,20 +97,20 @@ $jsCfg['cart'] = $cartN;
 <script type="application/ld+json"><?= json_encode([
     '@context' => 'https://schema.org', '@type' => 'NewsArticle', 'headline' => $title,
     'image' => [$image], 'datePublished' => date('c', strtotime($meta['published'] ?? 'now')),
-    'publisher' => ['@type' => 'Organization', 'name' => $siteTitle, 'logo' => ['@type' => 'ImageObject', 'url' => site_url((string) setting('logo'))]],
+    'publisher' => ['@type' => 'Organization', 'name' => $siteTitle, 'logo' => ['@type' => 'ImageObject', 'url' => site_url($ogLogo)]],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 <?php endif; ?>
 <?= setting('head_code') ?>
 </head>
 <body class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
 <script>try{var w=+sessionStorage.getItem('nx_warp');if(w){var d=document.documentElement,el=Date.now()-w;d.classList.add('warp-in');if(w>1&&el>=0&&el<20000)d.style.setProperty('--wt',-el+'ms')}}catch(e){}</script>
-<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-grid"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
+<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e(logo_url()) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
 
 <?php if (setting_on('anim_preloader')): ?>
 <div class="preloader" id="preloader" aria-hidden="true">
     <div class="pl-core">
         <span class="pl-ring r1"></span><span class="pl-ring r2"></span><span class="pl-ring r3"></span>
-        <img src="<?= e(media_url((string) setting('logo'))) ?>" alt="">
+        <img src="<?= e(logo_url()) ?>" alt="">
     </div>
     <div class="pl-text glitch" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></div>
     <div class="pl-bar"><i></i></div>
@@ -158,7 +159,7 @@ $jsCfg['cart'] = $cartN;
     <div class="container">
         <div class="header-inner glass">
             <a class="brand" href="<?= e(url('')) ?>">
-                <span class="brand-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="<?= e($siteTitle) ?>" width="46" height="46"></span>
+                <span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="<?= e($siteTitle) ?>" width="46" height="46"></span>
                 <span class="brand-text">
                     <b class="glitch" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></b>
                     <small>Gaming · Tech · News</small>
@@ -224,7 +225,7 @@ $jsCfg['cart'] = $cartN;
     <div class="container footer-grid">
         <div class="f-about">
             <a class="brand" href="<?= e(url('')) ?>">
-                <span class="brand-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="" width="46" height="46"></span>
+                <span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="" width="46" height="46"></span>
                 <span class="brand-text"><b><?= e($siteTitle) ?></b><small>Gaming · Tech · News</small></span>
             </a>
             <p><?= e(setting('footer_text')) ?></p>
@@ -281,7 +282,7 @@ $jsCfg['cart'] = $cartN;
     <div class="drawer-backdrop" data-close></div>
     <aside class="drawer-panel glass">
         <div class="drawer-head">
-            <a class="brand" href="<?= e(url('')) ?>"><span class="brand-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="" width="40" height="40"></span><span class="brand-text"><b><?= e($siteTitle) ?></b></span></a>
+            <a class="brand" href="<?= e(url('')) ?>"><span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="" width="40" height="40"></span><span class="brand-text"><b><?= e($siteTitle) ?></b></span></a>
             <button class="icon-btn" data-close aria-label="بستن"><?= icon('close') ?></button>
         </div>
         <nav class="drawer-nav">

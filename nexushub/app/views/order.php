@@ -56,7 +56,7 @@ $steps = [
                     <span class="bc-shine" aria-hidden="true"></span><span class="bc-orb" aria-hidden="true"></span>
                     <div class="bc-top"><b><?= e(setting('shop_card_bank', '')) ?></b><span class="bc-chip" aria-hidden="true"></span></div>
                     <div class="bc-num" dir="ltr"><?php foreach (explode(' ', $cardFmt) as $g): ?><span><?= e($g) ?></span><?php endforeach; ?></div>
-                    <div class="bc-bottom"><div><small>به نام</small><b><?= e(setting('shop_card_name')) ?></b></div><span class="bc-brand"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="">NEXUS</span></div>
+                    <div class="bc-bottom"><div><small>به نام</small><b><?= e(setting('shop_card_name')) ?></b></div><span class="bc-brand"><img src="<?= e(logo_url()) ?>" alt="">NEXUS</span></div>
                 </div>
                 <div class="pay-copy">
                     <button type="button" class="copy-tile" data-copy="<?= e($card) ?>" data-copy-msg="شماره کارت کپی شد ✅">

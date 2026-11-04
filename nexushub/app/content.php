@@ -305,7 +305,7 @@ function get_active_stories(): array
     foreach ($list as $s) {
         if (empty($items[(int) $s['id']])) continue;                       // a story without slides is not shown
         $first = $items[(int) $s['id']][0];
-        $cover = $s['cover'] ? media_url($s['cover']) : ($first['type'] === 'image' ? $first['src'] : media_url((string) setting('logo')));
+        $cover = $s['cover'] ? media_url($s['cover']) : ($first['type'] === 'image' ? $first['src'] : logo_url());
         $out[] = [
             'id' => (int) $s['id'], 'title' => $s['title'], 'cover' => $cover,
             'v' => strtotime($s['updated_at']),                              // changes when edited → shows as unseen again

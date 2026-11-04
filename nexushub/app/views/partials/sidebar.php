@@ -18,7 +18,7 @@ $tgLink = safe_link((string) setting('social_telegram'));
     <?php if ($tgLink): ?>
     <section class="widget widget-tg glass" data-reveal>
         <div class="wtg-head">
-            <span class="wtg-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="" width="56" height="56"><i class="wtg-badge"><?= icon('telegram', 14) ?></i></span>
+            <span class="wtg-logo"><img src="<?= e(logo_url()) ?>" alt="" width="56" height="56"><i class="wtg-badge"><?= icon('telegram', 14) ?></i></span>
             <div><b><?= e(setting('site_title')) ?></b><small><?= e(telegram_handle()) ?></small></div>
         </div>
         <p><?= e(setting('site_tagline')) ?></p>

@@ -3,7 +3,7 @@
  * صفحه سینمایی ورود / ثبت‌نام اعضا
  */
 $colors = theme_colors();
-$logo = media_url((string) setting('logo'));
+$logo = logo_url();
 $siteTitle = (string) setting('site_title');
 $canRegister = setting_on('members_register');
 $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'canRegister' => $canRegister];
@@ -26,15 +26,20 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 </head>
 <body class="au-body">
 <?= $decorHtml ?>
-<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-grid"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e($logo) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
+<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e($logo) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
 
 <!-- ============ Scene ============ -->
 <div class="au-scene" aria-hidden="true">
     <div class="au-sky"></div>
+    <div class="au-stars"><i></i><i></i></div>
+    <div class="au-godrays"><i></i></div>
     <div class="au-sunglow"><i></i></div>
     <div class="au-sun"></div>
+    <div class="au-ridges"><svg class="au-ridge" viewBox="0 0 1600 200" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="rgF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0614"/><stop offset="1" stop-color="#0a0207"/></linearGradient><linearGradient id="rgN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14030b"/><stop offset="1" stop-color="#050104"/></linearGradient></defs><path class="rf" d="M0,200 L0.0,109.1 L40.0,125.5 L80.0,149.1 L120.0,119.5 L160.0,90.0 L200.0,101.4 L240.0,109.3 L280.0,95.7 L320.0,146.0 L360.0,154.7 L400.0,115.5 L440.0,116.9 L480.0,95.1 L520.0,111.7 L560.0,123.1 L600.0,150.5 L640.0,143.6 L680.0,132.9 L720.0,130.3 L760.0,121.1 L800.0,125.1 L840.0,142.8 L880.0,138.9 L920.0,145.0 L960.0,144.1 L1000.0,136.4 L1040.0,102.3 L1080.0,112.1 L1120.0,116.6 L1160.0,126.3 L1200.0,136.6 L1240.0,114.8 L1280.0,111.0 L1320.0,73.2 L1360.0,89.7 L1400.0,85.9 L1440.0,113.1 L1480.0,164.3 L1520.0,143.1 L1560.0,102.3 L1600.0,25.6 L1600,200 Z" fill="url(#rgF)"/><path class="rl rlf" d="M0.0,109.1 L40.0,125.5 L80.0,149.1 L120.0,119.5 L160.0,90.0 L200.0,101.4 L240.0,109.3 L280.0,95.7 L320.0,146.0 L360.0,154.7 L400.0,115.5 L440.0,116.9 L480.0,95.1 L520.0,111.7 L560.0,123.1 L600.0,150.5 L640.0,143.6 L680.0,132.9 L720.0,130.3 L760.0,121.1 L800.0,125.1 L840.0,142.8 L880.0,138.9 L920.0,145.0 L960.0,144.1 L1000.0,136.4 L1040.0,102.3 L1080.0,112.1 L1120.0,116.6 L1160.0,126.3 L1200.0,136.6 L1240.0,114.8 L1280.0,111.0 L1320.0,73.2 L1360.0,89.7 L1400.0,85.9 L1440.0,113.1 L1480.0,164.3 L1520.0,143.1 L1560.0,102.3 L1600.0,25.6"/><path class="rn" d="M0,200 L0.0,176.3 L57.1,158.4 L114.3,114.8 L171.4,128.4 L228.6,130.6 L285.7,145.6 L342.9,182.2 L400.0,175.7 L457.1,165.8 L514.3,150.2 L571.4,164.6 L628.6,161.5 L685.7,175.1 L742.9,169.1 L800.0,174.9 L857.1,183.3 L914.3,155.0 L971.4,144.9 L1028.6,149.4 L1085.7,156.7 L1142.9,183.2 L1200.0,194.9 L1257.1,166.4 L1314.3,168.9 L1371.4,146.2 L1428.6,141.8 L1485.7,170.9 L1542.9,166.3 L1600.0,177.1 L1600,200 Z" fill="url(#rgN)"/><path class="rl" d="M0.0,176.3 L57.1,158.4 L114.3,114.8 L171.4,128.4 L228.6,130.6 L285.7,145.6 L342.9,182.2 L400.0,175.7 L457.1,165.8 L514.3,150.2 L571.4,164.6 L628.6,161.5 L685.7,175.1 L742.9,169.1 L800.0,174.9 L857.1,183.3 L914.3,155.0 L971.4,144.9 L1028.6,149.4 L1085.7,156.7 L1142.9,183.2 L1200.0,194.9 L1257.1,166.4 L1314.3,168.9 L1371.4,146.2 L1428.6,141.8 L1485.7,170.9 L1542.9,166.3 L1600.0,177.1"/></svg></div>
     <div class="au-floor"><div class="au-grid"></div></div>
+    <div class="au-reflect"></div>
     <div class="au-horizon"></div>
+    <div class="au-flare"></div>
     <div class="au-beams"><i></i><i></i><i></i></div>
     <div class="au-fog"><i></i><i></i></div>
     <canvas id="auFx"></canvas>
@@ -98,6 +103,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
                 <label class="au-field au-id-field">
                     <span class="au-id-icon" id="auIdIcon"></span>
                     <input type="text" name="identifier" id="auIdentifier" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="موبایل، ایمیل یا نام کاربری" required>
+                    <span class="au-id-mirror" id="auIdMirror" dir="ltr" aria-hidden="true"></span>
                     <em class="au-id-type" id="auIdType"></em>
                     <span class="au-id-line" aria-hidden="true"></span>
                     <span class="au-id-ring" aria-hidden="true"></span>

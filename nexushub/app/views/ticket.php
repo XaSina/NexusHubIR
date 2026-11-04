@@ -17,7 +17,7 @@ $last = $msgs ? (int) end($msgs)['id'] : 0;
     <div class="chat glass" data-reveal>
         <?php foreach ($msgs as $i => $msg): $me = $msg['sender'] === 'member'; ?>
             <div class="bubble <?= $me ? 'b-me' : 'b-sup' ?>" style="--i:<?= $i ?>">
-                <span class="b-av"><?= $me ? e(mb_substr($m['first_name'] ?? '؟', 0, 1)) : '<img src="' . e(media_url((string) setting('logo'))) . '" alt="">' ?></span>
+                <span class="b-av"><?= $me ? e(mb_substr($m['first_name'] ?? '؟', 0, 1)) : '<img src="' . e(logo_url()) . '" alt="">' ?></span>
                 <div class="b-body">
                     <span class="b-who"><?= $me ? e(($m['first_name'] ?? '') . ' ' . ($m['last_name'] ?? '')) : 'پشتیبانی NEXUS <i class="b-badge">✓</i>' ?></span>
                     <div class="b-text"><?= nl2br(e($msg['body'])) ?></div>

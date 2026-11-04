@@ -118,7 +118,7 @@ adm_head($st['id'] ? 'ویرایش استوری' : 'استوری جدید', 'sto
             <div class="card-head"><h3><?= icon('eye', 20) ?> پیش‌نمایش</h3><small class="muted">روی اسلاید کلیک کنید</small></div>
             <div class="phone-prev" id="phonePrev">
                 <div class="pp-bars" id="ppBars"></div>
-                <div class="pp-head"><span class="pp-av"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></span><b id="ppTitle"><?= e($st['title'] ?: 'عنوان استوری') ?></b><small>همین الان</small></div>
+                <div class="pp-head"><span class="pp-av"><img src="<?= e(logo_url()) ?>" alt=""></span><b id="ppTitle"><?= e($st['title'] ?: 'عنوان استوری') ?></b><small>همین الان</small></div>
                 <div class="pp-media" id="ppMedia"><span class="muted">اسلایدی انتخاب نشده</span></div>
                 <div class="pp-cap" id="ppCap"></div>
                 <span class="pp-link" id="ppLink" hidden></span>

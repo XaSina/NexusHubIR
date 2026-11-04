@@ -165,7 +165,7 @@ case 'telegram': if (!$tgLink) break; ?>
 <section class="container">
     <div class="tg-cta glass" data-reveal>
         <div class="tg-cta-bg" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="tg-cta-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt="" width="120" height="120"><span class="pulse-ring"></span><span class="pulse-ring d2"></span></div>
+        <div class="tg-cta-logo"><img src="<?= e(logo_url()) ?>" alt="" width="120" height="120"><span class="pulse-ring"></span><span class="pulse-ring d2"></span></div>
         <div class="tg-cta-text">
             <span class="eyebrow"><?= icon('telegram', 16) ?> کانال رسمی تلگرام</span>
             <h2>به کامیونیتی <span class="grad-text">NEXUS</span> بپیوند 💬</h2>

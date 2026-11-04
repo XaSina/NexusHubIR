@@ -262,13 +262,9 @@
         el.animate(k, { duration: dy ? 560 : 480, easing: 'cubic-bezier(.36,.07,.19,.97)' });
     }
     function errorOn(form, msg) {
-        var box = $('.au-error', form), top0 = card.getBoundingClientRect().top;
-        box.classList.remove('on'); void box.offsetWidth;
+        var box = $('.au-error', form);
         box.textContent = msg; box.classList.add('on');
-        var dy = top0 - card.getBoundingClientRect().top;
-        shake(canTranslate ? card : form, canTranslate && Math.abs(dy) > 1 ? dy : 0);
-        card.classList.add('bad'); clearTimeout(card._bad); card._bad = setTimeout(function () { card.classList.remove('bad'); }, 650);
-        $$('.au-field.err input', form).forEach(function (i) { i.style.animation = 'none'; void i.offsetWidth; i.style.animation = ''; });
+        shake($('#auSteps'), 0);
         if (navigator.vibrate) try { navigator.vibrate(35); } catch (e) {}
     }
     function clearErrors(form) {
@@ -329,8 +325,36 @@
         }
         idRing.animate([{ opacity: .55, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.035, 1.12)' }], { duration: 480, easing: 'cubic-bezier(.16,1,.3,1)' });
     }
-    idInput.addEventListener('input', function (e) { updateIdType(); typingFx(e); });
-    updateIdType(); typingFx(null);
+    var idMirror = $('#auIdMirror'), mirrorVal = '';
+    function renderMirror(next, animate) {
+        var prev = mirrorVal, pre = 0, suf = 0;
+        while (pre < prev.length && pre < next.length && prev[pre] === next[pre]) pre++;
+        while (suf < prev.length - pre && suf < next.length - pre && prev[prev.length - 1 - suf] === next[next.length - 1 - suf]) suf++;
+        // keep the untouched characters (their running animation continues), drop the replaced ones, insert the new ones
+        var kids = Array.prototype.slice.call(idMirror.children);
+        if (kids.length !== prev.length) { kids.forEach(function (k) { k.remove(); }); kids = []; pre = 0; suf = 0; prev = ''; }
+        for (var r = pre; r < prev.length - suf; r++) kids[r].remove();
+        var ref = kids[prev.length - suf] || null, added = 0;
+        for (var i = pre; i < next.length - suf; i++) {
+            var sp = document.createElement('span');
+            sp.className = animate ? 'ch new' : 'ch';
+            if (animate) sp.style.setProperty('--cd', Math.min(added++, 12) * 28 + 'ms');
+            sp.textContent = next[i];
+            idMirror.insertBefore(sp, ref);
+        }
+        Array.prototype.forEach.call(idMirror.children, function (k, n) { k.style.setProperty('--i', n); });
+        mirrorVal = next;
+        // only draw the mirror while the text fits; long values fall back to the native (scrolling) text
+        idField.classList.toggle('mirror', !reduce && next.length > 0 && idMirror.scrollWidth <= idMirror.clientWidth + 1);
+    }
+    function wave() { if (reduce) return; idMirror.classList.remove('wave'); void idMirror.offsetWidth; idMirror.classList.add('wave'); setTimeout(function () { idMirror.classList.remove('wave'); }, 1300); }
+    idInput.addEventListener('input', function (e) {
+        var was = idField.classList.contains('valid');
+        updateIdType(); typingFx(e); renderMirror(idInput.value, true);
+        if (!was && idField.classList.contains('valid')) setTimeout(wave, 420);
+    });
+    idInput.addEventListener('scroll', function () { if (idInput.scrollLeft) idField.classList.remove('mirror'); });
+    updateIdType(); typingFx(null); renderMirror(idInput.value, false);
 
     /* step 1: identify */
     steps.identify.addEventListener('submit', async function (e) {

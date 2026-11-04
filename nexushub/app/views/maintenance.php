@@ -10,7 +10,7 @@
 <body class="page-maint">
 <div class="bg-layer" aria-hidden="true"><div class="bg-blob b1"></div><div class="bg-blob b2"></div><div class="bg-grid"></div><div class="bg-vignette"></div></div>
 <div class="maint glass">
-    <div class="pl-core"><span class="pl-ring r1"></span><span class="pl-ring r2"></span><span class="pl-ring r3"></span><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></div>
+    <div class="pl-core"><span class="pl-ring r1"></span><span class="pl-ring r2"></span><span class="pl-ring r3"></span><img src="<?= e(logo_url()) ?>" alt=""></div>
     <h1 class="glitch" data-text="<?= e(setting('site_title')) ?>"><?= e(setting('site_title')) ?></h1>
     <p><?= e(setting('maintenance_text')) ?></p>
     <?php if ($tg = safe_link((string) setting('social_telegram'))): ?><a class="btn btn-primary" href="<?= e($tg) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> کانال تلگرام</a><?php endif; ?>

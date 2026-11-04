@@ -447,3 +447,79 @@ button { cursor: pointer; border: 0; background: none; }
 @media (prefers-reduced-motion: reduce) { .au-scene, .warping .au-scene { transform: none !important; } .au-rays { display: none; } }
 /* the identifier stays right-aligned (next to its icon) for placeholder and typed text alike — no jump when typing starts */
 .au-id-field input[dir="ltr"] { text-align: right; }
+
+/* ======================================================================
+   v3 — animated characters, calm error, richer scene
+   ====================================================================== */
+
+/* ---- identifier: every typed character pops in (a mirror layer draws the text; the input keeps the caret) ---- */
+.au-id-field input, .au-id-mirror { font-kerning: none; font-variant-ligatures: none; }
+.au-id-mirror { position: absolute; top: 1px; bottom: 1px; right: 59px; left: 97px; display: flex; align-items: center; justify-content: flex-end;
+    font-size: 1.05rem; letter-spacing: .3px; white-space: pre; overflow: hidden; pointer-events: none; color: #f4f4f7; opacity: 0; }
+.au-id-field.mirror .au-id-mirror { opacity: 1; }
+.au-id-field.mirror input { color: transparent; caret-color: #fff; }
+.au-id-field.mirror input::selection { color: transparent; }
+.au-id-mirror .ch { display: inline-block; will-change: transform; }
+.au-id-mirror .ch.new { animation: chIn .55s var(--spring) var(--cd, 0ms) both; }
+@keyframes chIn {
+    0% { opacity: 0; transform: translate3d(0, 60%, 0) scale(.35); text-shadow: 0 0 18px var(--primary); }
+    55% { opacity: 1; transform: translate3d(0, -10%, 0) scale(1.14); text-shadow: 0 0 14px var(--primary); color: #fff; }
+    100% { opacity: 1; transform: none; text-shadow: 0 0 0 transparent; }
+}
+.au-id-mirror.wave .ch { animation: chWave .7s ease-in-out calc(var(--i) * 32ms) both; }
+@keyframes chWave { 0%, 100% { transform: none; } 40% { transform: translate3d(0, -22%, 0); color: #ffd2b0; text-shadow: 0 0 12px var(--primary); } }
+@media (max-width: 640px) { .au-id-mirror { left: 89px; } }
+
+/* ---- wrong password: only the shake (content shakes inside a still card; no glow or ring flashes) ---- */
+.au-card.bad { box-shadow: 0 40px 100px -20px rgba(0,0,0,.9), 0 0 80px -20px rgba(var(--primary-rgb), .55), inset 0 1px 0 rgba(255,255,255,.08); transition: none; }
+.au-field.err input { animation: none; }
+/* error line opens smoothly instead of popping (so a centred card glides instead of jumping) */
+.au-error { display: block; max-height: 0; opacity: 0; padding: 0 14px; margin-top: -14px; border-width: 0; overflow: hidden;
+    transition: max-height .4s var(--ease-out), opacity .3s ease, padding .4s var(--ease-out), margin .4s var(--ease-out), border-width .4s; }
+.au-error.on { max-height: 140px; opacity: 1; padding: 10px 14px; margin-top: 0; border-width: 1px; animation: none; }
+
+/* ---- scene: stars, god rays, mountain ridges, sun reflection, horizon flare ---- */
+.au-stars { position: absolute; inset: 0 0 38% 0; pointer-events: none; opacity: 0; transition: opacity 2.4s ease .2s;
+    -webkit-mask: linear-gradient(to bottom, #000 0, rgba(0,0,0,.7) 55%, transparent 100%); mask: linear-gradient(to bottom, #000 0, rgba(0,0,0,.7) 55%, transparent 100%); }
+.au-stars i { position: absolute; inset: -40% -10% 0 -10%; will-change: transform; }
+.au-stars i:nth-child(1) { background-image: radial-gradient(1.2px 1.2px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 120px 80px, rgba(255,255,255,.8), transparent), radial-gradient(1.4px 1.4px at 200px 150px, #ffd9e0, transparent), radial-gradient(1px 1px at 60px 190px, rgba(255,255,255,.7), transparent), radial-gradient(1.1px 1.1px at 170px 20px, rgba(255,255,255,.9), transparent);
+    background-size: 240px 220px; animation: starDrift 140s linear infinite, starTw 4s ease-in-out infinite alternate; }
+.au-stars i:nth-child(2) { background-image: radial-gradient(.8px .8px at 40px 60px, rgba(255,255,255,.75), transparent), radial-gradient(.8px .8px at 110px 130px, rgba(255,210,220,.7), transparent), radial-gradient(.7px .7px at 150px 40px, rgba(255,255,255,.6), transparent);
+    background-size: 170px 160px; opacity: .8; animation: starDrift 220s linear infinite reverse, starTw 6s ease-in-out -2s infinite alternate; }
+@keyframes starDrift { to { transform: translate3d(-240px, 220px, 0); } }
+@keyframes starTw { from { opacity: .55; } to { opacity: 1; } }
+.s1 .au-stars { opacity: 1; }
+
+.au-godrays { position: absolute; left: 0; right: 0; top: 0; height: 60%; overflow: hidden; pointer-events: none; opacity: 0; transition: opacity 2.6s ease .8s; }
+.au-godrays i { position: absolute; left: 50%; top: 100%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax; will-change: transform;
+    background: repeating-conic-gradient(from 0deg, rgba(var(--primary-rgb), .085) 0deg 2.5deg, transparent 2.5deg 9deg);
+    -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.55) 12%, transparent 30%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.55) 12%, transparent 30%);
+    animation: raysSpin 160s linear infinite; }
+.s2 .au-godrays { opacity: 1; }
+
+.au-ridges { position: absolute; left: 0; right: 0; top: calc(60% - 15vh); height: 15vh; pointer-events: none; opacity: 0; transform: translate3d(0, 12px, 0); transition: opacity 2s ease .5s, transform 2.4s var(--ease-out) .5s; }
+.au-ridge { display: block; width: 100%; height: 100%; }
+.au-ridge .rl { fill: none; stroke: var(--primary); stroke-width: 1.4; vector-effect: non-scaling-stroke; opacity: .85; }
+.au-ridge .rlf { stroke: rgba(var(--secondary-rgb), .7); stroke-width: 1; opacity: .55; }
+.s1 .au-ridges { opacity: 1; transform: none; }
+
+.au-reflect { position: absolute; left: 50%; top: 60%; width: min(44vh, 56vw); height: 26%; margin-left: calc(min(44vh, 56vw) / -2); pointer-events: none; opacity: 0;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0,0,0,.82) 3px 7px), linear-gradient(to bottom, rgba(var(--secondary-rgb), .7), rgba(var(--primary-rgb), .35) 45%, transparent 100%);
+    -webkit-mask: radial-gradient(ellipse 50% 100% at 50% 0, #000 30%, transparent 100%); mask: radial-gradient(ellipse 50% 100% at 50% 0, #000 30%, transparent 100%);
+    transform-origin: 50% 0; transition: opacity 2s ease .8s; }
+.s1 .au-reflect { opacity: .85; animation: reflectWobble 4.5s ease-in-out infinite; }
+@keyframes reflectWobble { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.9) scaleY(1.04); } }
+
+.au-flare { position: absolute; left: 50%; top: calc(60% - 10px); width: 72vw; height: 20px; margin-left: -36vw; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,240,232,.85), rgba(var(--primary-rgb), .35) 32%, transparent 70%); transition: opacity 1.6s ease 1s; }
+.au-flare::after { content: ""; position: absolute; top: 50%; left: 50%; width: 90px; height: 3px; margin: -1.5px 0 0 -45px; border-radius: 3px;
+    background: radial-gradient(ellipse at center, #fff, rgba(255,255,255,0) 70%); animation: glint 7s ease-in-out infinite; }
+@keyframes glint { 0% { transform: translate3d(-34vw, 0, 0); opacity: 0; } 15%, 85% { opacity: .9; } 100% { transform: translate3d(34vw, 0, 0); opacity: 0; } }
+.s1 .au-flare { opacity: 1; animation: flarePulse 6s ease-in-out infinite; }
+@keyframes flarePulse { 50% { transform: scaleX(1.12); opacity: .75; } }
+
+@media (max-width: 640px) {
+    .au-stars i:nth-child(2), .au-flare::after { display: none; }
+    .au-ridges { height: 10vh; top: calc(60% - 10vh); }
+}
+@media (prefers-reduced-motion: reduce) { .au-stars i, .au-godrays i, .au-reflect, .au-flare, .au-flare::after { animation: none !important; } }

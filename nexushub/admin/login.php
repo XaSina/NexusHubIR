@@ -28,7 +28,7 @@ if (is_post()) {
 <div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
 <div class="login-wrap">
     <div class="login-box glass">
-        <div class="login-logo"><img src="<?= e(media_url((string) setting('logo'))) ?>" alt=""></div>
+        <div class="login-logo"><img src="<?= e(logo_url()) ?>" alt=""></div>
         <h1><?= e(setting('site_title')) ?></h1>
         <p>ورود به پنل مدیریت</p>
         <form method="post">
