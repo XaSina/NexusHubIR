@@ -30,46 +30,21 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 
 <!-- ============ Scene ============ -->
 <div class="au-scene" aria-hidden="true">
-    <div class="au-sky"></div>
-    <div class="au-stars"><i></i><i></i></div>
-    <div class="au-sunglow"><i></i></div>
-    <div class="au-sun"></div>
-    <div class="au-floor"><div class="au-grid"></div></div>
-    <div class="au-horizon"></div>
-    <div class="au-beams"><i></i><i></i><i></i></div>
-    <div class="au-fog"><i></i><i></i></div>
+    <div class="au-space"></div>
+    <div class="au-nebula"><i></i><i></i><i></i></div>
     <canvas id="auFx"></canvas>
+    <div class="au-planet-wrap"><div class="au-planet"></div></div>
     <div class="au-bloom"></div>
-    <div class="au-scan"></div>
-    <div class="au-grain"></div>
     <div class="au-vignette"></div>
     <div class="au-flash"></div>
 </div>
 
-<div class="au-bar au-bar-top">
-    <span class="au-rec"><i></i> REC</span>
-    <span class="au-hud-mid">NEXUS // ACCESS GATE</span>
-    <span class="au-tc" id="auTc">00:00:00:00</span>
-</div>
-<div class="au-bar au-bar-bottom">
-    <span>SCENE 01 — <?= jdate('Y/m/d', null, false) ?></span>
-    <span class="au-hud-mid" id="auHudState">STANDBY</span>
-    <span>4K · 24FPS</span>
-</div>
-<div class="au-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
 <a class="au-back" href="<?= e(url('')) ?>" data-warp><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> بازگشت به سایت</a>
 
 <!-- ============ Intro ============ -->
 <main class="au-intro" id="auIntro">
-    <div class="au-emblem">
-        <svg class="au-rings" viewBox="0 0 200 200" aria-hidden="true">
-            <circle class="r1" cx="100" cy="100" r="96"/>
-            <circle class="r2" cx="100" cy="100" r="86"/>
-            <circle class="r3" cx="100" cy="100" r="76"/>
-            <g class="ticks"><?php for ($i = 0; $i < 60; $i++): $a = $i * 6 * M_PI / 180; $r1 = $i % 5 ? 90 : 87; ?><line x1="<?= round(100 + $r1 * cos($a), 2) ?>" y1="<?= round(100 + $r1 * sin($a), 2) ?>" x2="<?= round(100 + 93 * cos($a), 2) ?>" y2="<?= round(100 + 93 * sin($a), 2) ?>"/><?php endfor; ?></g>
-        </svg>
-        <span class="au-shock"></span><span class="au-shock d2"></span>
+    <div class="au-emblem" id="auEmblem">
         <img src="<?= e($logo) ?>" alt="<?= e($siteTitle) ?>" id="auLogo" decoding="async">
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>

@@ -82,77 +82,186 @@
     /* ---------- timecode HUD ---------- */
     var tc = $('#auTc'), t0 = performance.now(), hud = $('#auHudState');
     var pad = function (n) { return ('0' + n).slice(-2); };
-    setInterval(function () {
+    if (tc) setInterval(function () {
         var t = (performance.now() - t0) / 1000;
         tc.textContent = pad(Math.floor(t / 3600)) + ':' + pad(Math.floor(t / 60) % 60) + ':' + pad(Math.floor(t) % 60) + ':' + pad(Math.floor(t * 24) % 24);
     }, 42);
     var setHud = function (s) { if (hud) hud.textContent = s; };
 
     /* ==========================================================================
-       Canvas FX: embers · hyperspace warp · confetti
+       Canvas FX (one layer): stars · particle logo · hyperspace streaks · confetti
+       Everything is batched into a few paths per frame so phones stay at 60fps.
        ========================================================================== */
     var small = window.innerWidth < 760;
     var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, small ? 1 : 2);
     var hex = function (h) { h = h.replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; };
     var PC = hex(cssVar('--primary', '#ff1f3d')), SC = hex(cssVar('--secondary', '#ff7a3d'));
-    var embers = [], streaks = [], confetti = [], warpUntil = 0, warpStart = 0;
-    function size() { W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    function ember(fresh) {
-        return { x: Math.random() * W, y: fresh ? H + Math.random() * 60 : Math.random() * H, vx: (Math.random() - .5) * .35, vy: -(.25 + Math.random() * 1.1),
-            r: .5 + Math.random() * 2.2, a: .3 + Math.random() * .7, c: Math.random() < .72 ? PC : SC, w: Math.random() * 6.28 };
-    }
-    function glowSprite(c, core) {
-        var o = document.createElement('canvas'), R = 32; o.width = o.height = R * 2;
+    var mix = function (a, b, t) { return [0, 1, 2].map(function (i) { return Math.round(a[i] + (b[i] - a[i]) * t); }); };
+    var rgba = function (c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; };
+    var stars = [], streaks = [], confetti = [], warpUntil = 0, warpStart = 0;
+    function glowSprite(c, R) {
+        var o = document.createElement('canvas'); o.width = o.height = R * 2;
         var g = o.getContext('2d'), gr = g.createRadialGradient(R, R, 0, R, R, R);
-        gr.addColorStop(0, 'rgba(' + core + ',1)'); gr.addColorStop(.12, 'rgba(' + core + ',.9)'); gr.addColorStop(.2, 'rgba(' + c.join(',') + ',.35)'); gr.addColorStop(1, 'rgba(' + c.join(',') + ',0)');
+        gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, rgba(c, .9)); gr.addColorStop(.45, rgba(c, .25)); gr.addColorStop(1, rgba(c, 0));
         g.fillStyle = gr; g.fillRect(0, 0, R * 2, R * 2); return o;
     }
-    var spP = glowSprite(PC, '255,190,170'), spS = glowSprite(SC, '255,230,170');
+    var spP = glowSprite(PC, 24), spW = glowSprite([255, 240, 230], 16);
+    function size() {
+        W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        placeLogo();
+    }
+    function star() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .12 ? 1.6 : (Math.random() < .5 ? 1.1 : .7), ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.8, v: .02 + Math.random() * .06 }; }
+
+    /* ---------- particle logo ---------- */
+    var LOGO = { parts: [], state: 'none', t0: 0, cx: 0, cy: 0, sz: 0, formAt: 0, orbitA: 0 };
+    var pointer = { x: -9999, y: -9999 };
+    if (!window.matchMedia('(hover: none)').matches) {
+        window.addEventListener('pointermove', function (e) { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+        document.addEventListener('pointerleave', function () { pointer.x = pointer.y = -9999; });
+    }
+    function placeLogo() {
+        var em = $('#auEmblem'); if (!em) return;
+        var r = em.getBoundingClientRect();
+        LOGO.cx = r.left + r.width / 2; LOGO.cy = r.top + r.height / 2; LOGO.sz = r.width;
+    }
+    // sample the real logo: keep pixels that stand out from the background colour (works for any uploaded logo)
+    function sampleLogo(img) {
+        var S = small ? 120 : 150, oc = document.createElement('canvas'); oc.width = oc.height = S;
+        var g = oc.getContext('2d'); g.drawImage(img, 0, 0, S, S);
+        var d = g.getImageData(0, 0, S, S).data, bg = [d[0], d[1], d[2]], pts = [];
+        for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
+            var i = (y * S + x) * 4; if (d[i + 3] < 120) continue;
+            var dx = x - S / 2, dy = y - S / 2; if (dx * dx + dy * dy > S * S * .25) continue;          // logo is shown as a circle
+            var dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
+            if (dr * dr + dg * dg + db * db < 3600) continue;
+            pts.push([x / S - .5, y / S - .5, Math.max(d[i], d[i + 1], d[i + 2]) / 255]);
+        }
+        for (var k = pts.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = pts[k]; pts[k] = pts[j]; pts[j] = t; }
+        return pts.slice(0, small ? 1200 : 2600);
+    }
+    // returns ms until the logo is formed (0 = particles unavailable → show the image instead)
+    function startLogo() {
+        var img = $('#auLogo'), em = $('#auEmblem');
+        var pts = null;
+        try { if (img && img.naturalWidth) pts = sampleLogo(img); } catch (e) { pts = null; }  // cross-origin logos can't be sampled
+        if (!pts || pts.length < 200) { if (em) em.classList.add('img-mode'); return 0; }
+        em.classList.add('px');
+        placeLogo();
+        var R0 = Math.max(W, H) * .75, now = performance.now();
+        LOGO.parts = pts.map(function (p) {
+            var a = Math.random() * 6.283, rr = R0 * (.35 + Math.random() * .75), lum = p[2];
+            return { nx: p[0], ny: p[1], sx: Math.cos(a) * rr, sy: Math.sin(a) * rr * .7, d: Math.random() * 650, du: 1250 + Math.random() * 650,
+                b: lum > .72 ? 3 : lum > .48 ? 2 : lum > .26 ? 1 : 0, ph: Math.random() * 6.28, ox: 0, oy: 0, spark: Math.random() < .045, x: 0, y: 0, vx: 0, vy: 0 };
+        });
+        LOGO.state = reduce ? 'formed' : 'forming'; LOGO.t0 = now; LOGO.formAt = now + (reduce ? 0 : 1950);
+        return reduce ? 1 : 1950;
+    }
+    function explodeLogo() {
+        if (LOGO.state === 'none' || LOGO.state === 'gone') return;
+        LOGO.parts.forEach(function (p) {
+            var dx = p.x - LOGO.cx, dy = p.y - LOGO.cy, l = Math.sqrt(dx * dx + dy * dy) || 1, v = 2 + Math.random() * 6;
+            p.vx = dx / l * v + (Math.random() - .5) * 2; p.vy = dy / l * v + (Math.random() - .5) * 2;
+        });
+        LOGO.state = 'explode'; LOGO.t0 = performance.now();
+    }
+    var BUCKET = [rgba(PC, .78), rgba(mix(PC, [255, 255, 255], .18), 1), rgba(mix(PC, [255, 255, 255], .5), 1), 'rgba(255,250,244,1)'];
+    var ease = function (t) { return 1 - Math.pow(1 - t, 4); };
+    function drawLogo(now) {
+        var L = LOGO; if (L.state === 'none' || L.state === 'gone') return;
+        var paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], sparks = [];
+        var ps = small ? 1.6 : 1.7, alpha = 1, sz = L.sz;
+        var sweep = L.cx - sz * .8 + (((now - L.formAt) % 4200) / 4200) * sz * 2.2;     // shine band passing across
+        if (L.state === 'explode') { alpha = Math.max(0, 1 - (now - L.t0) / 900); if (!alpha) { L.state = 'gone'; return; } }
+        var near = pointer.x > L.cx - sz && pointer.x < L.cx + sz && pointer.y > L.cy - sz && pointer.y < L.cy + sz;
+        for (var i = 0; i < L.parts.length; i++) {
+            var p = L.parts[i], tx = L.cx + p.nx * sz, ty = L.cy + p.ny * sz, x, y, b = p.b, s = ps;
+            if (L.state === 'explode') {
+                p.vx *= 1.04; p.vy *= 1.04; p.x += p.vx; p.y += p.vy; x = p.x; y = p.y; s = ps * (1 + (now - L.t0) / 450);
+            } else {
+                var t = Math.min(1, Math.max(0, (now - L.t0 - p.d) / p.du));
+                if (t < 1) {
+                    var e = ease(t), sw = (1 - e) * 1.25, cs = Math.cos(sw), sn = Math.sin(sw);
+                    var rx = p.sx * (1 - e) + (tx - L.cx) * e, ry = p.sy * (1 - e) + (ty - L.cy) * e;
+                    x = L.cx + rx * cs - ry * sn; y = L.cy + rx * sn + ry * cs; s = ps * (1 + (1 - e) * 1.6);
+                    if (t <= 0) continue;
+                } else {
+                    // formed: tiny shimmer + spring-back repel from the pointer
+                    var wx = 0, wy = 0;
+                    if (near) { var ddx = tx - pointer.x, ddy = ty - pointer.y, d2 = ddx * ddx + ddy * ddy; if (d2 < 3600) { var dd = Math.sqrt(d2) || 1, f = (1 - dd / 60) * 16; wx = ddx / dd * f; wy = ddy / dd * f; } }
+                    p.ox += (wx - p.ox) * .14; p.oy += (wy - p.oy) * .14;
+                    x = tx + p.ox + Math.sin(now * .0016 + p.ph) * .35; y = ty + p.oy + Math.cos(now * .0013 + p.ph) * .35;
+                    if (Math.abs(x - sweep) < 12 && b < 3) b++;
+                }
+                p.x = x; p.y = y;
+            }
+            paths[b].rect(x - s / 2, y - s / 2, s, s);
+            if (p.spark && L.state !== 'explode') sparks.push(p);
+        }
+        ctx.globalAlpha = alpha;
+        for (var k = 0; k < 4; k++) { ctx.fillStyle = BUCKET[k]; ctx.fill(paths[k]); }
+        // twinkling sparks
+        for (var q = 0; q < sparks.length; q++) {
+            var sp = sparks[q], tw = Math.sin(now * .003 + sp.ph * 3);
+            if (tw > .55) { var g = 6 + (tw - .55) * 22; ctx.globalAlpha = alpha * (tw - .55) * 2; ctx.drawImage(spW, sp.x - g / 2, sp.y - g / 2, g, g); }
+        }
+        // orbit ring + comet once formed
+        if (L.state !== 'explode' && now > L.formAt - 400) {
+            var oa = Math.min(1, (now - L.formAt + 400) / 900), rx2 = sz * .82, ry2 = sz * .25, rot = -.28, ocy = L.cy + sz * .06;
+            ctx.globalAlpha = .32 * oa; ctx.strokeStyle = rgba(mix(PC, [255, 255, 255], .25), 1); ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.ellipse(L.cx, ocy, rx2, ry2, rot, 0, 6.283); ctx.stroke();
+            L.orbitA = now * .0009;
+            for (var c = 0; c < 16; c++) {
+                var aa = L.orbitA - c * .045, ex = Math.cos(aa) * rx2, ey = Math.sin(aa) * ry2;
+                var px2 = L.cx + ex * Math.cos(rot) - ey * Math.sin(rot), py2 = ocy + ex * Math.sin(rot) + ey * Math.cos(rot);
+                var gs = (c ? 9 : 18) * (1 - c / 18);
+                ctx.globalAlpha = oa * (1 - c / 16) * (c ? .55 : 1); ctx.drawImage(c ? spP : spW, px2 - gs / 2, py2 - gs / 2, gs, gs);
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
     size();
-    var EMBERS = Math.min(small ? 34 : 110, Math.floor(W * H / 14000));
-    for (var i = 0; i < EMBERS; i++) embers.push(ember(false));
+    var STARS = Math.min(small ? 130 : 280, Math.floor(W * H / 6000));
+    for (var i = 0; i < STARS; i++) stars.push(star());
     window.addEventListener('resize', function () { size(); });
 
     function frame(now) {
         requestAnimationFrame(frame);
         if (document.hidden) return;
         ctx.clearRect(0, 0, W, H);
-        ctx.globalCompositeOperation = 'lighter';
-        var warping = now < warpUntil, k = warping ? Math.min(1, (now - warpStart) / 600) : 0;
-        // embers
-        for (var i = 0; i < embers.length; i++) {
-            var e = embers[i];
-            e.w += .02; e.x += e.vx + Math.sin(e.w) * .25; e.y += e.vy * (1 + k * 6);
-            if (e.y < -20) embers[i] = e = ember(true);
-            var es = e.r * 8;
-            ctx.globalAlpha = e.a; ctx.drawImage(e.c === SC ? spS : spP, e.x - es / 2, e.y - es / 2, es, es);
+        var warping = now < warpUntil, wp = warping ? (now - warpStart) / (warpUntil - warpStart) : 1;
+        // stars: three brightness batches, slow drift, twinkle
+        var sp3 = [new Path2D(), new Path2D(), new Path2D()];
+        for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            s.y -= s.v; s.x -= s.v * .4; if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; } if (s.x < -2) s.x = W + 2;
+            var tw = Math.sin(now * .001 * s.sp + s.ph), lv = tw > .45 ? 2 : tw > -.3 ? 1 : 0;
+            sp3[lv].rect(s.x, s.y, s.r, s.r);
         }
-        // hyperspace: soft streaks that fade in as they accelerate, plus a light core that blooms and fades
-        var wp = warping ? (now - warpStart) / (warpUntil - warpStart) : 1;
-        ctx.globalAlpha = 1;
-        if (warping && !reduce) {
-            if (wp < .72) for (var s = 0; s < (small ? 3 : 8); s++) {
-                var ang = Math.random() * 6.283, d0 = 30 + Math.random() * 60;
-                streaks.push({ x: W / 2 + Math.cos(ang) * d0, y: H * .55 + Math.sin(ang) * d0, a: ang, v: 2.5 + Math.random() * 3.5, l: 0, c: Math.random() < .55 ? PC : [255, 245, 238] });
-            }
+        ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill(sp3[0]);
+        ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fill(sp3[1]);
+        ctx.fillStyle = 'rgba(255,250,245,.95)'; ctx.fill(sp3[2]);
+        drawLogo(now);
+        // hyperspace streaks (two batched paths)
+        if (warping && !reduce && wp < .72) for (var n = 0; n < (small ? 3 : 8); n++) {
+            var ang = Math.random() * 6.283, d0 = 30 + Math.random() * 60;
+            streaks.push({ x: W / 2 + Math.cos(ang) * d0, y: H * .45 + Math.sin(ang) * d0, a: ang, v: 2.5 + Math.random() * 3.5, l: 0, c: Math.random() < .55 });
         }
         if (streaks.length) {
-            // two batched paths (coloured + white) instead of one stroke call per streak
             var pathC = new Path2D(), pathW = new Path2D();
             for (var j = streaks.length - 1; j >= 0; j--) {
                 var st = streaks[j];
                 st.v *= 1.06; st.l = Math.min(200, st.l + st.v * .8);
                 st.x += Math.cos(st.a) * st.v; st.y += Math.sin(st.a) * st.v;
                 if (st.x < -260 || st.x > W + 260 || st.y < -260 || st.y > H + 260) { streaks.splice(j, 1); continue; }
-                var pth = st.c === PC ? pathC : pathW;
+                var pth = st.c ? pathC : pathW;
                 pth.moveTo(st.x, st.y); pth.lineTo(st.x - Math.cos(st.a) * st.l, st.y - Math.sin(st.a) * st.l);
             }
             ctx.lineWidth = small ? 1.2 : 1.5;
-            ctx.strokeStyle = 'rgba(' + PC.join(',') + ',.55)'; ctx.stroke(pathC);
+            ctx.strokeStyle = rgba(PC, .55); ctx.stroke(pathC);
             ctx.strokeStyle = 'rgba(255,245,238,.45)'; ctx.stroke(pathW);
         }
         // confetti
-        ctx.globalCompositeOperation = 'source-over';
         for (var q = confetti.length - 1; q >= 0; q--) {
             var p = confetti[q];
             p.vy += .18; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--;
@@ -160,6 +269,7 @@
             ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
             if (p.life <= 0 || p.y > H + 40) confetti.splice(q, 1);
         }
+        ctx.globalAlpha = 1;
     }
     requestAnimationFrame(frame);
     function doWarp(ms) { warpStart = performance.now(); warpUntil = warpStart + ms; }
@@ -207,10 +317,12 @@
     (async function intro() {
         await warpGone; await wait(arrivedByWarp ? 260 : 150);
         body.classList.add('s1'); setHud('BOOTING');
-        await Promise.all([wait(650), logoReady]);
+        await logoReady;
+        var formIn = startLogo();                       // particles swirl in and assemble the logo
+        await wait(formIn ? Math.max(0, formIn - 250) : 650);
         body.classList.add('s2'); setHud('SIGNAL LOCKED');
-        setTimeout(function () { flash(true); }, reduce ? 0 : 1050);       // soft warm flash when the logo lands
-        await wait(1300);
+        if (!formIn) setTimeout(function () { flash(true); }, reduce ? 0 : 1050);
+        await wait(formIn ? 550 : 1300);
         body.classList.add('s3');
         scramble(title, titleText, 1100);
         await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 45);
@@ -229,6 +341,7 @@
         btn.classList.add('fired');
         await wait(140);
         body.classList.add('warping'); setHud('WARP DRIVE');
+        explodeLogo();
         doWarp(1150);
         setTimeout(function () { flash(true); }, 520);
         await wait(900);
