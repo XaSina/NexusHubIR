@@ -950,3 +950,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .calc-br li span { color: var(--a-muted); } .calc-br li span em { font-style: normal; }
 .calc-br li b { font-variant-numeric: tabular-nums; }
 @media (max-width: 680px) { .calc { grid-template-columns: 1fr; } }
+
+/* no blue/grey flash on tapped buttons and links (phones); keyboard users still get a focus ring */
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+:focus:not(:focus-visible) { outline: none; }

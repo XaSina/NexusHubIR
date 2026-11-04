@@ -822,3 +822,5 @@ button { cursor: pointer; border: 0; background: none; }
 .au-start.nb:hover .nb-arrows svg:first-child, .au-start.nb.fired .nb-arrows svg:first-child { transform: translateX(-160%) !important; }
 .au-start.nb:hover .nb-arrows svg:last-child, .au-start.nb.fired .nb-arrows svg:last-child { transform: none !important; }
 .au-start.nb .nb-arrows svg:last-child { transform: translateX(160%); }
+
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }

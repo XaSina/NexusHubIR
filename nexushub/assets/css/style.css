@@ -1304,3 +1304,26 @@ html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .tren
 /* section titles glide in from inside the page (they used to start 24px past the screen edge) */
 .js-reveal .sec-head[data-reveal] .sec-title { transform: translate3d(-24px, 0, 0); }
 html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: translate3d(24px, 0, 0); }
+
+/* ======================================================================
+   Phones: smoother everywhere
+   ====================================================================== */
+/* no blue/grey flash on tapped buttons and links; keyboard users still get a focus ring */
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+:focus:not(:focus-visible) { outline: none; }
+/* side menu: no browser scrollbar sticking out of the rounded panel */
+.drawer-panel { scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+.drawer-panel::-webkit-scrollbar { display: none; width: 0; height: 0; }
+@media (hover: none), (max-width: 900px) {
+    /* clip-path animations are re-painted on the main thread every frame: on phones the picture just fades in with its card */
+    .js-reveal [data-reveal] .pc-media, .js-reveal [data-reveal].in .pc-media { clip-path: none; transition: none; }
+    .js-reveal [data-reveal] .cover { transform: scale(1.08); }
+    .js-reveal [data-reveal].in .cover { transition: transform 1.1s var(--ease-silk) calc(var(--rd, 0ms) + .05s); }
+    .pcard-card .pc-media::before { display: none; }
+    /* lighter reveal: shorter travel, no perspective, fewer layers at once */
+    .js-reveal [data-reveal] { transform: translate3d(0, 22px, 0); transition: opacity .6s ease var(--rd, 0ms), transform .8s var(--ease-silk) var(--rd, 0ms); }
+    /* member card: entrance after the cover has faded, no constant re-blend of the holo layer */
+    .mcard { animation-delay: .3s; box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset; }
+    .mcard-holo { will-change: auto; }
+    .mcard-shine { display: none; }
+}

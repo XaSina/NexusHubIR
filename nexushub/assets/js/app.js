@@ -352,7 +352,8 @@
 
     /* ---------- While scrolling, cards passing under a still mouse don't flip hover states (that was the tiny shake) ---------- */
     var scT;
-    window.addEventListener('scroll', function () {
+    // mouse only: on phones there is no hover, and re-styling the whole page at every scroll start/stop cost frames
+    if (finePointer) window.addEventListener('scroll', function () {
         if (!document.documentElement.classList.contains('is-scrolling')) document.documentElement.classList.add('is-scrolling');
         clearTimeout(scT); scT = setTimeout(function () { document.documentElement.classList.remove('is-scrolling'); }, 160);
     }, { passive: true });
