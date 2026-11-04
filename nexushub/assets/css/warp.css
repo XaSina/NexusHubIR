@@ -71,3 +71,7 @@
     .nx-warp-disc, .nx-warp-core, .nx-warp-fx { transition-duration: .01ms !important; }
     .wf-scan, .wc-ring, .wc-glow, .wc-bar i { animation: none !important; }
 }
+
+/* the loader animates only while it is on screen (otherwise its rings/scan would tick forever in the background) */
+html .nx-warp:not(.cover) *, html .nx-warp:not(.cover) *::before, html .nx-warp:not(.cover) *::after { animation-play-state: paused; }
+html.warp-in .nx-warp *, html.warp-in .nx-warp *::before, html.warp-in .nx-warp *::after { animation-play-state: running; }

@@ -86,11 +86,19 @@
 
     /* ---------- Reveal ---------- */
     if (document.documentElement.classList.contains('js-reveal')) {
+        /* Items that enter together are staggered in reading order (top to bottom, right to left);
+           once played, the reveal styles are dropped so hover effects are instant again. */
         var io = new IntersectionObserver(function (entries) {
-            entries.forEach(function (en) {
-                if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+            var batch = entries.filter(function (en) { return en.isIntersecting; });
+            batch.sort(function (a, b) { return (a.boundingClientRect.top - b.boundingClientRect.top) || (b.boundingClientRect.left - a.boundingClientRect.left); });
+            batch.forEach(function (en, i) {
+                var el = en.target, d = Math.min(i, 6) * 70;
+                io.unobserve(el);
+                el.style.setProperty('--rd', d + 'ms');
+                el.classList.add('in');
+                setTimeout(function () { el.removeAttribute('data-reveal'); el.classList.remove('in'); el.style.removeProperty('--rd'); }, 1500 + d);
             });
-        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+        }, { rootMargin: '0px 0px -40px 0px', threshold: 0 });
         $$('[data-reveal]').forEach(function (el) { io.observe(el); });
     }
 
@@ -215,19 +223,20 @@
         }
         var draw = { matrix: drawMatrix, stars: drawStars, waves: drawWaves, bokeh: drawBokeh, fireflies: drawMotes, embers: drawMotes, rain: drawRain }[mode] || drawParticles;
         var last = 0, frame = mode === 'matrix' ? 55 : (lite ? 33 : 0);
+        var looping = false;                             // guard: never run two loops at once (tab switches used to start a second one)
+        function kick() { if (!looping && running && !scrolling) { looping = true; requestAnimationFrame(loop); } }
         function loop(t) {
-            if (!running) return;
+            if (!running || scrolling) { looping = false; return; }   // fully idle while hidden or while a phone scrolls
             requestAnimationFrame(loop);
-            if (scrolling) return;                       // free the GPU while the user scrolls (phones)
             if (frame && t - last < frame) return;
             last = t; draw(t);
         }
         size();
         window.addEventListener('resize', function () { clearTimeout(cv._t); cv._t = setTimeout(size, 200); });
         window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
-        document.addEventListener('visibilitychange', function () { running = !document.hidden; if (running) requestAnimationFrame(loop); });
-        if (lite) window.addEventListener('scroll', function () { scrolling = true; clearTimeout(scrollT); scrollT = setTimeout(function () { scrolling = false; }, 160); }, { passive: true });
-        requestAnimationFrame(loop);
+        document.addEventListener('visibilitychange', function () { running = !document.hidden; kick(); });
+        if (lite) window.addEventListener('scroll', function () { scrolling = true; clearTimeout(scrollT); scrollT = setTimeout(function () { scrolling = false; kick(); }, 160); }, { passive: true });
+        kick();
     }
 
     /* ---------- Cursor glow ---------- */
