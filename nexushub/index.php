@@ -91,6 +91,7 @@ switch ($seg[0] ?? '') {
 
     case 'archive':
         track_visit();
+        $per = max(3, min(60, (int) setting('archive_per_page', 15)));
         [$posts, $total] = get_posts(['limit' => $per, 'offset' => ($page - 1) * $per, 'count' => true]);
         $pg = paginate($total, $per, $page);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => 'همه اخبار', 'icon' => '📰', 'sub' => 'جدیدترین مطالب ' . setting('site_title'), 'base' => url('archive'), 'bodyClass' => 'page-list'], [

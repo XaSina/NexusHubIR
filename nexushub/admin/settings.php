@@ -2,7 +2,7 @@
 require __DIR__ . '/inc/boot.php';
 require_cap('*');
 
-$keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'trending_days',
+$keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
     'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code'];
@@ -12,6 +12,7 @@ if (is_post()) {
     $save = [];
     foreach ($keys as $k) if (isset($_POST[$k])) $save[$k] = trim((string) $_POST[$k]);
     $save['posts_per_page'] = (string) max(3, min(60, (int) ($save['posts_per_page'] ?? 12)));
+    if (isset($save['archive_per_page'])) $save['archive_per_page'] = (string) max(3, min(60, (int) $save['archive_per_page']));
     $save['trending_days'] = (string) max(1, min(365, (int) ($save['trending_days'] ?? 30)));
     $save['post_middle_paragraph'] = (string) max(1, min(20, (int) ($save['post_middle_paragraph'] ?? 3)));
     if (isset($save['reactions_list'])) {
@@ -53,6 +54,7 @@ adm_head('تنظیمات', 'settings');
             <?= f_text('contact_email', 'ایمیل تماس', $s['contact_email'], ['ltr' => true, 'placeholder' => 'info@example.com', 'attrs' => 'inputmode="email" autocomplete="off" data-lpignore="true"']) ?>
             <div class="grid g2">
                 <?= f_text('posts_per_page', 'تعداد خبر در هر صفحه', $s['posts_per_page'], ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
+                <?= f_text('archive_per_page', 'تعداد خبر در هر صفحه‌ی «همه اخبار»', (string) ($s['archive_per_page'] ?? 15), ['type' => 'number', 'min' => 3, 'max' => 60]) ?>
                 <?= f_text('trending_days', 'بازه «داغ‌ترین‌ها» (روز)', $s['trending_days'], ['type' => 'number', 'min' => 1, 'max' => 365]) ?>
             </div>
         </div>

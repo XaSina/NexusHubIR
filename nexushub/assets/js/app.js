@@ -285,6 +285,7 @@
     /* ---------- Tilt + shine ---------- */
     if (finePointer && !reduce) {
         $$('.tilt').forEach(function (el) {
+            if (el.closest('.h-scroll')) return;   // inside snapping rows a moving card makes the row re-snap (sideways jumps)
             el.addEventListener('mousemove', function (e) {
                 var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
                 el.style.setProperty('--mx', (x * 100) + '%'); el.style.setProperty('--my', (y * 100) + '%');
@@ -325,6 +326,45 @@
     }, { passive: true });
     onScroll();
     if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+    /* ---------- While scrolling, cards passing under a still mouse don't flip hover states (that was the tiny shake) ---------- */
+    var scT;
+    window.addEventListener('scroll', function () {
+        if (!document.documentElement.classList.contains('is-scrolling')) document.documentElement.classList.add('is-scrolling');
+        clearTimeout(scT); scT = setTimeout(function () { document.documentElement.classList.remove('is-scrolling'); }, 160);
+    }, { passive: true });
+
+    /* ---------- List pages: change page without reloading, with an animated swap ---------- */
+    var gridWrap = $('.col-main');
+    if (gridWrap && $('.grid-cards', gridWrap) && window.fetch && window.DOMParser) {
+        var busyPg = false;
+        var loadPage = function (href, push) {
+            if (busyPg) return; busyPg = true;
+            var grid = $('.grid-cards', gridWrap), pagi = $('.pagination', gridWrap);
+            grid.classList.add('pg-out');
+            var top = grid.getBoundingClientRect().top + window.scrollY - 110;
+            window.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+            Promise.all([fetch(href, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw 0; return r.text(); }), new Promise(function (r) { setTimeout(r, reduce ? 0 : 380); })])
+                .then(function (res) {
+                    var doc = new DOMParser().parseFromString(res[0], 'text/html');
+                    var ng = doc.querySelector('.col-main .grid-cards'), np = doc.querySelector('.col-main .pagination');
+                    if (!ng) throw 0;
+                    $$('[data-reveal]', ng).forEach(function (c, i) { c.removeAttribute('data-reveal'); c.classList.add('pg-new'); c.style.setProperty('--pi', Math.min(i, 9)); });
+                    grid.replaceWith(ng);
+                    if (pagi && np) pagi.replaceWith(np); else if (pagi) pagi.remove(); else if (np) ng.after(np);
+                    if (push) history.pushState({ pg: 1 }, '', href);
+                    document.title = doc.title;
+                    if (NX.tilt) $$('.tilt', ng).forEach(function (el) { el.classList.remove('tilt'); });
+                    busyPg = false;
+                })
+                .catch(function () { location.href = href; });
+        };
+        gridWrap.addEventListener('click', function (e) {
+            var a = e.target.closest('.pagination a'); if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+            e.preventDefault(); loadPage(a.href, true);
+        });
+        window.addEventListener('popstate', function () { loadPage(location.href, false); });
+    }
 
     /* ---------- Live clock ---------- */
     var clock = $('#liveClock');

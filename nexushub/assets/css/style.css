@@ -1246,3 +1246,19 @@ html:not(.warp-in) main { animation: mainIn 1s var(--ease-silk) .08s both; }
     .js-reveal [data-reveal] .pc-media, .js-reveal [data-reveal] .pc-body > * { clip-path: none !important; opacity: 1 !important; transform: none !important; }
     html:not(.warp-in) .site-header, html:not(.warp-in) main { animation: none; }
 }
+
+/* horizontal category rows: gentle snapping and no card movement (moving cards made the row re-snap sideways) */
+.h-scroll { scroll-snap-type: x proximity; }
+.js-reveal .h-scroll [data-reveal] { transform: none !important; transition: opacity .9s ease var(--rd, 0ms) !important; }
+.h-scroll .pcard-card:hover, .h-scroll .trend-item:hover, .h-scroll .pcard-shop:hover { translate: none; }
+.h-scroll .pcard-card:hover .cover { transform: scale(1.06); }
+/* frozen hover while the page scrolls */
+html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .trend-item, html.is-scrolling .widget { pointer-events: none; }
+
+/* animated page change on list pages */
+.grid-cards.pg-out > * { opacity: 0; transform: translate3d(0, -14px, 0) scale(.98); transition: opacity .32s ease, transform .38s cubic-bezier(.4,0,.2,1); }
+.grid-cards .pg-new { animation: pgIn .8s cubic-bezier(.19,1,.22,1) calc(var(--pi, 0) * 55ms) both; }
+@keyframes pgIn { from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.97); } }
+.pagination { transition: opacity .3s ease; }
+.grid-cards.pg-out ~ .pagination { opacity: .4; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .grid-cards .pg-new { animation: none; } .grid-cards.pg-out > * { transition: none; } }

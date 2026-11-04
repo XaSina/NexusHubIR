@@ -95,8 +95,8 @@ case 'latest':
         'since' => (string) setting('latest_since') ?: null,
         default => null,
     };
-    $latest = get_posts(['limit' => $lmax, 'exclude' => $heroIds] + ($lsince ? ['since' => $lsince] : []));
-    if (!$latest) $latest = get_posts(['limit' => $lmax, 'exclude' => $heroIds]);
+    $latest = get_posts(['limit' => $lmax] + ($lsince ? ['since' => $lsince] : []));
+    if (!$latest) $latest = get_posts(['limit' => $lmax]);
     if (!$latest) $latest = get_posts(['limit' => 9]); ?>
 <section class="container layout-2col home-latest">
     <div class="col-main">
