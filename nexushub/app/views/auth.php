@@ -44,7 +44,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 
 <!-- ============ Intro ============ -->
 <main class="au-intro" id="auIntro">
-    <div class="au-emblem" id="auEmblem">
+    <div class="au-emblem" id="auEmblem"<?= in_array((string) setting('logo'), ['', 'assets/img/logo-256.png', 'assets/img/logo.jpg'], true) ? ' data-mark="' . e(url('assets/img/logo-mark.png')) . '"' : '' ?>>
         <img src="<?= e($logo) ?>" alt="<?= e($siteTitle) ?>" id="auLogo" decoding="async">
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>
@@ -54,7 +54,6 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
         <span class="au-start-label">ورود و ثبت‌نام</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
     </button>
-    <p class="au-hint">فقط با شماره موبایل، ایمیل یا نام کاربری</p>
 </main>
 
 <!-- ============ Auth card ============ -->

@@ -89,8 +89,8 @@
     var setHud = function (s) { if (hud) hud.textContent = s; };
 
     /* ==========================================================================
-       Canvas FX (one layer): stars · particle logo · hyperspace streaks · confetti
-       Everything is batched into a few paths per frame so phones stay at 60fps.
+       Canvas FX (one layer): stars · particle logo (NX) · drifting dust · confetti
+       Batched paths + pre-rendered sprites keep phones at 60fps.
        ========================================================================== */
     var small = window.innerWidth < 760;
     var cv = $('#auFx'), ctx = cv.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -102,182 +102,196 @@
     function glowSprite(c, R) {
         var o = document.createElement('canvas'); o.width = o.height = R * 2;
         var g = o.getContext('2d'), gr = g.createRadialGradient(R, R, 0, R, R, R);
-        gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.18, rgba(c, .9)); gr.addColorStop(.45, rgba(c, .25)); gr.addColorStop(1, rgba(c, 0));
+        gr.addColorStop(0, rgba(mix(c, [255, 255, 255], .25), 1)); gr.addColorStop(.25, rgba(c, .85)); gr.addColorStop(.55, rgba(c, .22)); gr.addColorStop(1, rgba(c, 0));
         g.fillStyle = gr; g.fillRect(0, 0, R * 2, R * 2); return o;
     }
-    var spP = glowSprite(PC, 24), spW = glowSprite([255, 240, 230], 16);
+    var spP = glowSprite(PC, 24);
     function size() {
         W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         placeLogo();
     }
-    function star() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .1 ? 1.5 : (Math.random() < .45 ? 1 : .6), ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.8, v: .02 + Math.random() * .06 }; }
+    function star() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .1 ? 1.4 : (Math.random() < .45 ? 1 : .6), ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.8, v: .02 + Math.random() * .06 }; }
 
     /* ---------- particle logo ---------- */
-    var LOGO = { parts: [], state: 'none', t0: 0, cx: 0, cy: 0, sz: 0, formAt: 0, orbitA: 0 };
+    // only red tones (theme primary): deep inside, a little brighter on the edges for a crisp outline
+    var RED = [rgba(mix(PC, [0, 0, 0], .1), 1), rgba(PC, 1), rgba(mix(PC, [255, 255, 255], .22), 1)];
+    var LOGO = { parts: [], state: 'none', t0: 0, cx: 0, cy: 0, sz: 0, formAt: 0, doneAt: 0 };
     var pointer = { x: -9999, y: -9999 };
     if (!window.matchMedia('(hover: none)').matches) {
         window.addEventListener('pointermove', function (e) { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
         document.addEventListener('pointerleave', function () { pointer.x = pointer.y = -9999; });
     }
+    var dotsCv = null, glowCv = null;
     function placeLogo() {
         var em = $('#auEmblem'); if (!em) return;
         var r = em.getBoundingClientRect();
-        if (LOGO.sz && Math.abs(LOGO.sz - r.width) > 1) glowCv = dotsCv = brightCv = comboCv = null;
+        if (LOGO.sz && Math.abs(LOGO.sz - r.width) > 1) { dotsCv = glowCv = comboCv = null; if (LOGO.parts.length) setTimeout(buildSprites, 0); }
         LOGO.cx = r.left + r.width / 2; LOGO.cy = r.top + r.height / 2; LOGO.sz = r.width;
     }
-    // sample the real logo: keep pixels that stand out from the background colour (works for any uploaded logo)
-    function sampleLogo(img) {
-        var S = small ? 190 : 230, oc = document.createElement('canvas'); oc.width = oc.height = S;
+    // even, slightly jittered grid over the mark → uniform, crisp particle coverage
+    function sampleMark(img, isMark) {
+        var S = 256, oc = document.createElement('canvas'); oc.width = oc.height = S;
         var g = oc.getContext('2d'); g.drawImage(img, 0, 0, S, S);
-        var d = g.getImageData(0, 0, S, S).data, bg = [d[0], d[1], d[2]], pts = [];
-        for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
-            var i = (y * S + x) * 4; if (d[i + 3] < 120) continue;
-            var dx = x - S / 2, dy = y - S / 2; if (dx * dx + dy * dy > S * S * .25) continue;          // logo is shown as a circle
+        var d = g.getImageData(0, 0, S, S).data, bg = [d[0], d[1], d[2]];
+        var inside = function (x, y) {
+            x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= S || y >= S) return false;
+            var i = (y * S + x) * 4;
+            if (isMark) return d[i + 3] > 128;
+            if (d[i + 3] < 120) return false;
+            var dx = x - S / 2, dy = y - S / 2; if (dx * dx + dy * dy > S * S * .25) return false;
             var dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
-            if (dr * dr + dg * dg + db * db < 3600) continue;
-            pts.push([x / S - .5, y / S - .5, Math.max(d[i], d[i + 1], d[i + 2]) / 255]);
+            return dr * dr + dg * dg + db * db > 3600;
+        };
+        var sz = LOGO.sz || 250, step = (small ? 1.75 : 1.85) / sz * S, pts = [], e = step * 1.8;
+        for (var y = step / 2; y < S; y += step) for (var x = step / 2; x < S; x += step) {
+            var jx = x + (Math.random() - .5) * step * .9, jy = y + (Math.random() - .5) * step * .9;
+            if (!inside(jx, jy)) continue;
+            var edge = !inside(jx + e, jy) || !inside(jx - e, jy) || !inside(jx, jy + e) || !inside(jx, jy - e);
+            pts.push([jx / S - .5, jy / S - .5, edge ? 2 : (Math.random() < .6 ? 1 : 0), Math.random() < .12 ? 1.5 : (Math.random() < .5 ? 1.15 : .95)]);
         }
-        for (var k = pts.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = pts[k]; pts[k] = pts[j]; pts[j] = t; }
-        return pts.slice(0, small ? 1900 : 3300);
+        var cap = small ? 3200 : 4800;
+        if (pts.length > cap) { for (var k = pts.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = pts[k]; pts[k] = pts[j]; pts[j] = t; } pts.length = cap; }
+        return pts;
     }
+    function loadMark() {
+        var em = $('#auEmblem'), src = em && em.dataset.mark;
+        return new Promise(function (res) {
+            if (!src) return res(null);
+            var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src;
+            setTimeout(function () { res(null); }, 2500);
+        });
+    }
+    var markReady = loadMark();
     // returns ms until the logo is formed (0 = particles unavailable → show the image instead)
-    function startLogo() {
-        var img = $('#auLogo'), em = $('#auEmblem');
-        var pts = null;
-        try { if (img && img.naturalWidth) pts = sampleLogo(img); } catch (e) { pts = null; }  // cross-origin logos can't be sampled
+    function startLogo(mark) {
+        var img = $('#auLogo'), em = $('#auEmblem'), pts = null;
+        placeLogo();
+        try { pts = mark ? sampleMark(mark, true) : (img && img.naturalWidth ? sampleMark(img, false) : null); } catch (e) { pts = null; }
         if (!pts || pts.length < 200) { if (em) em.classList.add('img-mode'); return 0; }
         em.classList.add('px');
-        placeLogo();
         var R0 = Math.max(W, H) * .75, now = performance.now();
         LOGO.parts = pts.map(function (p) {
-            var a = Math.random() * 6.283, rr = R0 * (.35 + Math.random() * .75), lum = p[2];
-            return { nx: p[0], ny: p[1], sx: Math.cos(a) * rr, sy: Math.sin(a) * rr * .7, d: Math.random() * 650, du: 1250 + Math.random() * 650,
-                b: lum > .72 ? 3 : lum > .48 ? 2 : lum > .26 ? 1 : 0, ph: Math.random() * 6.28, ox: 0, oy: 0, spark: Math.random() < .045, x: 0, y: 0, vx: 0, vy: 0 };
+            var a = Math.random() * 6.283, rr = R0 * (.35 + Math.random() * .75);
+            return { nx: p[0], ny: p[1], b: p[2], k: p[3], sx: Math.cos(a) * rr, sy: Math.sin(a) * rr * .7, d: Math.random() * 650, du: 1250 + Math.random() * 650,
+                ph: Math.random() * 6.28, ox: 0, oy: 0, x: 0, y: 0, keep: Math.random() < (small ? .4 : .45) };
         });
         LOGO.state = reduce ? 'formed' : 'forming'; LOGO.t0 = now; LOGO.formAt = now + (reduce ? 0 : 1950); LOGO.doneAt = now + (reduce ? 0 : 2650);
+        setTimeout(buildSprites, reduce ? 0 : 120);
         return reduce ? 1 : 1950;
     }
-    function explodeLogo() {
-        if (LOGO.state === 'none' || LOGO.state === 'gone') return;
+    // start: the logo breaks up and its particles drift slowly across the screen, then float as dust behind the card
+    function disperseLogo() {
+        if (LOGO.state === 'none' || LOGO.state === 'gone' || LOGO.state === 'dust') return;
+        var now = performance.now();
         LOGO.parts.forEach(function (p) {
-            var dx = p.x - LOGO.cx, dy = p.y - LOGO.cy, l = Math.sqrt(dx * dx + dy * dy) || 1, v = 2 + Math.random() * 6;
-            p.vx = dx / l * v + (Math.random() - .5) * 2; p.vy = dy / l * v + (Math.random() - .5) * 2;
+            if (LOGO.settled || !p.x) { p.x = LOGO.cx + p.nx * LOGO.sz + p.ox; p.y = LOGO.cy + p.ny * LOGO.sz + p.oy; }
+            var a = Math.atan2(p.y - LOGO.cy, p.x - LOGO.cx) + (Math.random() - .5) * 1.4, dist = Math.max(W, H) * (.25 + Math.random() * .75);
+            p.fx = p.x; p.fy = p.y; p.dx = p.x + Math.cos(a) * dist; p.dy = p.y + Math.sin(a) * dist * .8;
+            p.du2 = 3000 + Math.random() * 1600; p.mote = Math.random() < .06; p.vx = (Math.random() - .5) * .25; p.vy = (Math.random() - .5) * .25;
         });
-        LOGO.state = 'explode'; LOGO.t0 = performance.now();
+        LOGO.state = 'dust'; LOGO.t0 = now;
     }
-    var BUCKET = [rgba(mix(PC, [255, 255, 255], .08), .8), rgba(mix(PC, [255, 255, 255], .32), 1), rgba(mix(PC, [255, 255, 255], .62), 1), 'rgba(255,252,248,1)'];
     var ease = function (t) { return 1 - Math.pow(1 - t, 4); };
-    var glowCv = null, dotsCv = null, brightCv = null, comboCv = null;
-    function buildDots() {
-        var L = LOGO, n = Math.ceil(L.sz * 1.1 * dpr), o = L.sz * .55, s2 = small ? 1.05 : 1.15;
-        var mk = function (bright) {
-            var g = document.createElement('canvas'); g.width = g.height = n;
-            var c = g.getContext('2d'); c.scale(dpr, dpr);
-            var paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
-            for (var i = 0; i < L.parts.length; i++) { var p = L.parts[i]; paths[bright ? Math.min(3, p.b + 1) : p.b].rect(p.nx * L.sz + o - s2 / 2, p.ny * L.sz + o - s2 / 2, s2, s2); }
-            for (var k = 0; k < 4; k++) { c.fillStyle = BUCKET[k]; c.fill(paths[k]); }
-            return g;
-        };
-        dotsCv = mk(false); brightCv = mk(true);
-        if (!glowCv) buildGlow();
-        var gsz = L.sz * 1.3, m = Math.ceil(gsz * dpr), cb = document.createElement('canvas'); cb.width = cb.height = m;
-        var cc = cb.getContext('2d'); cc.scale(dpr, dpr);
-        cc.globalCompositeOperation = 'lighter'; cc.globalAlpha = .55; cc.drawImage(glowCv, 0, 0, gsz, gsz);
-        cc.globalCompositeOperation = 'source-over'; cc.globalAlpha = 1; cc.drawImage(dotsCv, (gsz - L.sz * 1.1) / 2, (gsz - L.sz * 1.1) / 2, L.sz * 1.1, L.sz * 1.1);
-        comboCv = cb;
+    var easeOut3 = function (t) { return 1 - Math.pow(1 - t, 3); };
+    // glow (soft red stamps, no blur filter) and glow+dots, both at final size so each frame is a 1:1 draw
+    var comboCv = null;
+    function buildSprites() {
+        var L = LOGO, gsz = L.sz * 1.3, m = Math.ceil(gsz * dpr), o = gsz / 2, s2 = small ? 1.1 : 1.2;
+        var mk = function () { var c = document.createElement('canvas'); c.width = c.height = m; var x = c.getContext('2d'); x.scale(dpr, dpr); return [c, x]; };
+        var g = mk(), gx = g[1];
+        gx.globalAlpha = .07;
+        for (var q = 0; q < L.parts.length; q += 9) { var pp = L.parts[q]; gx.drawImage(spP, pp.nx * L.sz + o - 13, pp.ny * L.sz + o - 13, 26, 26); }
+        glowCv = g[0];
+        var c2 = mk(), cx2 = c2[1];
+        cx2.drawImage(glowCv, 0, 0, gsz, gsz);
+        var paths = [new Path2D(), new Path2D(), new Path2D()];
+        for (var i = 0; i < L.parts.length; i++) { var p = L.parts[i], z = s2 * p.k; paths[p.b].rect(p.nx * L.sz + o - z / 2, p.ny * L.sz + o - z / 2, z, z); }
+        for (var k = 0; k < 3; k++) { cx2.fillStyle = RED[k]; cx2.fill(paths[k]); }
+        comboCv = c2[0]; dotsCv = true;
     }
-    function buildGlow() {
-        var L = LOGO, hasF = 'filter' in CanvasRenderingContext2D.prototype, k = hasF ? 2 : 5, n = Math.ceil(L.sz * 1.3 / k), g = document.createElement('canvas'); g.width = g.height = n;
-        var c = g.getContext('2d'), o = L.sz * .65;
-        if (hasF) c.filter = 'blur(' + (7 / k) + 'px)';
-        c.globalCompositeOperation = 'lighter';
-        for (var i = 0; i < L.parts.length; i++) {
-            var p = L.parts[i]; c.fillStyle = p.b >= 2 ? rgba(mix(PC, [255, 255, 255], .5), .35) : rgba(PC, .3);
-            c.fillRect((p.nx * L.sz + o) / k - .6, (p.ny * L.sz + o) / k - .6, 1.2, 1.2);
+    // orbit: draws itself in once the logo forms, then a red comet runs around it; back half is behind the logo
+    function drawOrbit(now, front) {
+        var L = LOGO, sz = L.sz, rx = sz * .84, ry = sz * .24, rot = -.28, ocy = L.cy + sz * .02;
+        var prog = Math.max(0, Math.min(1, (now - L.formAt + 200) / 1300)); if (!prog) return;
+        var pe = easeOut3(prog), a0 = -1.2, span = pe * 6.2832, N = 72, cr = Math.cos(rot), sr = Math.sin(rot);
+        var pt = function (a) { var ex = Math.cos(a) * rx, ey = Math.sin(a) * ry; return [L.cx + ex * cr - ey * sr, ocy + ex * sr + ey * cr]; };
+        ctx.strokeStyle = rgba(PC, 1); ctx.lineWidth = front ? 1 : .8; ctx.globalAlpha = front ? .5 : .2;
+        ctx.beginPath(); var pen = false;
+        for (var i = 0; i <= N; i++) {
+            var a = a0 + span * i / N, f = Math.sin(a) > 0, q = pt(a);
+            if (f === front) { if (!pen) { ctx.moveTo(q[0], q[1]); pen = true; } else ctx.lineTo(q[0], q[1]); } else pen = false;
         }
-        glowCv = g;
-    }
-    // orbit ring with depth: back half is drawn behind the logo (dim), front half in front (brighter)
-    function drawOrbit(now, front, oa) {
-        var L = LOGO, sz = L.sz, rx = sz * .84, ry = sz * .24, rot = -.28, ocy = L.cy + sz * .05;
-        ctx.globalAlpha = oa * (front ? .55 : .2); ctx.strokeStyle = rgba(mix(PC, [255, 255, 255], .45), 1); ctx.lineWidth = front ? 1 : .8;
-        ctx.beginPath(); ctx.ellipse(L.cx, ocy, rx, ry, rot, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2); ctx.stroke();
-        var a0 = now * .0008;
-        for (var c = 0, cn = small ? 10 : 18; c < cn; c++) {
-            var aa = a0 - c * (small ? .07 : .04), inFront = Math.sin(aa) > 0;
-            if (inFront !== front) continue;
-            var ex = Math.cos(aa) * rx, ey = Math.sin(aa) * ry;
-            var x = L.cx + ex * Math.cos(rot) - ey * Math.sin(rot), y = ocy + ex * Math.sin(rot) + ey * Math.cos(rot);
-            var gs = (c ? 8 : 20) * (1 - c / 20) * (front ? 1 : .7);
-            ctx.globalAlpha = oa * (1 - c / 18) * (c ? .5 : 1) * (front ? 1 : .45); ctx.drawImage(c ? spP : spW, x - gs / 2, y - gs / 2, gs, gs);
+        ctx.stroke();
+        // comet: leads the draw-in, then keeps orbiting
+        var head = prog < 1 ? a0 + span : a0 + 6.2832 + (now - L.formAt - 1100) * .0008;
+        for (var c = 0, cn = small ? 10 : 16; c < cn; c++) {
+            var aa = head - c * (small ? .07 : .045); if (Math.sin(aa) > 0 !== front) continue;
+            var q2 = pt(aa), gs = (c ? 8 : 16) * (1 - c / (cn + 2)) * (front ? 1 : .7);
+            ctx.globalAlpha = (1 - c / cn) * (front ? .9 : .4); ctx.drawImage(spP, q2[0] - gs / 2, q2[1] - gs / 2, gs, gs);
         }
+        ctx.globalAlpha = 1;
     }
     function drawLogo(now) {
         var L = LOGO; if (L.state === 'none' || L.state === 'gone') return;
-        var paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], sparks = [];
-        var ps = small ? 1.05 : 1.15, alpha = 1, sz = L.sz;
-        var sweep = L.cx - sz * .8 + (((now - L.formAt) % 4200) / 4200) * sz * 2.2;     // shine band passing across
-        if (L.state === 'explode') { alpha = Math.max(0, 1 - (now - L.t0) / 900); if (!alpha) { L.state = 'gone'; return; } }
+        var sz = L.sz, ps = small ? 1.1 : 1.2;
+        if (L.state === 'dust') return drawDust(now);
         var near = pointer.x > L.cx - sz && pointer.x < L.cx + sz && pointer.y > L.cy - sz && pointer.y < L.cy + sz;
-        var settledAll = L.state !== 'explode' && now > L.doneAt;
-        if (settledAll && !near && !L.parts.some(function (p) { return Math.abs(p.ox) > .05 || Math.abs(p.oy) > .05; })) {
-            if (!comboCv) buildDots();
-            var gsz = sz * 1.3, dsz = sz * 1.1;
-            drawOrbit(now, false, 1);
-            ctx.globalAlpha = 1; ctx.drawImage(comboCv, Math.round((L.cx - gsz / 2) * dpr) / dpr, Math.round((L.cy - gsz / 2) * dpr) / dpr, gsz, gsz);
-            // shine band: the bright sprite seen through a moving clip
-            ctx.save(); ctx.beginPath(); ctx.rect(sweep - 12, L.cy - dsz / 2, 24, dsz); ctx.clip(); ctx.drawImage(brightCv, L.cx - dsz / 2, L.cy - dsz / 2, dsz, dsz); ctx.restore();
-            for (var q2 = 0, lim = small ? 70 : 200, cnt = 0; q2 < L.parts.length && cnt < lim; q2++) {
-                var sp2 = L.parts[q2]; if (!sp2.spark) continue; cnt++;
-                var tw2 = Math.sin(now * .003 + sp2.ph * 3);
-                if (tw2 > .55) { var g2 = 5 + (tw2 - .55) * 18; ctx.globalAlpha = (tw2 - .55) * 2; ctx.drawImage(spW, L.cx + sp2.nx * sz - g2 / 2, L.cy + sp2.ny * sz - g2 / 2, g2, g2); }
-            }
-            drawOrbit(now, true, 1);
-            ctx.globalAlpha = 1;
-            return;
-        }
-        for (var i = 0; i < L.parts.length; i++) {
-            var p = L.parts[i], tx = L.cx + p.nx * sz, ty = L.cy + p.ny * sz, x, y, b = p.b, s = ps;
-            if (L.state === 'explode') {
-                p.vx *= 1.04; p.vy *= 1.04; p.x += p.vx; p.y += p.vy; x = p.x; y = p.y; s = ps * (1 + (now - L.t0) / 450);
-            } else {
+        if (near) L.disturbed = true;
+        if (!near && L.disturbed && !L.parts.some(function (p) { return Math.abs(p.ox) > .05 || Math.abs(p.oy) > .05; })) L.disturbed = false;
+        var settled = now > L.doneAt && !near && !L.disturbed;
+        var ga = Math.min(1, Math.max(0, (now - L.formAt) / 700)), gsz = sz * 1.3;
+        var gxp = Math.round((L.cx - gsz / 2) * dpr) / dpr, gyp = Math.round((L.cy - gsz / 2) * dpr) / dpr;
+        drawOrbit(now, false);
+        if (settled && comboCv) {
+            ctx.drawImage(comboCv, gxp, gyp, gsz, gsz);
+            L.settled = true;
+        } else {
+            L.settled = false;
+            if (glowCv && ga) { ctx.globalAlpha = ga; ctx.drawImage(glowCv, gxp, gyp, gsz, gsz); ctx.globalAlpha = 1; }
+            var paths = [new Path2D(), new Path2D(), new Path2D()];
+            for (var i = 0; i < L.parts.length; i++) {
+                var p = L.parts[i], tx = L.cx + p.nx * sz, ty = L.cy + p.ny * sz, x, y, s = ps;
                 var t = Math.min(1, Math.max(0, (now - L.t0 - p.d) / p.du));
+                if (t <= 0) continue;
                 if (t < 1) {
                     var e = ease(t), sw = (1 - e) * 1.25, cs = Math.cos(sw), sn = Math.sin(sw);
                     var rx = p.sx * (1 - e) + (tx - L.cx) * e, ry = p.sy * (1 - e) + (ty - L.cy) * e;
-                    x = L.cx + rx * cs - ry * sn; y = L.cy + rx * sn + ry * cs; s = ps * (1 + (1 - e) * 1.6);
-                    if (t <= 0) continue;
+                    x = L.cx + rx * cs - ry * sn; y = L.cy + rx * sn + ry * cs; s = ps * (1 + (1 - e) * 1.4);
                 } else {
-                    // formed: tiny shimmer + spring-back repel from the pointer
                     var wx = 0, wy = 0;
                     if (near) { var ddx = tx - pointer.x, ddy = ty - pointer.y, d2 = ddx * ddx + ddy * ddy; if (d2 < 3600) { var dd = Math.sqrt(d2) || 1, f = (1 - dd / 60) * 16; wx = ddx / dd * f; wy = ddy / dd * f; } }
                     p.ox += (wx - p.ox) * .14; p.oy += (wy - p.oy) * .14;
-                    x = tx + p.ox + Math.sin(now * .0016 + p.ph) * .35; y = ty + p.oy + Math.cos(now * .0013 + p.ph) * .35;
-                    if (Math.abs(x - sweep) < 12 && b < 3) b++;
+                    x = tx + p.ox; y = ty + p.oy;
                 }
                 p.x = x; p.y = y;
+                s *= p.k; paths[p.b].rect(x - s / 2, y - s / 2, s, s);
             }
-            paths[b].rect(x - s / 2, y - s / 2, s, s);
-            if (p.spark && L.state !== 'explode') sparks.push(p);
+            for (var k = 0; k < 3; k++) { ctx.fillStyle = RED[k]; ctx.fill(paths[k]); }
         }
-        var oa = L.state !== 'explode' && now > L.formAt - 400 ? Math.min(1, (now - L.formAt + 400) / 900) : 0;
-        if (L.state !== 'explode' && now > L.formAt && !glowCv) buildGlow();
-        if (glowCv) {
-            var ga = L.state === 'explode' ? alpha : Math.min(1, (now - L.formAt) / 700), gsz = sz * 1.3;
-            ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * .55;
-            ctx.drawImage(glowCv, L.cx - gsz / 2, L.cy - gsz / 2, gsz, gsz);
-            ctx.globalCompositeOperation = 'source-over';
+        drawOrbit(now, true);
+    }
+    function drawDust(now) {
+        var L = LOGO, el = now - L.t0, path = new Path2D(), fade = new Path2D(), s = small ? 1.5 : 1.6, alive = 0, motes = [];
+        for (var i = 0; i < L.parts.length; i++) {
+            var p = L.parts[i], t = Math.min(1, el / p.du2);
+            if (!p.keep && t >= 1) continue;
+            var e = easeOut3(t), x, y;
+            if (t < 1) { x = p.fx + (p.dx - p.fx) * e; y = p.fy + (p.dy - p.fy) * e; }
+            else {
+                p.dx += p.vx; p.dy += p.vy;
+                if (p.dx < -4) p.dx = W + 4; if (p.dx > W + 4) p.dx = -4; if (p.dy < -4) p.dy = H + 4; if (p.dy > H + 4) p.dy = -4;
+                x = p.dx; y = p.dy;
+            }
+            (p.keep ? path : fade).rect(x - s / 2, y - s / 2, s, s); alive++;
+            if (p.keep && p.mote) motes.push(x, y);
         }
-        if (oa) drawOrbit(now, false, oa);
-        ctx.globalAlpha = alpha;
-        for (var k = 0; k < 4; k++) { ctx.fillStyle = BUCKET[k]; ctx.fill(paths[k]); }
-        // twinkling sparks
-        for (var q = 0; q < sparks.length; q++) {
-            var sp = sparks[q], tw = Math.sin(now * .003 + sp.ph * 3);
-            if (tw > .55) { var g = 5 + (tw - .55) * 18; ctx.globalAlpha = alpha * (tw - .55) * 2; ctx.drawImage(spW, sp.x - g / 2, sp.y - g / 2, g, g); }
-        }
-        if (oa) drawOrbit(now, true, oa);
+        var ka = Math.max(.6, 1 - el / 4000);
+        ctx.globalAlpha = ka; ctx.fillStyle = RED[2]; ctx.fill(path);
+        ctx.globalAlpha = ka * .55;
+        for (var m = 0; m < motes.length; m += 2) ctx.drawImage(spP, motes[m] - 7, motes[m + 1] - 7, 14, 14);
+        var fa = Math.max(0, 1 - el / 3600); if (fa) { ctx.globalAlpha = fa; ctx.fillStyle = RED[0]; ctx.fill(fade); }
         ctx.globalAlpha = 1;
+        if (!alive) L.state = 'gone';
     }
 
     size();
@@ -289,7 +303,6 @@
         requestAnimationFrame(frame);
         if (document.hidden) return;
         ctx.clearRect(0, 0, W, H);
-        var warping = now < warpUntil, wp = warping ? (now - warpStart) / (warpUntil - warpStart) : 1;
         // stars: three brightness batches, slow drift, twinkle
         var sp3 = [new Path2D(), new Path2D(), new Path2D()];
         for (var i = 0; i < stars.length; i++) {
@@ -298,29 +311,10 @@
             var tw = Math.sin(now * .001 * s.sp + s.ph), lv = tw > .45 ? 2 : tw > -.3 ? 1 : 0;
             sp3[lv].rect(s.x, s.y, s.r, s.r);
         }
-        ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill(sp3[0]);
-        ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fill(sp3[1]);
-        ctx.fillStyle = 'rgba(255,250,245,.95)'; ctx.fill(sp3[2]);
+        ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fill(sp3[0]);
+        ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fill(sp3[1]);
+        ctx.fillStyle = 'rgba(255,250,245,.8)'; ctx.fill(sp3[2]);
         drawLogo(now);
-        // hyperspace streaks (two batched paths)
-        if (warping && !reduce && wp < .72) for (var n = 0; n < (small ? 3 : 8); n++) {
-            var ang = Math.random() * 6.283, d0 = 30 + Math.random() * 60;
-            streaks.push({ x: W / 2 + Math.cos(ang) * d0, y: H * .45 + Math.sin(ang) * d0, a: ang, v: 2.5 + Math.random() * 3.5, l: 0, c: Math.random() < .55 });
-        }
-        if (streaks.length) {
-            var pathC = new Path2D(), pathW = new Path2D();
-            for (var j = streaks.length - 1; j >= 0; j--) {
-                var st = streaks[j];
-                st.v *= 1.06; st.l = Math.min(200, st.l + st.v * .8);
-                st.x += Math.cos(st.a) * st.v; st.y += Math.sin(st.a) * st.v;
-                if (st.x < -260 || st.x > W + 260 || st.y < -260 || st.y > H + 260) { streaks.splice(j, 1); continue; }
-                var pth = st.c ? pathC : pathW;
-                pth.moveTo(st.x, st.y); pth.lineTo(st.x - Math.cos(st.a) * st.l, st.y - Math.sin(st.a) * st.l);
-            }
-            ctx.lineWidth = small ? 1.2 : 1.5;
-            ctx.strokeStyle = rgba(PC, .55); ctx.stroke(pathC);
-            ctx.strokeStyle = 'rgba(255,245,238,.45)'; ctx.stroke(pathW);
-        }
         // confetti
         for (var q = confetti.length - 1; q >= 0; q--) {
             var p = confetti[q];
@@ -377,15 +371,17 @@
     (async function intro() {
         await warpGone; await wait(arrivedByWarp ? 260 : 150);
         body.classList.add('s1'); setHud('BOOTING');
-        await logoReady;
-        var formIn = startLogo();                       // particles swirl in and assemble the logo
+        var mark = await Promise.all([logoReady, markReady]).then(function (r) { return r[1]; });
+        var formIn = startLogo(mark);                   // particles swirl in and assemble the NX
         await wait(formIn ? Math.max(0, formIn - 250) : 650);
         body.classList.add('s2'); setHud('SIGNAL LOCKED');
         if (!formIn) setTimeout(function () { flash(true); }, reduce ? 0 : 1050);
         await wait(formIn ? 550 : 1300);
         body.classList.add('s3');
-        scramble(title, titleText, 900);
-        setTimeout(function () { body.classList.add('s4'); setHud('READY'); }, reduce ? 0 : 750);   // the button doesn't wait for the typing
+        title.innerHTML = Array.from(titleText).map(function (ch, i) { return '<span class="lt" style="--i:' + i + '">' + (ch === ' ' ? '&nbsp;' : ch.replace(/[<>&]/g, '')) + '</span>'; }).join('');
+        title.classList.add('split');
+        setTimeout(function () { body.classList.add('s4'); setHud('READY'); }, reduce ? 0 : 1100);  // the button doesn't wait for the typing
+        await wait(650);
         await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 34);
     })();
 
@@ -403,9 +399,7 @@
             ring.animate([{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.5, 2)' }], { duration: 700, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = function () { ring.remove(); }; }
         await wait(140);
         body.classList.add('warping'); setHud('WARP DRIVE');
-        explodeLogo();
-        doWarp(1150);
-        setTimeout(function () { flash(true); }, 520);
+        disperseLogo();
         await wait(900);
         $('#auIntro').hidden = true;
         stage.hidden = false;
@@ -666,7 +660,6 @@
         await wait(380);
         stage.hidden = true;
         ov.hidden = false; body.classList.add('entering');
-        doWarp(420);
         if (fly) {
             var to = av.getBoundingClientRect(), fr = fly.getBoundingClientRect();
             var dx = (to.left + to.width / 2) - (fr.left + fr.width / 2), dy = (to.top + to.height / 2) - (fr.top + fr.height / 2), sc = to.width / fr.width;
