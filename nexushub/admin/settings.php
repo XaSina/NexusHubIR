@@ -28,6 +28,8 @@ if (is_post()) {
         unset($save['tg_bot_token']);
         flash('توکن ربات تلگرام معتبر نبود و تغییر نکرد (شکل درست: 123456789:ABC...).', 'warn');
     }
+    // extra code boxes: page-structure tags typed in by mistake (<html>, <head>, </body> ...) would break every page
+    foreach (['head_code', 'footer_code'] as $ck) if (isset($save[$ck])) $save[$ck] = trim(preg_replace('~</?(html|head|body)\b[^>]*>|<!doctype[^>]*>~i', '', $save[$ck]));
     if (isset($save['google_verify'])) $save['google_verify'] = preg_replace('~[^A-Za-z0-9_-]~', '', preg_match('~content=["\']([^"\']+)~', $save['google_verify'], $gm) ? $gm[1] : $save['google_verify']);
     if (isset($save['robots_extra'])) $save['robots_extra'] = mb_substr(preg_replace('~[^\x20-\x7E\n]~', '', str_replace("\r", '', $save['robots_extra'])), 0, 2000);
     if (isset($save['verify_files'])) {   // file names only: letters, digits, - and _, ending in .txt / .html
