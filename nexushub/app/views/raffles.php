@@ -23,7 +23,7 @@
             <?php if ($r['status'] === 'active'): ?>
                 <span class="rf-card-meta">⏰ <?= e(raffle_left_text($st['left'])) ?> مونده · 👥 <?= fa_num((string) $st['participants']) ?><?= $st['need'] ? ' از ' . fa_num((string) $st['need']) : '' ?> نفر</span>
             <?php elseif ($r['status'] === 'drawn' && $res): ?>
-                <span class="rf-card-meta">🏆 برنده: <?= e($res[0]['name']) ?><?= count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '' ?></span>
+                <span class="rf-card-meta">🏆 برنده: <?= e(preg_replace('~\s+\S\.$~u', '', (string) $res[0]['name'])) ?><?= count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '' ?></span>
                 <span class="btn btn-ghost btn-sm">🎡 دیدن گردونه و برنده</span>
             <?php else: ?>
                 <span class="rf-card-meta"><?= e(jdate('j F Y', strtotime($r['draw_at']))) ?></span>

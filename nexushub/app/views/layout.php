@@ -248,6 +248,7 @@ $jsCfg['cart'] = $cartN;
             <ul class="f-links">
                 <li><a href="<?= e(url('archive')) ?>">همه اخبار</a></li>
                 <?php try { $rfN = (int) val("SELECT COUNT(*) FROM raffles WHERE status = 'active' OR (status = 'drawn' AND drawn_at >= DATE_SUB(?, INTERVAL result_hours HOUR))", [now()]); } catch (Throwable $e) { $rfN = 0; } if ($rfN): ?><li><a href="<?= e(url('raffle')) ?>">🎰 قرعه‌کشی</a></li><?php endif; ?>
+                <?php try { $lwN = (int) val("SELECT COUNT(*) FROM wheels WHERE audience = 'public' AND status = 'active' AND (end_at IS NULL OR end_at > ?)", [now()]); } catch (Throwable $e) { $lwN = 0; } if ($lwN): ?><li><a href="<?= e(url('wheel')) ?>">🎡 گردونه شانس</a></li><?php endif; ?>
                 <?php if ($shopOn && setting_on('shop_in_footer')): ?><li><a href="<?= e(url('shop')) ?>">🛍️ <?= e(setting('shop_menu_label', 'فروشگاه')) ?></a></li><?php if (setting_on('shop_support_on')): ?><li><a href="<?= e(url('support')) ?>">پشتیبانی فروشگاه</a></li><?php endif; ?><?php endif; ?>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>

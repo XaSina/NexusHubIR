@@ -9,10 +9,11 @@ $modeInfo = raffle_modes()[$mode];
 $open = raffle_open($r);
 $medals = ['🥇', '🥈', '🥉'];
 ?>
+<link rel="stylesheet" href="<?= e(asset('css/wheel.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/raffle.css')) ?>">
 <section class="container rf-page" id="rfPage" data-id="<?= (int) $r['id'] ?>">
 
-    <div class="rf-hero" style="<?= $r['image'] ? '--img:url(\'' . e(media_url($r['image'])) . '\')' : '' ?>">
+    <div class="rf-hero rf-in" style="<?= $r['image'] ? '--img:url(\'' . e(media_url($r['image'])) . '\')' : '' ?>">
         <div class="rf-hero-bg" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="rf-hero-in">
             <?php if ($r['image']): ?><div class="rf-hero-art"><img src="<?= e(media_url($r['image'])) ?>" alt="<?= e($r['title']) ?>"></div><?php endif; ?>
@@ -29,25 +30,18 @@ $medals = ['🥇', '🥈', '🥉'];
 
     <div class="rf-prizes">
         <?php foreach ($prizes as $i => $p): ?>
-        <div class="rf-prize" style="--i:<?= $i ?>"><span class="rf-medal"><?= $medals[$i] ?? '🏅' ?></span><span class="rf-pz-emoji"><?= e($p['emoji'] ?? '🎁') ?></span><b><?= e($p['title']) ?></b><small>جایزه‌ی نفر <?= e(['اول', 'دوم', 'سوم', 'چهارم', 'پنجم', 'ششم', 'هفتم', 'هشتم', 'نهم', 'دهم'][$i] ?? fa_num((string) ($i + 1))) ?></small></div>
+        <div class="rf-prize rf-in" style="--i:<?= $i ?>;--d:<?= $i + 2 ?>"><span class="rf-medal"><?= $medals[$i] ?? '🏅' ?></span><span class="rf-pz-emoji"><?= e($p['emoji'] ?? '🎁') ?></span><b><?= e($p['title']) ?></b><small>جایزه‌ی نفر <?= e(['اول', 'دوم', 'سوم', 'چهارم', 'پنجم', 'ششم', 'هفتم', 'هشتم', 'نهم', 'دهم'][$i] ?? fa_num((string) ($i + 1))) ?></small></div>
         <?php endforeach; ?>
     </div>
 
     <div class="rf-grid">
         <div class="rf-main">
-            <div class="rf-wheel-card glass">
+            <div class="rf-wheel-card glass rf-in" style="--d:3">
                 <div class="rf-wheel-head"><b>🎡 گردونه‌ی قرعه‌کشی</b><span id="rfLive" class="rf-live" hidden><i></i> زنده</span></div>
-                <div class="rf-wheel-wrap" id="rfWheelWrap">
-                    <div class="rf-lights" aria-hidden="true"></div>
-                    <div class="rf-pointer" id="rfPointer" aria-hidden="true"></div>
-                    <div class="rf-disc" id="rfDisc"></div>
-                    <div class="rf-hub"><img src="<?= e(logo_url()) ?>" alt=""></div>
-                    <canvas class="rf-confetti" id="rfConfetti" aria-hidden="true"></canvas>
-                    <div class="rf-winner" id="rfWinner" hidden></div>
-                </div>
+                <div class="nxw" id="rfWheelWrap" data-logo="<?= e(logo_url()) ?>"></div>
                 <p class="rf-wheel-note" id="rfWheelNote"></p>
                 <div class="rf-results" id="rfResults"></div>
-                <button type="button" class="btn btn-ghost btn-sm rf-replay" id="rfReplay" hidden>▶ پخش دوباره‌ی قرعه‌کشی</button>
+                <button type="button" class="rf-replay" id="rfReplay" hidden><span class="rf-replay-ic">▶</span> پخش دوباره‌ی قرعه‌کشی</button>
             </div>
             <?php if (trim((string) $r['description']) !== ''): ?>
             <div class="rf-desc glass"><h3><?= icon('info', 18) ?> توضیحات و قوانین</h3><div class="prose"><?= nl2br(e($r['description'])) ?></div></div>
@@ -55,7 +49,7 @@ $medals = ['🥇', '🥈', '🥉'];
         </div>
 
         <aside class="rf-side">
-            <div class="rf-act glass" id="rfAct">
+            <div class="rf-act glass rf-in" id="rfAct" style="--d:4">
                 <?php if (!$me && $open): ?>
                     <h3>شرکت در قرعه‌کشی</h3>
                     <p class="muted">برای شرکت باید عضو سایت باشی. ثبت‌نام کمتر از یک دقیقه طول می‌کشه.</p>
@@ -82,7 +76,7 @@ $medals = ['🥇', '🥈', '🥉'];
                 <div id="rfMine"></div>
             </div>
 
-            <div class="rf-how glass">
+            <div class="rf-how glass rf-in" style="--d:5">
                 <h3>📜 روش قرعه‌کشی</h3>
                 <ul>
                     <?php if ($mode === 'free'): ?>
@@ -101,7 +95,7 @@ $medals = ['🥇', '🥈', '🥉'];
                 </ul>
             </div>
 
-            <div class="rf-people glass">
+            <div class="rf-people glass rf-in" style="--d:6">
                 <h3>👥 شرکت‌کننده‌ها <small id="rfPeopleN"></small></h3>
                 <div id="rfPeople" class="rf-plist"></div>
             </div>
@@ -109,4 +103,5 @@ $medals = ['🥇', '🥈', '🥉'];
     </div>
 </section>
 <script>window.NX_RAFFLE = <?= json_encode($state + ['price' => (int) $r['ticket_price'], 'cap' => (int) $r['max_tickets_user'], 'invite' => $me && $mode === 'referral' ? raffle_url($r) . '?ref=' . rawurlencode($me['member_code']) : '', 'logged' => (bool) $me, 'prizes' => $prizes, 'bonusPct' => (float) $r['ticket_bonus'], 'maxRef' => (int) $r['max_referrals'], 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time(), 'resultLive' => raffle_result_live($r), 'show' => !empty($_GET['show'])], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
+<script src="<?= e(asset('js/wheel.js')) ?>" defer></script>
 <script src="<?= e(asset('js/raffle.js')) ?>" defer></script>

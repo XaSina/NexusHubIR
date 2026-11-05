@@ -263,3 +263,11 @@
 }
 html.perf-safe .rfx-ring, html.perf-safe .rfx-cta::after { display: none; }
 html.perf-safe .rfx-emoji, html.perf-safe .rfx-dot { animation: none; }
+
+/* promo box: a little turning wheel as the art */
+.rfx-art-wheel .rfx-mini { position: relative; z-index: 1; width: 78%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle, #0b0c16 0 16%, transparent 17%), repeating-conic-gradient(var(--nxp) 0 30deg, #141629 30deg 60deg, color-mix(in srgb, var(--nxp) 50%, #ffd23f) 60deg 90deg, #1d1f3a 90deg 120deg);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.85), 0 0 14px rgba(var(--nxp-rgb), .8); animation: lwMini 6s linear infinite; }
+@keyframes lwMini { to { transform: rotate(360deg); } }
+.rfx-how { font-size: .74rem; color: var(--muted); }
+html.perf-safe .rfx-art-wheel .rfx-mini { animation: none; }

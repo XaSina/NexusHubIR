@@ -199,6 +199,28 @@ switch ($seg[1] ?? '') {
         $r = row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
         json_out(['ok' => true] + raffle_state($r, $me));
 
+    /* ---------- lucky wheel ---------- */
+    case 'wheel-state':
+    case 'wheel-spin':
+        $w = row("SELECT * FROM wheels WHERE id = ? AND audience = 'public'", [(int) ($_POST['id'] ?? 0)]);
+        if (!$w || ($w['status'] !== 'active' && !current_user())) json_out(['ok' => false, 'error' => 'گردونه پیدا نشد.'], 404);
+        $me = current_member();
+        if ($seg[1] === 'wheel-spin') {
+            if (!$me) {
+                $_SESSION['after_login'] = 'wheel/' . $w['slug'];
+                json_out(['ok' => false, 'login' => true, 'url' => url('auth'), 'error' => 'برای چرخوندن اول وارد حسابت شو یا ثبت‌نام کن.'], 401);
+            }
+            if (microtime(true) - (float) ($_SESSION['last_wheel_spin'] ?? 0) < 4) json_out(['ok' => false, 'error' => 'گردونه هنوز داره می‌چرخه…'], 429);
+            wheel_track_ref($w, $me);
+            $res = wheel_spin($w, $me);
+            if (!$res['ok']) json_out($res, 422);
+            $_SESSION['last_wheel_spin'] = microtime(true);
+            $w = row('SELECT * FROM wheels WHERE id = ?', [$w['id']]);
+            json_out($res + ['state' => wheel_state($w, $me)]);
+        }
+        wheel_track_ref($w, $me);
+        json_out(['ok' => true] + wheel_state($w, $me));
+
     case 'auth-register':
         if (!setting_on('members_register')) json_out(['ok' => false, 'error' => 'ثبت‌نام در حال حاضر غیرفعال است.'], 403);
         if (!empty($_POST['website'])) json_out(['ok' => false, 'error' => 'درخواست نامعتبر.'], 422); // honeypot

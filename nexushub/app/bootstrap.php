@@ -44,6 +44,7 @@ require NX_APP . '/shop.php';
 require NX_APP . '/market.php';
 require NX_APP . '/seo.php';
 require NX_APP . '/raffle.php';
+require NX_APP . '/wheel.php';
 
 nx_session_start();
 

@@ -135,10 +135,32 @@ $bonus = (string) (float) $r['ticket_bonus'];
                 <p class="small muted" style="margin:6px 0 0">پرداخت کارت‌به‌کارت با کارت تنظیمات فروشگاه؛ خریدار فیش رو آپلود می‌کنه و تو تأییدش می‌کنی. شماره‌ی تیکت‌ها به ترتیب تأیید داده می‌شه.</p>
             </div>
         </div>
+        <div class="card">
+            <div class="card-head"><h3>📣 کادر تبلیغ روی سایت</h3><small class="muted">یه تم انتخاب کن — پیش‌نمایش‌ها زنده‌ان</small></div>
+            <div class="rf-boxrow">
+                <?= f_switch('box_on', 'نمایش کادر روی سایت', (bool) $r['box_on'], 'با شمارش معکوس و تعداد شرکت‌کننده‌ها') ?>
+                <label class="af"><span class="af-label">کجای سایت؟ (چند مورد)</span>
+                    <select name="box_places[]" multiple data-multi data-placeholder="هیچ جایی انتخاب نشده">
+                        <?php foreach (shop_banner_places() as $k => $nm): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($nm) ?></option><?php endforeach; ?>
+                    </select></label>
+                <?= f_color('box_accent', 'رنگ کادر', (string) ($r['box_accent'] ?: setting('color_primary', '#ff1f3d'))) ?>
+            </div>
+            <div class="theme-gallery rf-gallery" id="rfGallery">
+                <?php $sampleSt = ['participants' => max(1, (int) round((int) $r['min_participants'] * .6)), 'need' => (int) $r['min_participants'], 'sold' => max(1, (int) round((int) $r['min_tickets'] * .6)), 'need_tickets' => (int) $r['min_tickets']];
+                foreach (ad_themes() as $k => $t): ?>
+                    <label class="theme-opt">
+                        <input type="radio" name="box_theme" value="<?= e($k) ?>" <?= $r['box_theme'] === $k ? 'checked' : '' ?>>
+                        <?= raffle_box_html(['box_theme' => $k, 'status' => 'active', 'prizes' => json_encode($prizes, JSON_UNESCAPED_UNICODE)] + $r, $sampleSt, true) ?>
+                        <div class="t-name"><b><?= e($t['name']) ?></b><small><?= e($t['desc']) ?></small></div>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        </div>
     </div>
 
     <div>
-        <div class="card rf-sticky">
+        <div class="rf-sticky">
+        <div class="card">
             <div class="card-head"><h3>⏰ زمان و وضعیت</h3></div>
             <?= f_jdate('draw_at', 'زمان برگزاری (شمسی)', $r['draw_at'], 'سر همین ساعت گردونه روی سایت زنده می‌چرخه') ?>
             <?php if (!$locked): ?><?= f_select('status', 'وضعیت', ['draft' => 'پیش‌نویس (فقط خودت می‌بینی)', 'active' => 'فعال — مردم می‌تونن شرکت کنن', 'cancelled' => 'لغو شده'], $r['status']) ?><?php endif; ?>
@@ -147,32 +169,16 @@ $bonus = (string) (float) $r['ticket_bonus'];
             <?= $chips('result_hours', ['0' => 'نه', '6' => '۶ ساعت', '24' => '۱ روز', '72' => '۳ روز', '168' => '۱ هفته'], (string) (int) ($r['result_hours'] ?? 24)) ?>
             <small class="af-hint">تو این مدت کادر «برنده مشخص شد» روی سایت می‌مونه و گردونه برای هر کی وارد صفحه بشه خودکار می‌چرخه.</small>
         </div>
+        <div class="card rf-savecard">
+            <div class="rf-save-head"><span class="rf-save-ic">🎰</span><div><b><?= $r['id'] ? 'ذخیره‌ی تغییرات' : 'ساخت قرعه‌کشی' ?></b><small>وضعیت فعلی: <?= e(['draft' => '📝 پیش‌نویس', 'active' => '🟢 فعال', 'cancelled' => '⛔ لغو شده', 'drawn' => '🏆 برگزار شده', 'failed' => 'ℹ️ برگزار نشد'][$r['status']] ?? $r['status']) ?></small></div></div>
+            <button class="rf-save" type="submit"><span class="rf-save-check"><?= icon('check', 18) ?></span><span><?= $r['id'] ? 'ذخیره و اعمال روی سایت' : 'ساخت و ذخیره' ?></span></button>
+            <a class="rf-back" href="raffles.php">→ بازگشت به لیست قرعه‌کشی‌ها</a>
+        </div>
+        </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-head"><h3>📣 کادر تبلیغ روی سایت</h3><small class="muted">یه تم انتخاب کن — پیش‌نمایش‌ها زنده‌ان</small></div>
-    <div class="rf-boxrow">
-        <?= f_switch('box_on', 'نمایش کادر روی سایت', (bool) $r['box_on'], 'با شمارش معکوس و تعداد شرکت‌کننده‌ها') ?>
-        <label class="af"><span class="af-label">کجای سایت؟ (چند مورد)</span>
-            <select name="box_places[]" multiple data-multi data-placeholder="هیچ جایی انتخاب نشده">
-                <?php foreach (shop_banner_places() as $k => $nm): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($nm) ?></option><?php endforeach; ?>
-            </select></label>
-        <?= f_color('box_accent', 'رنگ کادر', (string) ($r['box_accent'] ?: setting('color_primary', '#ff1f3d'))) ?>
-    </div>
-    <div class="theme-gallery rf-gallery" id="rfGallery">
-        <?php $sampleSt = ['participants' => max(1, (int) round((int) $r['min_participants'] * .6)), 'need' => (int) $r['min_participants'], 'sold' => max(1, (int) round((int) $r['min_tickets'] * .6)), 'need_tickets' => (int) $r['min_tickets']];
-        foreach (ad_themes() as $k => $t): ?>
-            <label class="theme-opt">
-                <input type="radio" name="box_theme" value="<?= e($k) ?>" <?= $r['box_theme'] === $k ? 'checked' : '' ?>>
-                <?= raffle_box_html(['box_theme' => $k, 'status' => 'active', 'prizes' => json_encode($prizes, JSON_UNESCAPED_UNICODE)] + $r, $sampleSt, true) ?>
-                <div class="t-name"><b><?= e($t['name']) ?></b><small><?= e($t['desc']) ?></small></div>
-            </label>
-        <?php endforeach; ?>
-    </div>
-</div>
 <input type="hidden" name="box_places[]" value="">
-<div class="sticky-save"><button class="abtn abtn-primary" type="submit"><?= icon('check', 18) ?> ذخیره</button><a class="abtn" href="raffles.php">بازگشت</a></div>
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

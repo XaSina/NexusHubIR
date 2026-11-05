@@ -1,0 +1,88 @@
+/* NEXUS | HUB — shared prize wheel (raffles, lucky wheel, panel). Follows the site theme colours:
+   neon rim in primary → secondary, chasing light beads, glass slices, jewelled pointer.
+   The disc only gets a compositor layer while it spins, so names stay sharp when it stops. */
+.nxw { --nxw-glow: rgba(var(--primary-rgb), .55); position: relative; width: min(100%, 500px); aspect-ratio: 1; margin: 18px auto 8px; isolation: isolate; user-select: none; -webkit-user-select: none; }
+.nxw-aura { position: absolute; inset: -12%; z-index: -1; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(var(--primary-rgb), .32), rgba(var(--secondary-rgb), .12) 62%, transparent 78%); }
+.nxw-aura::after { content: ""; position: absolute; inset: 0; border-radius: 50%; opacity: .55;
+    background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.06) 0 5deg, transparent 5deg 15deg);
+    -webkit-mask: radial-gradient(closest-side, transparent 52%, #000 64%, transparent 100%); mask: radial-gradient(closest-side, transparent 52%, #000 64%, transparent 100%);
+    animation: nxwRays 50s linear infinite; }
+@keyframes nxwRays { to { transform: rotate(360deg); } }
+/* rim: neon gradient ring with an inner bevel */
+.nxw-rim { position: absolute; inset: 1.2%; border-radius: 50%;
+    background: conic-gradient(from 0deg, var(--primary), var(--secondary), color-mix(in srgb, var(--primary) 60%, #fff), var(--secondary), var(--primary));
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,.18), 0 0 0 5px rgba(5,6,14,.9), 0 0 38px -4px var(--nxw-glow), 0 26px 60px -20px rgba(0,0,0,.85); }
+.nxw-rim::before { content: ""; position: absolute; inset: 1.4%; border-radius: 50%; background: linear-gradient(160deg, #1a1d33, #07080f 55%, #141729); box-shadow: inset 0 2px 0 rgba(255,255,255,.12), inset 0 -2px 6px rgba(0,0,0,.6); }
+.nxw-rim::after { content: ""; position: absolute; inset: 6.4%; border-radius: 50%; background: #04050b; box-shadow: 0 0 0 1.5px rgba(var(--primary-rgb), .85), 0 0 14px rgba(var(--primary-rgb), .55), inset 0 0 0 1px rgba(0,0,0,.8); }
+.nxw-bulbs { position: absolute; inset: 0; z-index: 1; }
+.nxw-bulbs { container-type: size; }
+.nxw-bulbs i { position: absolute; left: 50%; top: 50%; width: 2.2%; aspect-ratio: 1; border-radius: 50%; }
+.nxw-bulbs i { transform: translate(-50%, -50%) rotate(var(--a)) translateY(-46.8cqh); background: radial-gradient(circle at 35% 35%, #fff, color-mix(in srgb, var(--primary) 35%, #fff) 45%, var(--primary) 80%);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.55); animation: nxwChase 1.6s linear infinite; animation-delay: calc(var(--k) * -.05s); }
+@keyframes nxwChase { 0%, 100% { opacity: 1; box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 9px 2px rgba(var(--primary-rgb), .95); } 40%, 80% { opacity: .35; box-shadow: 0 0 0 1px rgba(0,0,0,.55); } }
+.nxw-spinning .nxw-bulbs i { animation-duration: .5s; }
+/* disc */
+.nxw-disc { position: absolute; z-index: 2; inset: 8.2%; border-radius: 50%; transform: rotate(0deg); backface-visibility: hidden; }
+.nxw-disc svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.nxw-idle .nxw-disc { animation: nxwIdle 90s linear infinite; }
+@keyframes nxwIdle { to { transform: rotate(360deg); } }
+.nxw-lines line { stroke: rgba(255,255,255,.5); stroke-width: .55; }
+.nxw-dense .nxw-lines line { stroke-width: .18; stroke: rgba(255,255,255,.22); }
+.nxw-edge { stroke: rgba(255,255,255,.22); stroke-width: .8; }
+.nxw-ticks circle { fill: #fff; opacity: .85; }
+.nxw-core { fill: rgba(0,0,0,.45); }
+.nxw-t { font-family: Vazirmatn, Tahoma, sans-serif; font-weight: 800; fill: #fff; direction: rtl; unicode-bidi: plaintext; letter-spacing: 0;
+    paint-order: stroke fill; stroke: rgba(0,0,0,.55); stroke-width: .9px; stroke-linejoin: round; }
+.nxw-em { font-weight: 400; }
+.nxw-seg path, .nxw-seg circle { transition: filter .35s ease, opacity .35s ease; }
+.nxw-has-win .nxw-seg:not(.win) path, .nxw-has-win .nxw-seg:not(.win) circle { opacity: .45; }
+.nxw-has-win .nxw-t:not(.win) { opacity: .5; }
+.nxw-seg.win path, .nxw-seg.win circle { filter: brightness(1.35) saturate(1.25); stroke: #fff; stroke-width: 1.6; }
+.nxw-t.win { fill: #fff; }
+/* glass: a fixed reflection, it does not turn with the disc */
+.nxw-glass { position: absolute; z-index: 3; inset: 8.2%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(120% 75% at 28% 6%, rgba(255,255,255,.26), rgba(255,255,255,.05) 36%, transparent 52%), radial-gradient(closest-side, transparent 80%, rgba(0,0,0,.45));
+    box-shadow: inset 0 0 24px rgba(0,0,0,.6); }
+/* pointer */
+.nxw-pointer { position: absolute; z-index: 5; top: -3%; left: 50%; width: 11.5%; min-width: 38px; aspect-ratio: 44 / 60; transform: translateX(-50%); transform-origin: 50% 35%;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(var(--primary-rgb), .6)); }
+.nxw-pointer svg { display: block; width: 100%; height: 100%; }
+.nxw-pointer.tick { animation: nxwTick .14s ease-out; }
+@keyframes nxwTick { 45% { transform: translateX(-50%) rotate(-15deg); } }
+/* hub */
+.nxw-hub { position: absolute; z-index: 4; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; padding: 4%;
+    background: conic-gradient(from 210deg, var(--primary), var(--secondary), var(--primary)); box-shadow: 0 10px 28px rgba(0,0,0,.65), 0 0 0 2px rgba(0,0,0,.7), 0 0 24px -2px rgba(var(--primary-rgb), .7); }
+.nxw-hub img, .nxw-hub b { position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #06070d; box-shadow: 0 0 0 2px #06070d, inset 0 0 10px #000; font-size: 1.8rem; }
+.nxw-hub::after { content: ""; position: absolute; z-index: 2; inset: 4%; border-radius: 50%; pointer-events: none; background: radial-gradient(90% 55% at 35% 12%, rgba(255,255,255,.32), transparent 60%); }
+.nxw-hub-ring { position: absolute; inset: -9%; border-radius: 50%; border: 1.5px solid rgba(var(--primary-rgb), .55); opacity: 0; }
+.nxw-spinning .nxw-hub-ring { animation: nxwPulse 1s ease-out infinite; }
+@keyframes nxwPulse { 0% { opacity: .9; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.25); } }
+/* winner card over the wheel */
+.nxw-winner { position: absolute; z-index: 6; left: 50%; top: 50%; width: min(90%, 340px); padding: 22px 18px 18px; border-radius: 22px; text-align: center; transform: translate(-50%, -50%) scale(.6); opacity: 0;
+    background: linear-gradient(160deg, rgba(var(--primary-rgb), .22), rgba(var(--secondary-rgb), .14)), rgb(var(--surface-rgb, 16,18,30));
+    border: 1px solid rgba(255,255,255,.14); box-shadow: 0 0 0 1px rgba(var(--primary-rgb), .5), 0 26px 70px rgba(0,0,0,.7), 0 0 50px -10px rgba(var(--primary-rgb), .8);
+    transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .3s ease; }
+.nxw-winner.in { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.nxw-winner .w-medal { display: block; font-size: 2.8rem; line-height: 1.1; animation: nxwBob 1.6s ease-in-out infinite; }
+@keyframes nxwBob { 50% { transform: translateY(-5px) rotate(-4deg); } }
+.nxw-winner small { display: block; font-size: .78rem; color: var(--muted, #aab); }
+.nxw-winner b { display: block; margin: 6px 0 4px; font-size: 1.45rem; line-height: 1.5; color: #fff;
+    background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--primary) 55%, #fff), #fff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nxwShine 2.4s linear infinite; }
+@keyframes nxwShine { to { background-position: 200% 0; } }
+.nxw-winner .w-prize { margin-top: 6px; padding: 6px 12px; display: inline-block; border-radius: 12px; font-weight: 800; color: #ffd23f; background: rgba(255,210,63,.1); border: 1px solid rgba(255,210,63,.35); }
+.nxw-winner .w-code { margin-top: 10px; display: flex; gap: 6px; justify-content: center; direction: ltr; }
+.nxw-winner .w-code code { padding: 6px 12px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; background: rgba(255,255,255,.08); border: 1px dashed rgba(255,255,255,.35); color: #fff; }
+/* full-screen confetti */
+.nxw-party { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 99990; pointer-events: none; }
+.theme-light .nxw-rim::before { background: linear-gradient(160deg, #2a2e4a, #0d0f1c 55%, #23263f); }
+@media (max-width: 600px) { .nxw { width: min(100%, 360px); } .nxw-winner { padding: 16px 12px 14px; } .nxw-winner b { font-size: 1.2rem; } }
+/* light performance modes: nothing loops; the spin itself still runs */
+html.perf-safe .nxw-aura::after { display: none; }
+html.perf-safe .nxw-bulbs i { animation: none; opacity: .9; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+html.perf-safe .nxw-spinning .nxw-bulbs i:nth-child(odd) { animation: nxwBlink .5s steps(1) infinite; }
+@keyframes nxwBlink { 50% { opacity: .3; } }
+html.perf-safe .nxw-rim { box-shadow: 0 0 0 1.5px rgba(255,255,255,.18), 0 0 0 5px rgba(5,6,14,.9); }
+html.perf-safe .nxw-pointer { filter: none; }
+html.perf-safe .nxw-winner .w-medal, html.perf-safe .nxw-winner b, html.perf-safe .nxw-idle .nxw-disc { animation: none; }
+html.perf-safe .nxw-winner b { background: none; color: #fff; }

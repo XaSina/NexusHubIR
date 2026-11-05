@@ -357,7 +357,7 @@ function raffle_box_html(array $r, ?array $st = null, bool $preview = false): st
         . '</span>';
     if ($drawn) {
         $res = json_decode((string) ($r['results'] ?? ''), true) ?: [];
-        $who = $res ? $res[0]['name'] . (count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '') : '';
+        $who = $res ? preg_replace('~\s+\S\.$~u', '', (string) $res[0]['name']) . (count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '') : '';
         $tag = '<span class="rfx-tag rfx-done">🏆 برگزار شد</span>';
         $mid = '<span class="rfx-win"><small>برنده</small><b>' . e($who ?: '—') . '</b></span>';
         $side = '<span class="rfx-cta">🎡 دیدن گردونه ' . icon('arrow-left', 15) . '</span>';
@@ -419,7 +419,7 @@ function raffle_state(array $r, ?array $me, bool $admin = false): array
     return [
         'id' => (int) $r['id'], 'status' => $r['status'], 'mode' => $r['mode'], 'left' => $st['left'], 'draw_at' => date('c', strtotime($r['draw_at'])),
         'participants' => $st['participants'], 'need' => $st['need'], 'sold' => $st['sold'], 'need_tickets' => $st['need_tickets'],
-        'results' => array_map(fn($w) => ['prize' => $w['prize'], 'name' => $admin ? ($w['full'] ?? $w['name']) : $w['name'], 'ticket' => $w['ticket'] ?? null, 'chance' => $w['chance'] ?? 0, 'me' => $me && (int) $w['member_id'] === (int) $me['id']],
+        'results' => array_map(fn($w) => ['prize' => $w['prize'], 'name' => $admin ? ($w['full'] ?? $w['name']) : ($st['pool'][(int) $w['member_id']]['name'] ?? preg_replace('~\s+\S\.$~u', '', (string) $w['name'])), 'ticket' => $w['ticket'] ?? null, 'chance' => $w['chance'] ?? 0, 'me' => $me && (int) $w['member_id'] === (int) $me['id']],
             json_decode((string) ($r['results'] ?? ''), true) ?: []),
         'wheel' => raffle_wheel($r, $st['pool'], $admin),
         'admin' => $admin,

@@ -17,6 +17,7 @@ function adm_icon(string $name, int $size = 20): string
         'dashboard' => '<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>',
         'posts' => '<path d="M4 4h12l4 4v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 14h8M8 18h5"/>',
         'plus' => '<path d="M12 5v14M5 12h14"/>',
+        'wheel' => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M12 14v7M3 12h7M14 12h7M5.6 5.6l5 5M13.4 13.4l5 5M18.4 5.6l-5 5M10.6 13.4l-5 5"/>',
         'folder' => '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
         'image' => '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
         'ads' => '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/>',
@@ -54,6 +55,7 @@ function adm_nav(): array
     $toReview = (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')");
     $openT = (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'");
     try { $raffleReq = (int) val("SELECT COUNT(*) FROM raffle_requests WHERE status = 'pending'"); } catch (Throwable $e) { $raffleReq = 0; }
+    try { $wheelTodo = (int) val("SELECT COUNT(*) FROM wheel_spins WHERE member_id IS NOT NULL AND kind = 'prize' AND status = 'new'"); } catch (Throwable $e) { $wheelTodo = 0; }
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
         ['سفارش‌ها', 'orders.php', 'orders', 'shop', 'orders', $toReview],
@@ -68,6 +70,7 @@ function adm_nav(): array
         ['استوری‌ها', 'stories.php', 'story', '*', 'stories', 0],
         ['تبلیغات', 'ads.php', 'ads', '*', 'ads', 0],
         ['قرعه‌کشی', 'raffles.php', 'gift', '*', 'raffles', $raffleReq],
+        ['گردونه شانس', 'wheels.php', 'wheel', '*', 'wheels', $wheelTodo],
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
         ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],

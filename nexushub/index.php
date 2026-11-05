@@ -454,6 +454,31 @@ switch ($seg[0] ?? '') {
         ]);
         break;
 
+    /* ======================= Lucky wheel ======================= */
+    case 'wheel':
+        track_visit();
+        $slug = (string) ($seg[1] ?? '');
+        if ($slug === '') {
+            $list = array_values(array_filter(rows("SELECT * FROM wheels WHERE audience = 'public' AND status = 'active' ORDER BY id DESC LIMIT 30"), 'wheel_open'));
+            if (count($list) === 1) redirect('wheel/' . rawurlencode($list[0]['slug']));
+            page_out('wheels', ['list' => $list, 'bodyClass' => 'page-wheels'], ['title' => 'گردونه شانس | ' . setting('site_title'),
+                'description' => 'گردونه شانس ' . setting('site_title') . ' — بچرخون و جایزه ببر', 'url' => site_url('wheel'),
+                'crumbs' => [['خانه', site_url('')], ['گردونه شانس', site_url('wheel')]]]);
+            break;
+        }
+        $wheel = row('SELECT * FROM wheels WHERE slug = ?', [$slug]);
+        if (!$wheel || $wheel['audience'] !== 'public' || ($wheel['status'] !== 'active' && !current_user())) not_found();
+        if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['wheel_ref'][(int) $wheel['id']] = (string) $_GET['ref'];
+        wheel_track_ref($wheel, current_member());
+        page_out('wheel', ['wheel' => $wheel, 'bodyClass' => 'page-wheel'], [
+            'title' => $wheel['title'] . ' | گردونه شانس ' . setting('site_title'),
+            'description' => '🎡 بچرخون و جایزه ببر: ' . implode('، ', array_slice(array_column(array_filter(wheel_items($wheel), fn($it) => $it['kind'] === 'prize'), 'label'), 0, 4)) . ' — ' . str_excerpt((string) $wheel['description'], 180),
+            'image' => $wheel['image'] && !str_ends_with(strtolower((string) $wheel['image']), '.svg') ? site_url($wheel['image']) : '',
+            'url' => site_url('wheel/' . rawurlencode($wheel['slug'])), 'noindex' => $wheel['status'] !== 'active',
+            'crumbs' => [['خانه', site_url('')], ['گردونه شانس', site_url('wheel')], [$wheel['title'], site_url('wheel/' . rawurlencode($wheel['slug']))]],
+        ]);
+        break;
+
     case 'sitemap.xml':
         header('Content-Type: application/xml; charset=utf-8');
         echo view('sitemap');

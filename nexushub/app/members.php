@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 9;
+const NX_DB_VERSION = 10;   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
