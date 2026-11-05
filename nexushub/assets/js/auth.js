@@ -505,6 +505,12 @@
                 target = Math.min(0, visBottom - bottom0);                       // just enough: the card's bottom sits right above the keyboard
                 target = Math.max(target, visTop - top0);                        // ...but its top never goes off screen
                 target = Math.min(target, visBottom - field0);                   // the focused field always stays visible
+                if (bottom0 - top0 > visBottom - visTop) {                       // a tall card (sign-up form): don't lift, scroll the form instead
+                    target = 0;
+                    var fr = f.getBoundingClientRect();
+                    if (fr.bottom > visBottom) stage.scrollBy({ top: fr.bottom - visBottom, behavior: 'smooth' });
+                    else if (fr.top < visTop) stage.scrollBy({ top: fr.top - visTop, behavior: 'smooth' });
+                }
             }
             if (Math.abs(target - kb) > 2) { kb = Math.round(target); cardEl.style.setProperty('--kb', kb + 'px'); }
         }

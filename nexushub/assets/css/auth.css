@@ -824,3 +824,13 @@ button { cursor: pointer; border: 0; background: none; }
 .au-start.nb .nb-arrows svg:last-child { transform: translateX(160%); }
 
 *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+
+/* phones: a form taller than the screen (sign-up) scrolls inside the stage, so the submit button is always reachable.
+   `safe center` keeps short cards centred and starts tall ones at the top instead of cutting them. */
+@media (max-width: 640px) {
+    .au-stage { place-items: safe center; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+        padding: 60px 14px calc(44px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-height: 700px) and (min-width: 641px) {
+    .au-stage { place-items: safe center; overflow-y: auto; }
+}
