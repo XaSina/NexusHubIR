@@ -357,3 +357,70 @@ function smart_img(string $src, string $attrs): string
     }
     return $img;
 }
+
+/* ---------- Trust badges (e.g. Enamad, Samandehi) shown in the footer ----------
+   The admin pastes the badge's official code, or just an image address. Only <a> and <img> survive, with a
+   short list of attributes and http(s) links only; an onclick="window.open('https://…')" popup (Samandehi
+   style) becomes a normal link. referrerpolicy is kept: the issuers check the referring domain. */
+function trust_badges(): array
+{
+    $list = json_decode((string) setting('trust_badges', '[]'), true);
+    return is_array($list) ? array_values(array_filter($list, fn($b) => is_array($b) && trim((string) ($b['code'] ?? '')) !== '')) : [];
+}
+
+function trust_url_ok(string $u): bool
+{
+    return (bool) preg_match('~^https?://[^\s"\'<>]+$~i', $u);
+}
+
+function trust_badge_html(array $b): string
+{
+    $code = trim((string) ($b['code'] ?? ''));
+    $title = trim((string) ($b['title'] ?? ''));
+    $link = trim((string) ($b['link'] ?? ''));
+    if ($code === '') return '';
+    if (strpos($code, '<') === false) {                       // just an image address (and maybe a link)
+        if (!trust_url_ok($code)) return '';
+        $img = '<img src="' . e($code) . '" alt="' . e($title) . '" referrerpolicy="origin">';
+        return trust_url_ok($link) ? '<a href="' . e($link) . '" target="_blank" rel="noopener" referrerpolicy="origin" title="' . e($title) . '">' . $img . '</a>' : $img;
+    }
+    if (!class_exists('DOMDocument')) return '';
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $doc->loadHTML('<?xml encoding="UTF-8"><div id="tb">' . $code . '</div>', LIBXML_NONET);
+    libxml_clear_errors();
+    $root = $doc->getElementById('tb');
+    if (!$root) return '';
+    $allowed = ['a' => ['href', 'target', 'title', 'referrerpolicy', 'id'], 'img' => ['src', 'alt', 'title', 'referrerpolicy', 'id', 'code', 'width', 'height']];
+    $walk = function (DOMNode $n) use (&$walk, $allowed, $doc, $title): string {
+        $out = '';
+        foreach (iterator_to_array($n->childNodes) as $c) {
+            if (!($c instanceof DOMElement)) continue;
+            $tag = strtolower($c->tagName);
+            if (!isset($allowed[$tag])) { $out .= $walk($c); continue; }   // drop the wrapper, keep what is inside
+            $attrs = '';
+            $popup = '';
+            if ($c->hasAttribute('onclick') && preg_match('~(https?://[^\s"\'<>)]+)~i', $c->getAttribute('onclick'), $m)) $popup = $m[1];
+            foreach ($allowed[$tag] as $a) {
+                if (!$c->hasAttribute($a)) continue;
+                $v = trim($c->getAttribute($a));
+                if (in_array($a, ['href', 'src'], true) && !trust_url_ok($v)) continue;
+                if ($a === 'target') $v = '_blank';
+                if ($a === 'referrerpolicy' && !preg_match('~^[a-z-]+$~', $v)) continue;
+                if (in_array($a, ['width', 'height'], true) && !ctype_digit($v)) continue;
+                $attrs .= ' ' . $a . '="' . e(mb_substr($v, 0, 600)) . '"';
+            }
+            if ($tag === 'img') {
+                if (strpos($attrs, ' src=') === false) continue;
+                if (strpos($attrs, ' alt=') === false) $attrs .= ' alt="' . e($title) . '"';
+                $html = '<img' . $attrs . '>';
+                $out .= $popup !== '' && trust_url_ok($popup) ? '<a href="' . e($popup) . '" target="_blank" rel="noopener" referrerpolicy="origin">' . $html . '</a>' : $html;
+            } else {
+                $out .= '<a' . $attrs . ' rel="noopener">' . $walk($c) . '</a>';
+            }
+        }
+        return $out;
+    };
+    $html = $walk($root);
+    return strpos($html, '<img') !== false ? $html : '';
+}

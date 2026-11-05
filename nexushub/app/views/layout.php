@@ -261,6 +261,17 @@ $jsCfg['cart'] = $cartN;
             <?php if ($tgLink): ?><a class="btn btn-primary" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(telegram_handle() ?: 'کانال تلگرام') ?></a><?php endif; ?>
         </div>
     </div>
+    <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('*'); ?>
+    <?php if ($tBadges || $tAdmin): ?>
+    <div class="container f-trust">
+        <div class="f-trust-head"><span class="f-trust-ic"><?= icon('shield', 18) ?></span><b><?= e(setting('trust_title', 'نمادهای اعتماد')) ?></b></div>
+        <div class="f-trust-list">
+            <?php foreach ($tBadges as $h): ?><div class="f-trust-item"><?= $h ?></div><?php endforeach; ?>
+            <?php if (!$tBadges && $tAdmin): ?><a class="f-trust-item f-trust-empty" href="<?= e(url('admin/appearance.php')) ?>"><?= icon('plus', 20) ?><small>افزودن نماد اعتماد</small></a><a class="f-trust-item f-trust-empty" href="<?= e(url('admin/appearance.php')) ?>"><?= icon('plus', 20) ?><small>افزودن نماد</small></a><?php endif; ?>
+        </div>
+        <?php if (!$tBadges && $tAdmin): ?><small class="f-trust-note">این جای خالی فقط برای شما (مدیر) نمایش داده می‌شه.</small><?php endif; ?>
+    </div>
+    <?php endif; ?>
     <div class="container f-bottom">
         <span>© <?= jdate('Y') ?> — <?= e(setting('copyright')) ?></span>
         <span class="f-made">Designed with <span class="heart">❤</span> for NEXUS</span>

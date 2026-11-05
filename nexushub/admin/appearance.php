@@ -4,7 +4,7 @@ require_cap('*');
 
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
     'auth_logo_style', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
-    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'show_online',
+    'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
     'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin'];
 
@@ -34,6 +34,19 @@ if (is_post()) {
         $save['latest_hours'] = (string) max(1, min(24 * 90, (int) en_num($save['latest_hours'] ?? '72')));
         $save['latest_since'] = ($save['latest_since'] ?? '') !== '' ? (string) (jalali_to_datetime((string) $save['latest_since']) ?: '') : '';
     }
+    // trust badges: up to 12, each {title, code, link}; the code is cleaned again whenever it is shown
+    if (isset($save['trust_badges'])) {
+        $tb = json_decode($save['trust_badges'], true);
+        $clean = [];
+        if (is_array($tb)) foreach (array_slice($tb, 0, 12) as $b) {
+            if (!is_array($b)) continue;
+            $code = trim((string) ($b['code'] ?? ''));
+            if ($code === '') continue;
+            $clean[] = ['title' => mb_substr(trim((string) ($b['title'] ?? '')), 0, 60), 'code' => mb_substr($code, 0, 3000), 'link' => safe_link((string) ($b['link'] ?? ''))];
+        }
+        $save['trust_badges'] = json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+    if (isset($save['trust_title'])) $save['trust_title'] = mb_substr($save['trust_title'], 0, 60);
     foreach (['home_sections', 'menu'] as $jk) {
         if (isset($save[$jk])) {
             $j = json_decode($save[$jk], true);
@@ -259,6 +272,14 @@ adm_head('ظاهر سایت', 'appearance');
             <?= f_textarea('footer_text', 'متن درباره در فوتر', $s['footer_text'], ['rows' => 4]) ?>
             <?= f_text('copyright', 'متن کپی‌رایت', $s['copyright']) ?>
         </div>
+        <div class="card tb-card">
+            <div class="card-head"><h3>🛡️ نمادهای اعتماد (اینماد، ساماندهی و …)</h3></div>
+            <p class="muted small">کد رسمی نماد رو همون‌طور که سایت صادرکننده داده اینجا بچسبون، یا فقط آدرس عکس نماد رو بزن. هر چندتا که بخوای اضافه کن؛ توی فوتر کنار هم نشون داده می‌شن.</p>
+            <?= f_text('trust_title', 'عنوان بخش', (string) ($s['trust_title'] ?? 'نمادهای اعتماد')) ?>
+            <input type="hidden" name="trust_badges" id="tbData" value="<?= e((string) ($s['trust_badges'] ?? '[]')) ?>">
+            <div class="tb-list" id="tbList"></div>
+            <button type="button" class="abtn tb-add" id="tbAdd"><?= icon('plus', 16) ?> افزودن نماد</button>
+        </div>
     </div>
 </div>
 
@@ -276,6 +297,34 @@ adm_head('ظاهر سایت', 'appearance');
 </div>
 </form>
 <script>
+/* trust badges: add / remove rows, live preview of what was saved, JSON on submit */
+document.addEventListener('DOMContentLoaded', function () {
+    var list = document.getElementById('tbList'), data = document.getElementById('tbData'), prev = <?= json_encode(array_map('trust_badge_html', trust_badges()), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+    if (!list) return;
+    var n = 0;
+    function row(b, html) {
+        b = b || {}; n++;
+        var d = document.createElement('div'); d.className = 'tb-row';
+        d.innerHTML = '<div class="tb-row-head"><b>نماد ' + n + '</b><button type="button" class="abtn abtn-sm tb-del" title="حذف">✕ حذف</button></div>'
+            + '<div class="tb-row-body"><div class="tb-fields">'
+            + '<label class="tb-f"><span>نام (مثلاً اینماد)</span><input class="tb-title"></label>'
+            + '<label class="tb-f"><span>کد نماد یا آدرس عکس</span><textarea class="tb-code" rows="3" dir="ltr" placeholder="<a href=&quot;https://trustseal.enamad.ir/...&quot;><img src=&quot;...&quot;></a>"></textarea></label>'
+            + '<label class="tb-f"><span>لینک (اختیاری، فقط وقتی آدرس عکس گذاشتی)</span><input class="tb-link" dir="ltr" placeholder="https://"></label>'
+            + '</div><div class="tb-preview">' + (html || '<small>پیش‌نمایش بعد از ذخیره</small>') + '</div></div>';
+        d.querySelector('.tb-title').value = b.title || ''; d.querySelector('.tb-code').value = b.code || ''; d.querySelector('.tb-link').value = b.link || '';
+        list.appendChild(d); return d;
+    }
+    var saved = []; try { saved = JSON.parse(data.value || '[]') || []; } catch (e) {}
+    saved.forEach(function (b, i) { row(b, prev[i]); });
+    if (!saved.length) row();
+    document.getElementById('tbAdd').addEventListener('click', function () { row().querySelector('.tb-title').focus(); });
+    list.addEventListener('click', function (e) { var x = e.target.closest('.tb-del'); if (x) x.closest('.tb-row').remove(); });
+    document.getElementById('apForm').addEventListener('submit', function () {
+        data.value = JSON.stringify([].map.call(list.querySelectorAll('.tb-row'), function (r) {
+            return { title: r.querySelector('.tb-title').value.trim(), code: r.querySelector('.tb-code').value.trim(), link: r.querySelector('.tb-link').value.trim() };
+        }).filter(function (b) { return b.code; }));
+    });
+});
 document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('apForm');
     var secList = document.getElementById('secList'), menuList = document.getElementById('menuList');
