@@ -72,6 +72,7 @@ $medals = ['🥇', '🥈', '🥉'];
                 <?php else: ?>
                     <h3><?= $r['status'] === 'drawn' ? '🏆 قرعه‌کشی برگزار شد' : ($r['status'] === 'failed' ? 'ℹ️ قرعه‌کشی برگزار نشد' : ($r['status'] === 'cancelled' ? 'این قرعه‌کشی لغو شد' : '⏰ ثبت‌نام بسته شد')) ?></h3>
                     <p class="muted"><?= $r['status'] === 'failed' ? 'تعداد شرکت‌کننده‌ها به حد نصاب نرسید.' : ($r['status'] === 'drawn' ? 'نتیجه رو کنار گردونه ببین.' : 'چند لحظه دیگه گردونه می‌چرخه…') ?></p>
+                    <?php if ($r['status'] === 'drawn' && $me && $r['drawn_at']) foreach (json_decode((string) $r['results'], true) ?: [] as $w) if ((int) $w['member_id'] === (int) $me['id']) echo prize_claim_box((string) $r['drawn_at'], (string) $w['prize']); ?>
                 <?php endif; ?>
                 <div id="rfMine"></div>
             </div>
@@ -92,6 +93,7 @@ $medals = ['🥇', '🥈', '🥉'];
                     <?php endif; ?>
                     <li>اگه تا زمان برگزاری حداقل <b><?= fa_num((string) $r['min_participants']) ?></b> نفر شرکت نکنن، قرعه‌کشی برگزار نمی‌شه.</li>
                     <li>سر ساعت، گردونه همین‌جا زنده می‌چرخه و هر نفر فقط یک جایزه می‌بره.</li>
+                    <?php if (prize_claim_on()): ?><li>🏆 برنده‌ها باید تا <b><?= fa_num((string) prize_claim_hours()) ?> ساعت</b> بعد از قرعه‌کشی <?= prize_claim_ids() ? 'به ' . implode(' یا ', array_map(fn($id, $l) => '<a href="' . e($l) . '" target="_blank" rel="noopener" dir="ltr">' . e($id) . '</a>', array_keys(prize_claim_ids()), prize_claim_ids())) : 'به پشتیبانی' ?> توی تلگرام پیام بدن؛ وگرنه جایزه باطل می‌شه.</li><?php endif; ?>
                 </ul>
             </div>
 

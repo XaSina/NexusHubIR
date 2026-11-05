@@ -37,10 +37,25 @@
         if (!S.logged) { box.innerHTML = '<h3>🎟️ چرخش‌های تو</h3><p class="muted small">برای چرخوندن باید عضو سایت باشی' + (S.rules.signup ? ' — با ثبت‌نام <b>' + fa(S.rules.signup) + ' چرخش رایگان</b> می‌گیری!' : '.') + '</p><button type="button" class="btn btn-primary btn-block lw-login">ورود / ثبت‌نام</button>'; return; }
         var h = '<h3>🎟️ چرخش‌های تو</h3><div class="lw-big"><b>' + fa(me.left) + '</b><span>چرخش آماده</span></div>';
         h += '<div class="lw-stat"><span>چرخش‌های استفاده‌شده</span><b>' + fa(me.used) + '</b></div>';
-        if (S.mine && S.mine.length) h += '<div class="lw-wins">' + S.mine.map(function (x) { return '<span class="lw-win k-' + x.kind + '"><b>' + esc(x.label) + '</b><small>' + esc(x.when) + '</small></span>'; }).join('') + '</div>';
+        if (S.mine && S.mine.length) h += '<div class="lw-wins">' + S.mine.map(function (x) {
+            var st = x.kind !== 'prize' ? '' : x.delivered ? '<em class="ok">✅ تحویل شد</em>' : x.left == null ? '' : x.left > 0 ? '<em class="wait">⏳ ' + leftText(x.left) + ' مهلت</em>' : '<em class="over">⌛ باطل شد</em>';
+            return '<span class="lw-win k-' + x.kind + '"><b>' + esc(x.label) + '</b><small>' + esc(x.when) + '</small>' + st + '</span>';
+        }).join('') + '</div>';
+        var open = (S.mine || []).filter(function (x) { return x.kind === 'prize' && !x.delivered && x.left > 0; });
+        if (S.claim && open.length) h += '<div class="pc-box"><div class="pc-head"><span class="pc-ic">📩</span><div><b>جایزه‌ت رو بگیر: ' + esc(open[0].label) + '</b><small>' + leftText(open[0].left) + ' وقت داری به یکی از این آیدی‌ها پیام بدی؛ بعدش جایزه باطل می‌شه.</small></div></div><div class="pc-ids">' + idButtons() + '</div></div>';
         box.innerHTML = h;
     }
+    function claimIds() {
+        var ids = S.claim ? Object.keys(S.claim.ids || {}) : [];
+        return ids.length ? ids.map(function (id) { return '<a href="' + esc(S.claim.ids[id]) + '" target="_blank" rel="noopener" dir="ltr">' + esc(id) + '</a>'; }).join(' یا ') : '<a href="' + esc(S.claim ? S.claim.support : '#') + '">پشتیبانی</a>';
+    }
+    function leftText(sec) { var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h ? fa(h) + ' ساعت' + (m ? ' و ' + fa(m) + ' دقیقه' : '') : fa(Math.max(1, m)) + ' دقیقه'; }
     function bar(have, need) { var p = need ? Math.min(100, have / need * 100) : 0; return '<span class="lw-bar"><i style="width:' + p.toFixed(1) + '%"></i></span>'; }
+    function idButtons() {
+        var ids = S.claim ? Object.keys(S.claim.ids || {}) : [];
+        if (!ids.length) return '<a class="pc-id" href="' + esc(S.claim ? S.claim.support : '#') + '"><span>💬</span><b>پشتیبانی سایت</b></a>';
+        return ids.map(function (id) { return '<a class="pc-id" href="' + esc(S.claim.ids[id]) + '" target="_blank" rel="noopener"><span>✈️</span><b dir="ltr">' + esc(id) + '</b></a>'; }).join('');
+    }
     function renderRules() {
         var el = $('#lwRules'); if (!el) return;
         var R = S.rules, me = S.me, h = '';
@@ -49,6 +64,7 @@
         if (R.buy_every) h += '<div class="lw-rule"><span class="ic">🛍️</span><div><b>هر ' + fa(R.buy_every) + ' خرید = ' + fa(R.buy_spins) + ' چرخش</b><small>' + (me ? fa(me.buys) + ' خرید ثبت شده · ' + fa(me.buy_next) + ' خرید تا چرخش بعدی' : 'خریدهای فروشگاه حساب می‌شن') + '</small>' + (me ? bar(R.buy_every - me.buy_next, R.buy_every) : '') + '</div></div>';
         if (R.invite_every) h += '<div class="lw-rule"><span class="ic">🤝</span><div><b>هر ' + fa(R.invite_every) + ' دعوت = ' + fa(R.invite_spins) + ' چرخش</b><small>' + (me ? fa(me.invites) + ' نفر با لینکت ثبت‌نام کردن · ' + fa(me.invite_next) + ' نفر تا چرخش بعدی' : 'دوستات با لینک تو ثبت‌نام کنن') + '</small>' + (me ? bar(R.invite_every - me.invite_next, R.invite_every) + '<div class="rf-invite"><input readonly value="' + esc(me.invite) + '"><button type="button" class="btn btn-primary btn-sm" data-copy="' + esc(me.invite) + '">کپی لینک</button></div>' : '') + '</div></div>';
         if (R.max_user) h += '<p class="muted small" style="margin:8px 0 0">هر نفر روی هم حداکثر ' + fa(R.max_user) + ' بار می‌تونه بچرخونه.</p>';
+        if (S.claim) h += '<div class="lw-claimnote">🏆 اگه جایزه بردی، تا <b>' + fa(S.claim.hours) + ' ساعت</b> به ' + claimIds() + ' توی تلگرام پیام بده؛ بعدش جایزه باطل می‌شه.</div>';
         el.innerHTML = h || '<p class="muted small">چرخش‌ها رو مدیر سایت هدیه می‌ده.</p>';
     }
     function renderItems() {
@@ -72,7 +88,7 @@
             window.NXWheel.party();
             html = '<span class="w-medal">🎉</span><small>تبریک! برنده شدی</small><b>' + esc((it.emoji ? it.emoji + ' ' : '') + it.label) + '</b>'
                 + (it.code ? '<div class="w-code"><code>' + esc(it.code) + '</code></div>' : '')
-                + '<small style="margin-top:8px">' + (S.admin ? 'نتیجه‌ی چرخش تو' : 'جایزه‌ت توی اعلان‌ها هم ثبت شد') + '</small>';
+                + '<small style="margin-top:8px">' + (S.admin ? 'نتیجه‌ی چرخش تو' : S.claim ? '📩 تا ' + fa(S.claim.hours) + ' ساعت به ' + (Object.keys(S.claim.ids || {}).map(function (id) { return '\u2068' + id + '\u2069'; }).join(' یا ') || 'پشتیبانی') + ' پیام بده' : 'جایزه‌ت توی اعلان‌ها هم ثبت شد') + '</small>';
         } else if (it.kind === 'again') {
             html = '<span class="w-medal">🔁</span><small>شانس دوباره!</small><b>' + esc(it.label) + '</b><small>یه چرخش دیگه بهت اضافه شد</small>';
         } else {

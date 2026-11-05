@@ -168,3 +168,19 @@ html.perf-safe .rf-replay::after { display: none; }
 .rf-lockpage h1 { margin: 0; font-size: 1.4rem; }
 .rf-lockpage p { margin: 0; }
 .rf-lock-ic { width: 76px; height: 76px; display: grid; place-items: center; font-size: 2.2rem; border-radius: 24px; background: rgba(var(--primary-rgb), .14); border: 1px solid rgba(var(--primary-rgb), .4); box-shadow: 0 16px 40px -18px rgba(var(--primary-rgb), .9); }
+/* prize claim box for winners (raffle + lucky wheel) */
+.pc-box { margin-top: 14px; padding: 14px; border-radius: 18px; text-align: right;
+    background: linear-gradient(135deg, rgba(255,210,63,.12), rgba(var(--primary-rgb), .08)), rgba(var(--text-rgb), .03); border: 1px solid rgba(255,210,63,.4);
+    box-shadow: 0 16px 36px -22px rgba(255,210,63,.6); animation: rfResIn .8s cubic-bezier(.16,1,.3,1) both; }
+.pc-box.is-over { border-color: rgba(var(--text-rgb), .15); background: rgba(var(--text-rgb), .04); box-shadow: none; }
+.pc-head { display: flex; gap: 12px; align-items: flex-start; }
+.pc-ic { width: 42px; height: 42px; flex-shrink: 0; display: grid; place-items: center; font-size: 1.3rem; border-radius: 13px; background: rgba(255,210,63,.16); border: 1px solid rgba(255,210,63,.4); }
+.pc-head b { display: block; font-size: .95rem; margin-bottom: 3px; }
+.pc-head small { display: block; color: var(--muted); font-size: .8rem; line-height: 1.8; }
+.pc-ids { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pc-id { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 14px; font-weight: 800; font-size: .86rem; color: var(--text);
+    background: linear-gradient(rgb(var(--surface-rgb)), rgb(var(--surface-rgb))) padding-box, linear-gradient(120deg, #2aabee, var(--acc1, var(--primary))) border-box; border: 1.5px solid transparent;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s; }
+.pc-id span { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; font-size: .8rem; background: linear-gradient(135deg, #2aabee, #229ed9); }
+.pc-id:hover { color: var(--text); transform: translateY(-2px); box-shadow: 0 12px 26px -14px rgba(42,171,238,.9); }
+.rf-how a[dir], .pc-id b, .lw-claimnote a { unicode-bidi: isolate; }

@@ -59,6 +59,48 @@ function raffle_page_allowed(array $r, ?array $me): bool
     return false;
 }
 
+/* ---------- prize claim: winners must message one of the owner's Telegram IDs within N hours ---------- */
+function prize_claim_on(): bool { return setting_on('prize_claim_on'); }
+function prize_claim_hours(): int { return max(1, min(720, (int) setting('prize_claim_hours', '24'))); }
+
+/** the owner's Telegram IDs as [@name => https://t.me/name] */
+function prize_claim_ids(): array
+{
+    $out = [];
+    foreach (preg_split('~[\r\n,،]+~u', (string) setting('prize_claim_ids', '')) as $id) {
+        $id = trim(preg_replace('~^(https?://)?(t\.me|telegram\.me)/~i', '', $id), " @/\t");
+        if ($id !== '' && preg_match('~^[A-Za-z0-9_]{3,40}$~', $id)) $out['@' . $id] = 'https://t.me/' . $id;
+    }
+    return $out;
+}
+
+/** deadline (unix time) for a prize won at $wonAt */
+function prize_claim_deadline(string $wonAt): int { return strtotime($wonAt) + prize_claim_hours() * 3600; }
+
+/** one-line message for notifications: "تا ۲۴ ساعت به @a یا @b پیام بده…" */
+function prize_claim_text(?string $wonAt = null): string
+{
+    if (!prize_claim_on()) return 'به زودی برای تحویل جایزه باهات تماس می‌گیریم.';
+    $ids = array_map(fn($id) => "\u{2068}" . $id . "\u{2069}", array_keys(prize_claim_ids()));   // isolated, so "@name" never flips inside Persian text
+    $who = $ids ? implode(' یا ', $ids) : 'پشتیبانی سایت';
+    $until = $wonAt ? ' (تا ' . jdate('l j F — ساعت H:i', prize_claim_deadline($wonAt)) . ')' : '';
+    return '📩 برای دریافت جایزه تا ' . fa_num((string) prize_claim_hours()) . ' ساعت' . $until . ' به ' . $who . ' توی تلگرام پیام بده؛ بعد از این زمان جایزه باطل می‌شه.';
+}
+
+/** a box for the winner: deadline, time left and buttons to the IDs */
+function prize_claim_box(string $wonAt, string $prize = ''): string
+{
+    if (!prize_claim_on()) return '';
+    $end = prize_claim_deadline($wonAt); $left = $end - time();
+    $btns = '';
+    foreach (prize_claim_ids() as $id => $link) $btns .= '<a class="pc-id" href="' . e($link) . '" target="_blank" rel="noopener"><span>✈️</span><b dir="ltr">' . e($id) . '</b></a>';
+    if ($btns === '') $btns = '<a class="pc-id" href="' . e(url('support')) . '"><span>💬</span><b>پشتیبانی سایت</b></a>';
+    return '<div class="pc-box' . ($left <= 0 ? ' is-over' : '') . '">'
+        . '<div class="pc-head"><span class="pc-ic">' . ($left > 0 ? '📩' : '⌛') . '</span><div><b>' . ($left > 0 ? 'جایزه‌ت رو بگیر' . ($prize !== '' ? ': ' . e($prize) : '') : 'مهلت دریافت جایزه تموم شد') . '</b>'
+        . '<small>' . ($left > 0 ? 'تا ' . e(jdate('l j F — ساعت H:i', $end)) . ' (' . e(raffle_left_text($left)) . ' مونده) به یکی از این آیدی‌ها پیام بده؛ بعدش جایزه باطل می‌شه.' : 'مهلت ' . fa_num((string) prize_claim_hours()) . ' ساعته‌ی پیام دادن گذشته و جایزه باطل شده.') . '</small></div></div>'
+        . ($left > 0 ? '<div class="pc-ids">' . $btns . '</div>' : '') . '</div>';
+}
+
 /** full name of a member by id (for results saved before full names were stored) */
 function raffle_member_full(int $mid, string $fallback = ''): string
 {
@@ -269,7 +311,7 @@ function raffle_maybe_draw(array $r, bool $force = false): array
         q("UPDATE raffles SET status = 'drawn', results = ?, draw_seed = ?, drawn_at = ?, updated_at = ? WHERE id = ?",
             [json_encode($results, JSON_UNESCAPED_UNICODE), bin2hex(random_bytes(12)), now(), now(), $r['id']]);
         $pdo->commit();
-        foreach ($results as $w) notify('m:' . $w['member_id'], 'raffle', (int) $r['id'], '🏆', 'تبریک! برنده‌ی قرعه‌کشی شدی', 'جایزه: ' . $w['prize'] . ' — «' . $r['title'] . '». به زودی باهات تماس می‌گیریم.', 'raffle/' . $r['slug'], 'success');
+        foreach ($results as $w) notify('m:' . $w['member_id'], 'raffle', (int) $r['id'], '🏆', 'تبریک! برنده‌ی قرعه‌کشی شدی', 'جایزه: ' . $w['prize'] . ' — «' . $r['title'] . '». ' . prize_claim_text(now()), 'raffle/' . $r['slug'], 'success');
         notify('admin', 'raffle', (int) $r['id'], '🏆', 'قرعه‌کشی برگزار شد', $r['title'] . ' — ' . implode('، ', array_column($results, 'full')), 'admin/raffle-view.php?id=' . $r['id'], 'success');
         return row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
     } catch (Throwable $e) {

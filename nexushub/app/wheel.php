@@ -102,7 +102,7 @@ function wheel_spin(array $w, ?array $m): array
         return ['ok' => false, 'error' => $e instanceof RuntimeException ? $e->getMessage() : 'خطا در چرخش؛ دوباره امتحان کن.'];
     }
     if ($m && $it['kind'] === 'prize') {
-        notify('m:' . $m['id'], 'wheel', (int) $w['id'], '🎡', 'جایزه‌ی گردونه شانس: ' . $it['label'], ($it['code'] !== '' ? 'کد / توضیح جایزه: ' . $it['code'] . ' — ' : '') . '«' . $w['title'] . '». به زودی جایزه‌ت رو تحویل می‌دیم.', 'wheel/' . $w['slug'], 'success');
+        notify('m:' . $m['id'], 'wheel', (int) $w['id'], '🎡', 'جایزه‌ی گردونه شانس: ' . $it['label'], ($it['code'] !== '' ? 'کد / توضیح جایزه: ' . $it['code'] . ' — ' : '') . '«' . $w['title'] . '». ' . prize_claim_text(now()), 'wheel/' . $w['slug'], 'success');
         notify('admin', 'wheel', (int) $w['id'], '🎡', 'برنده‌ی گردونه: ' . $it['label'], member_full_name($m) . ' — «' . $w['title'] . '»', 'admin/wheel-view.php?id=' . $w['id'], 'success');
     }
     return ['ok' => true, 'index' => $i, 'spin' => $sid, 'item' => ['label' => $it['label'], 'emoji' => $it['emoji'], 'kind' => $it['kind'], 'code' => $it['code']]];
@@ -130,13 +130,15 @@ function wheel_state(array $w, ?array $me, bool $admin = false): array
     $total = array_sum(array_map(fn($it) => $it['stock'] !== 0 ? $it['chance'] : 0, $items)) ?: 1;
     $recent = rows("SELECT s.label, s.created_at, m.first_name, m.last_name FROM wheel_spins s LEFT JOIN members m ON m.id = s.member_id
         WHERE s.wheel_id = ? AND s.kind = 'prize' AND s.member_id IS NOT NULL ORDER BY s.id DESC LIMIT 10", [$w['id']]);
-    $mine = $me ? rows('SELECT label, kind, item, created_at FROM wheel_spins WHERE wheel_id = ? AND member_id = ? ORDER BY id DESC LIMIT 12', [$w['id'], $me['id']]) : [];
+    $mine = $me ? rows('SELECT label, kind, item, status, created_at FROM wheel_spins WHERE wheel_id = ? AND member_id = ? ORDER BY id DESC LIMIT 12', [$w['id'], $me['id']]) : [];
     return [
         'id' => (int) $w['id'], 'admin' => $admin, 'open' => wheel_open($w), 'audience' => $w['audience'], 'status' => $w['status'],
         'items' => array_map(fn($it) => ['label' => $it['label'], 'emoji' => $it['emoji'], 'kind' => $it['kind'], 'w' => 1,
             'chance' => $show ? round($it['stock'] !== 0 ? $it['chance'] / $total * 100 : 0, 2) : null, 'out' => $it['stock'] === 0], $items),
         'me' => wheel_member($w, $me),
-        'mine' => array_map(fn($x) => ['label' => $x['label'], 'kind' => $x['kind'], 'when' => jago($x['created_at'])], $mine),
+        'mine' => array_map(fn($x) => ['label' => $x['label'], 'kind' => $x['kind'], 'when' => jago($x['created_at']), 'delivered' => $x['status'] === 'delivered',
+            'left' => $x['kind'] === 'prize' && prize_claim_on() ? prize_claim_deadline($x['created_at']) - time() : null], $mine),
+        'claim' => prize_claim_on() ? ['hours' => prize_claim_hours(), 'ids' => prize_claim_ids(), 'support' => url('support')] : null,
         'recent' => array_map(fn($x) => ['name' => $admin ? trim($x['first_name'] . ' ' . $x['last_name']) : wheel_first_name($x['first_name']), 'label' => $x['label'], 'when' => jago($x['created_at'])], $recent),
         'rules' => wheel_rules($w), 'logged' => (bool) $me,
     ];

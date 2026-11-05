@@ -1366,3 +1366,13 @@ html.perf-calm .rfl-card { animation: none; }
 .rfl-sw i::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .3s var(--ease); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
 .rfl-sw input:checked + i { background: var(--grad); }
 .rfl-sw input:checked + i::after { transform: translateX(-18px); }
+/* prize delivery settings */
+.pc-card { margin-bottom: 18px; }
+.pc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.pc-card textarea { width: 100%; min-height: 110px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--a-line); background: var(--a-surface2); color: var(--a-text); font: inherit; font-size: .9rem; resize: vertical; }
+.pc-prev { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(255,210,63,.07); border: 1px dashed rgba(255,210,63,.35); }
+.pc-prev small { color: var(--a-muted); font-size: .74rem; }
+.pc-prev p { margin: 4px 0 0; font-size: .84rem; line-height: 1.9; }
+.pc-save { margin-top: 14px; width: auto; padding: 12px 22px; }
+@media (max-width: 800px) { .pc-grid { grid-template-columns: minmax(0, 1fr); } .pc-save { width: 100%; } }
+.pc-prev p, .pc-card textarea { unicode-bidi: plaintext; }

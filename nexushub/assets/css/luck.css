@@ -68,3 +68,13 @@
 @media (max-width: 600px) { .lw-items { grid-template-columns: minmax(0, 1fr); } .lw-spin { width: 100%; } }
 html.perf-safe .lw-spin::after, html.perf-safe .lw-spin.ready { animation: none; }
 html.perf-safe .lw-spin::after { display: none; }
+/* spacing: hero, cards and rule boxes keep air between them */
+.lw-grid { margin-top: 20px; }
+.lw-page .rf-side { gap: 20px; }
+.lw-rules { gap: 12px; }
+.lw-rule { padding: 12px; }
+.lw-claimnote { margin-top: 12px; padding: 10px 12px; border-radius: 14px; font-size: .8rem; line-height: 1.9; color: var(--muted); background: rgba(255,210,63,.07); border: 1px dashed rgba(255,210,63,.35); }
+.lw-claimnote b { color: var(--text); }
+.lw-win em { font-style: normal; font-size: .66rem; margin-top: 2px; }
+.lw-win em.wait { color: #ffb02e; } .lw-win em.ok { color: #3ddc84; } .lw-win em.over { color: var(--muted); }
+.lw-mine .pc-box { margin-top: 12px; }

@@ -272,6 +272,45 @@ function preset_images(string $set = 'product'): array
     ];
 }
 
+/** "prize delivery" settings (shared by raffles and the lucky wheel) */
+function prize_claim_save(): bool
+{
+    if (($_POST['act'] ?? '') !== 'claim') return false;
+    $ids = implode("\n", array_keys(prize_claim_ids_from((string) ($_POST['prize_claim_ids'] ?? ''))));
+    save_settings(['prize_claim_on' => !empty($_POST['prize_claim_on']) ? '1' : '0', 'prize_claim_hours' => (string) max(1, min(720, (int) en_num((string) ($_POST['prize_claim_hours'] ?? 24)))), 'prize_claim_ids' => $ids]);
+    flash('تنظیمات تحویل جایزه ذخیره شد ✅');
+    return true;
+}
+function prize_claim_ids_from(string $raw): array
+{
+    $out = [];
+    foreach (preg_split('~[\r\n,،]+~u', $raw) as $id) {
+        $id = trim(preg_replace('~^(https?://)?(t\.me|telegram\.me)/~i', '', $id), " @/\t");
+        if ($id !== '' && preg_match('~^[A-Za-z0-9_]{3,40}$~', $id)) $out['@' . $id] = 1;
+    }
+    return $out;
+}
+function prize_claim_card(): string
+{
+    $hours = prize_claim_hours();
+    $chips = '';
+    foreach ([6 => '۶ ساعت', 12 => '۱۲ ساعت', 24 => '۲۴ ساعت', 48 => '۲ روز', 72 => '۳ روز', 168 => '۱ هفته'] as $v => $t) $chips .= '<button type="button" data-v="' . $v . '"' . ($v === $hours ? ' class="on"' : '') . '>' . $t . '</button>';
+    return '<form method="post" class="card pc-card" id="pcForm">' . csrf_field() . '<input type="hidden" name="act" value="claim">'
+        . '<div class="card-head"><h3>📩 تحویل جایزه به برنده‌ها</h3><small class="muted">برای قرعه‌کشی و گردونه شانس</small></div>'
+        . '<div class="pc-grid"><div>'
+        . f_switch('prize_claim_on', 'به برنده پیام بده که برای دریافت جایزه بهت پیام بده', prize_claim_on(), 'توی اعلان برنده، صفحه‌ی قرعه‌کشی/گردونه و کارت برنده نشون داده می‌شه')
+        . f_text('prize_claim_hours', 'مهلت پیام دادن (ساعت بعد از برنده شدن)', (string) $hours, ['type' => 'number', 'min' => 1, 'max' => 720, 'hint' => 'بعد از این مدت جایزه باطل می‌شه'])
+        . '<div class="rf-quick" data-for="prize_claim_hours">' . $chips . '</div></div><div>'
+        . '<label class="af"><span class="af-label">آیدی‌های تلگرام (هر خط یکی — هر چند تا خواستی)</span><textarea name="prize_claim_ids" rows="4" dir="ltr" placeholder="@NexusHubIR&#10;@NexusSupport">' . e((string) setting('prize_claim_ids', '')) . '</textarea><small class="af-hint">با @ یا بدون @، یا لینک t.me — اگه خالی باشه، برنده به صفحه‌ی پشتیبانی فرستاده می‌شه.</small></label>'
+        . '<div class="pc-prev"><small>پیامی که برنده می‌گیره:</small><p id="pcPrev">' . e(prize_claim_text()) . '</p></div>'
+        . '</div></div>'
+        . '<button class="rf-save pc-save" type="submit"><span class="rf-save-check">' . icon('check', 18) . '</span><span>ذخیره‌ی تنظیمات تحویل جایزه</span></button>'
+        . '</form>'
+        . '<script>document.addEventListener("DOMContentLoaded",function(){var f=document.getElementById("pcForm");if(!f)return;var h=f.querySelector("[name=prize_claim_hours]"),q=f.querySelector(".rf-quick");'
+        . 'var s=function(){[].forEach.call(q.querySelectorAll("button"),function(b){b.classList.toggle("on",b.dataset.v===String(parseInt(h.value,10)));});};'
+        . 'q.addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(b){h.value=b.dataset.v;s();}});h.addEventListener("input",s);});</script>';
+}
+
 function f_jdate(string $name, string $label, ?string $datetime, string $hint = ''): string
 {
     return '<label class="af"><span class="af-label">' . e($label) . '</span><span class="jd-field"><input type="text" name="' . e($name) . '" value="' . e(datetime_to_jalali_input($datetime)) . '" dir="ltr" placeholder="1405/08/12 14:30" data-jdp autocomplete="off">' . icon('calendar', 18) . '</span>'

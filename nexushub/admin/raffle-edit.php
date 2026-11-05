@@ -56,6 +56,7 @@ if (is_post()) {
             $row['created_at'] = now();
             $nid = (int) insert('raffles', $row);
         }
+        save_settings(['footer_raffle_link' => !empty($_POST['footer_raffle_link']) ? '1' : '0']);
         flash($d['status'] === 'active' ? 'قرعه‌کشی فعال شد 🎰' : 'ذخیره شد ✅');
         redirect('admin/raffle-view.php?id=' . $nid);
     }
@@ -168,6 +169,7 @@ $bonus = (string) (float) $r['ticket_bonus'];
             <?= f_text('result_hours', 'نمایش نتیجه روی سایت (ساعت)', (string) (int) ($r['result_hours'] ?? 24), ['type' => 'number', 'min' => 0, 'max' => 720]) ?>
             <?= $chips('result_hours', ['0' => 'نه', '6' => '۶ ساعت', '24' => '۱ روز', '72' => '۳ روز', '168' => '۱ هفته'], (string) (int) ($r['result_hours'] ?? 24)) ?>
             <small class="af-hint">تو این مدت کادر «برنده مشخص شد» روی سایت می‌مونه و گردونه برای هر کی وارد صفحه بشه خودکار می‌چرخه.</small>
+            <?= f_switch('footer_raffle_link', 'لینک «قرعه‌کشی» توی فوتر سایت', setting_on('footer_raffle_link'), 'برای همه‌ی قرعه‌کشی‌ها یکیه') ?>
         </div>
         <div class="card rf-savecard">
             <div class="rf-save-head"><span class="rf-save-ic">🎰</span><div><b><?= $r['id'] ? 'ذخیره‌ی تغییرات' : 'ساخت قرعه‌کشی' ?></b><small>وضعیت فعلی: <?= e(['draft' => '📝 پیش‌نویس', 'active' => '🟢 فعال', 'cancelled' => '⛔ لغو شده', 'drawn' => '🏆 برگزار شده', 'failed' => 'ℹ️ برگزار نشد'][$r['status']] ?? $r['status']) ?></small></div></div>

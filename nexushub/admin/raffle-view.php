@@ -75,9 +75,9 @@ adm_head($r['title'], 'raffles');
 
 <?php if ($results): ?>
 <div class="card mb"><div class="card-head"><h3>🏆 برنده‌ها</h3><small class="muted"><?= e(jdate('j F Y — H:i', strtotime((string) $r['drawn_at']))) ?></small></div>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>جایزه</th><th>برنده</th><th>موبایل</th><?= $r['mode'] === 'paid' ? '<th>تیکت برنده</th>' : '' ?><th>شانسش</th></tr></thead><tbody>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>جایزه</th><th>برنده</th><th>موبایل</th><?= $r['mode'] === 'paid' ? '<th>تیکت برنده</th>' : '' ?><th>شانسش</th><th>مهلت دریافت</th></tr></thead><tbody>
     <?php foreach ($results as $i => $w): $wm = row('SELECT first_name, last_name, phone, member_code FROM members WHERE id = ?', [$w['member_id']]); ?>
-        <tr><td><?= ['🥇', '🥈', '🥉'][$i] ?? '🏅' ?> <?= e($w['prize']) ?></td><td><b><?= e(($wm['first_name'] ?? '') . ' ' . ($wm['last_name'] ?? '')) ?></b> <small class="muted ltr"><?= e($wm['member_code'] ?? '') ?></small></td><td class="ltr small m-phone"><?= e($wm['phone'] ?? '') ?></td><?= $r['mode'] === 'paid' ? '<td><b>#' . fa_num((string) $w['ticket']) . '</b></td>' : '' ?><td><?= fa_num((string) $w['chance']) ?>٪</td></tr>
+        <tr><td><?= ['🥇', '🥈', '🥉'][$i] ?? '🏅' ?> <?= e($w['prize']) ?></td><td><b><?= e(($wm['first_name'] ?? '') . ' ' . ($wm['last_name'] ?? '')) ?></b> <small class="muted ltr"><?= e($wm['member_code'] ?? '') ?></small></td><td class="ltr small m-phone"><?= e($wm['phone'] ?? '') ?></td><?= $r['mode'] === 'paid' ? '<td><b>#' . fa_num((string) $w['ticket']) . '</b></td>' : '' ?><td><?= fa_num((string) $w['chance']) ?>٪</td><td><?php $dl = prize_claim_deadline((string) $r['drawn_at']) - time(); ?><span class="badge <?= $dl > 0 ? 'b-warn' : 'b-muted' ?>"><?= $dl > 0 ? '⏳ ' . e(raffle_left_text($dl)) . ' مونده' : '⌛ مهلت تموم شد' ?></span></td></tr>
     <?php endforeach; ?></tbody></table></div></div>
 <?php elseif ($r['status'] === 'failed'): ?>
 <div class="alert alert-warn mb">این قرعه‌کشی به حد نصاب نرسید و برگزار نشد.<?= $r['mode'] === 'paid' && $st['sold'] ? ' پول خریدارهای تیکت (لیست پایین) رو برگردون.' : '' ?></div>

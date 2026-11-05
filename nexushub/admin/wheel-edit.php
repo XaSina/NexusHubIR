@@ -54,6 +54,7 @@ if (is_post()) {
             $row['created_at'] = now();
             $nid = (int) insert('wheels', $row);
         }
+        if (isset($_POST['footer_wheel_seen'])) save_settings(['footer_wheel_link' => !empty($_POST['footer_wheel_link']) ? '1' : '0']);
         flash('گردونه ذخیره شد 🎡');
         redirect('admin/wheel-view.php?id=' . $nid);
     }
@@ -175,6 +176,7 @@ adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شان�
             <div class="card-head"><h3>⏰ وضعیت</h3></div>
             <?= f_select('status', 'وضعیت', ['draft' => 'پیش‌نویس (فقط خودت می‌بینی)', 'active' => 'فعال — کاربرها می‌تونن بچرخونن', 'paused' => 'متوقف'], $w['status']) ?>
             <?= f_jdate('end_at', 'پایان (اختیاری، شمسی)', $w['end_at'], 'خالی = همیشه فعال') ?>
+            <input type="hidden" name="footer_wheel_seen" value="1"><?= f_switch('footer_wheel_link', 'لینک «گردونه شانس» توی فوتر سایت', setting_on('footer_wheel_link'), 'برای همه‌ی گردونه‌ها یکیه') ?>
         </div>
         <div class="card rf-savecard">
             <div class="rf-save-head"><span class="rf-save-ic">🎡</span><div><b><?= $w['id'] ? 'ذخیره‌ی تغییرات' : 'ساخت گردونه' ?></b><small>بعد از ذخیره، توی صفحه‌ی مدیریت می‌تونی بچرخونیش.</small></div></div>

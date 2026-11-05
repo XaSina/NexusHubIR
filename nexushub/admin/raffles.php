@@ -5,6 +5,7 @@ require_cap('*');
 if (is_post()) {
     csrf_check();
     $id = (int) ($_POST['id'] ?? 0);
+    if (prize_claim_save()) redirect('admin/raffles.php');
     if (($_POST['act'] ?? '') === 'opts') {
         save_settings(['footer_raffle_link' => !empty($_POST['footer_raffle_link']) ? '1' : '0',
             'raffle_ended_access' => in_array($_POST['raffle_ended_access'] ?? '', ['all', 'participants', 'winners'], true) ? $_POST['raffle_ended_access'] : 'winners']);
@@ -40,6 +41,7 @@ adm_head('قرعه‌کشی‌ها', 'raffles');
         <select name="raffle_ended_access"><?php foreach (['winners' => '🏆 فقط برنده‌ها', 'participants' => '👥 فقط شرکت‌کننده‌ها', 'all' => '🌍 همه'] as $k => $t): ?><option value="<?= $k ?>" <?= setting('raffle_ended_access', 'winners') === $k ? 'selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
 </form>
 <script>document.addEventListener('change', function (e) { if (e.target.closest('#rflOpts')) e.target.closest('form').submit(); });</script>
+<?= prize_claim_card() ?>
 <?php if (!$list): ?>
     <div class="card"><div class="empty-state"><span>🎰</span>هنوز قرعه‌کشی‌ای نساختی. «قرعه‌کشی جدید» رو بزن.</div></div>
 <?php else: ?>
