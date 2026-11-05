@@ -18,6 +18,7 @@ function default_settings(): array
         'footer_text' => 'NEXUS | HUB — محتوای روزانه، کاربردی و متفاوت 🔥 به کامیونیتی NEXUS بپیوندید.',
         'copyright' => 'تمامی حقوق برای NEXUS | HUB محفوظ است.',
         'trust_badges' => '[]',
+        'verify_files' => "35243901.txt\n35691018.txt",
         'trust_title' => 'نمادهای اعتماد',
         'show_online' => '1',
 

@@ -33,6 +33,17 @@ $seg = $path === '' ? [] : explode('/', $path);
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $per = max(3, min(60, (int) setting('archive_per_page', 9)));   // all list pages: all news, categories, tags, authors, search
 
+// domain-verification files (Enamad, Samandehi, Google, ...) listed in the panel: an empty text file at the
+// site root, even in maintenance mode
+if (count($seg) === 1 && preg_match('~^[A-Za-z0-9_-]{3,80}\.(txt|html?)$~', $seg[0])) {
+    $vf = array_filter(array_map('trim', preg_split('~[\r\n,]+~', (string) setting('verify_files', ''))));
+    if (in_array($seg[0], $vf, true)) {
+        header('Content-Type: ' . (str_ends_with($seg[0], '.txt') ? 'text/plain' : 'text/html') . '; charset=utf-8');
+        header('Cache-Control: no-cache');
+        exit;
+    }
+}
+
 // حالت تعمیر
 if (setting_on('maintenance') && (!current_user() || isset($_GET['maintenance_preview'])) && ($seg[0] ?? '') !== 'go') {
     http_response_code(503);

@@ -5,7 +5,7 @@ require_cap('*');
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
-    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code'];
+    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files'];
 
 if (is_post()) {
     csrf_check();
@@ -27,6 +27,10 @@ if (is_post()) {
     if (isset($save['tg_bot_token']) && $save['tg_bot_token'] !== '' && !preg_match('~^\d{5,}:[\w-]{20,}$~', $save['tg_bot_token'])) {
         unset($save['tg_bot_token']);
         flash('توکن ربات تلگرام معتبر نبود و تغییر نکرد (شکل درست: 123456789:ABC...).', 'warn');
+    }
+    if (isset($save['verify_files'])) {   // file names only: letters, digits, - and _, ending in .txt / .html
+        $vf = array_filter(array_map('trim', preg_split('~[\r\n,]+~', $save['verify_files'])), fn($f) => (bool) preg_match('~^[A-Za-z0-9_-]{3,80}\.(txt|html?)$~', $f));
+        $save['verify_files'] = implode("\n", array_slice(array_unique($vf), 0, 20));
     }
     save_settings($save);
     flash('تنظیمات ذخیره شد ✅');
@@ -125,6 +129,13 @@ adm_head('تنظیمات', 'settings');
             <div class="card-head"><h3>🧩 کدهای اضافه</h3></div>
             <?= f_textarea('head_code', 'کد داخل &lt;head&gt; (مثلاً گوگل آنالیتیکس)', $s['head_code'], ['rows' => 5, 'code' => true]) ?>
             <?= f_textarea('footer_code', 'کد قبل از &lt;/body&gt;', $s['footer_code'], ['rows' => 5, 'code' => true]) ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>✅ فایل‌های تأیید دامنه (اینماد و …)</h3></div>
+            <?= f_textarea('verify_files', 'نام فایل‌ها (هر خط یکی)', (string) ($s['verify_files'] ?? ''), ['rows' => 4, 'code' => true, 'placeholder' => '35243901.txt', 'hint' => 'اسم فایلی که اینماد (یا هر سایت دیگه) گفته رو اینجا بنویس، مثلاً 35243901.txt — دیگه لازم نیست فایلی آپلود کنی؛ سایت خودش اون آدرس رو خالی تحویل می‌ده. حتماً دامنه‌ی ثبت‌شده در اینماد درست باشه: nexushubstore.ir']) ?>
+            <?php foreach (array_filter(array_map('trim', preg_split('~[\r\n,]+~', (string) ($s['verify_files'] ?? '')))) as $vfn): ?>
+                <a class="abtn abtn-sm" href="<?= e(url($vfn)) ?>" target="_blank" rel="noopener" dir="ltr"><?= e($vfn) ?> ↗</a>
+            <?php endforeach; ?>
         </div>
     </div>
 </div>
