@@ -47,7 +47,11 @@ function site_url(string $path = ''): string
         $baseFull = $override;
     } else {
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $baseFull = (is_https() ? 'https' : 'http') . '://' . $host . nx_base_path();
+        // the addresses we hand out (sitemap, canonical, share links) always use https on the real domain, even when a
+        // page was opened over plain http: Google then keeps one version of each page (the https one)
+        $local = (bool) preg_match('~^(localhost|127\.|\[?::1|10\.|192\.168\.)~', $host);
+        $https = is_https() || (!$local && function_exists('setting_on') && setting_on('seo_https'));
+        $baseFull = ($https ? 'https' : 'http') . '://' . $host . nx_base_path();
     }
     return $baseFull . '/' . ltrim($path, '/');
 }

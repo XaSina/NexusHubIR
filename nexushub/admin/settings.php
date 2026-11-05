@@ -5,7 +5,7 @@ require_cap('*');
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
-    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra'];
+    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_https'];
 
 if (is_post()) {
     csrf_check();
@@ -69,6 +69,7 @@ adm_head('تنظیمات', 'settings');
             <?= f_textarea('site_description', 'توضیحات متا (Meta Description)', $s['site_description'], ['rows' => 4, 'maxlength' => 320]) ?>
             <?= f_text('meta_keywords', 'کلمات کلیدی (با ویرگول)', $s['meta_keywords']) ?>
             <?= f_image('og_image', 'عکس پیش‌فرض اشتراک‌گذاری (وقتی لینک سایت رو جایی می‌فرستن)', $s['og_image'] ?? '', 'پیشنهاد: ۱۲۰۰×۶۳۰ پیکسل. خبرها عکس کاور خودشون رو دارن.') ?>
+            <?= f_switch('seo_https', 'آدرس‌ها همیشه با https به گوگل داده بشن', setting_on('seo_https'), 'نقشه‌ی سایت، آدرس اصلی خبرها و لینک اشتراک با https ساخته می‌شن. فقط وقتی خاموشش کن که سایتت SSL نداره.') ?>
             <?= f_text('google_verify', 'کد تأیید گوگل (Search Console)', $s['google_verify'] ?? '', ['ltr' => true, 'placeholder' => 'متاتگ یا فقط کد content', 'hint' => 'کل متاتگی که گوگل داده رو بچسبون؛ خودش کد رو برمی‌داره.']) ?>
             <?= f_textarea('robots_extra', 'خطوط اضافه برای robots.txt', $s['robots_extra'] ?? '', ['rows' => 3, 'code' => true, 'placeholder' => 'Disallow: /private']) ?>
             <a class="abtn abtn-sm" href="<?= e(url('robots.txt')) ?>" target="_blank" rel="noopener" dir="ltr">robots.txt ↗</a>

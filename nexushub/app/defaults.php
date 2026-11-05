@@ -38,6 +38,7 @@ function default_settings(): array
         'auth_welcome_text' => 'شماره موبایل، ایمیل یا نام کاربری‌ات رو وارد کن. اگه حساب داشته باشی وارد می‌شی، نداشته باشی حسابت رو می‌سازیم.',
         'og_image' => '',
         'google_verify' => '',
+        'seo_https' => '1',
         'robots_extra' => '',
         'verify_files' => "35243901.txt\n35691018.txt",
         'trust_title' => 'نمادهای اعتماد',
