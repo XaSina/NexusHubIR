@@ -37,16 +37,17 @@ $reqs = $r['mode'] === 'paid' ? rows('SELECT q.*, m.first_name, m.last_name, m.p
 $badges = ['draft' => 'b-muted', 'active' => 'b-ok', 'drawn' => 'b-info', 'failed' => 'b-warn', 'cancelled' => 'b-muted'];
 adm_head($r['title'], 'raffles');
 ?>
-<div class="card mb">
-    <div class="card-head"><h3>🎰 <?= e($r['title']) ?> <span class="badge <?= $badges[$r['status']] ?? '' ?>"><?= e(raffle_status_names()[$r['status']]) ?></span></h3>
-        <div class="row-flex">
-            <a class="abtn abtn-sm" href="<?= e(raffle_url($r)) ?>" target="_blank"><?= icon('external', 15) ?> صفحه‌ی قرعه‌کشی</a>
-            <a class="abtn abtn-sm" href="raffle-edit.php?id=<?= $id ?>"><?= adm_icon('edit', 15) ?> ویرایش</a>
-            <?php if ($r['status'] === 'draft'): ?><form method="post"><?= csrf_field() ?><input type="hidden" name="act" value="activate"><button class="abtn abtn-sm abtn-primary">فعال کن</button></form><?php endif; ?>
-            <?php if ($r['status'] === 'active'): ?><form method="post" data-confirm="همین الان برگزار بشه؟ (اگه به حد نصاب نرسیده باشه برگزار نمی‌شه)"><?= csrf_field() ?><input type="hidden" name="act" value="draw"><button class="abtn abtn-sm abtn-primary">🏆 برگزاری همین الان</button></form><?php endif; ?>
-            <?php if (in_array($r['status'], ['draft', 'active'], true)): ?><form method="post" data-confirm="قرعه‌کشی لغو بشه؟"><?= csrf_field() ?><input type="hidden" name="act" value="cancel"><button class="abtn abtn-sm abtn-ghost">لغو</button></form><?php endif; ?>
-        </div>
+<div class="rfl-head">
+    <div class="rfl-head-t"><span class="rfl-head-ic"><?= e(raffle_prizes($r)[0]['emoji'] ?? '🎰') ?></span><div><h2><?= e($r['title']) ?> <span class="badge <?= $badges[$r['status']] ?? '' ?>"><?= e(raffle_status_names()[$r['status']]) ?></span></h2><small><?= raffle_modes()[$r['mode']][2] ?> <?= e(raffle_modes()[$r['mode']][0]) ?> · <?= e(jdate('j F Y — H:i', strtotime($r['draw_at']))) ?></small></div></div>
+    <div class="rfl-tools">
+        <a class="rfl-hbtn" href="<?= e(raffle_url($r)) ?>" target="_blank"><span><?= icon('external', 15) ?></span> صفحه‌ی قرعه‌کشی</a>
+        <a class="rfl-hbtn" href="raffle-edit.php?id=<?= $id ?>"><span><?= adm_icon('edit', 15) ?></span> ویرایش</a>
+        <?php if ($r['status'] === 'draft'): ?><form method="post"><?= csrf_field() ?><input type="hidden" name="act" value="activate"><button class="rfl-hbtn is-go"><span>▶</span> فعال کن</button></form><?php endif; ?>
+        <?php if ($r['status'] === 'active'): ?><form method="post" data-confirm="همین الان برگزار بشه؟ (اگه به حد نصاب نرسیده باشه برگزار نمی‌شه)"><?= csrf_field() ?><input type="hidden" name="act" value="draw"><button class="rfl-hbtn is-warn"><span>🏆</span> برگزاری همین الان</button></form><?php endif; ?>
+        <?php if (in_array($r['status'], ['draft', 'active'], true)): ?><form method="post" data-confirm="قرعه‌کشی لغو بشه؟"><?= csrf_field() ?><input type="hidden" name="act" value="cancel"><button class="rfl-hbtn is-dim"><span>✕</span> لغو</button></form><?php endif; ?>
     </div>
+</div>
+<div class="card mb">
     <div class="grid g4 stats-grid">
         <div class="stat"><span class="stat-ic">👥</span><div><b><?= fa_num((string) $st['participants']) ?></b><small>شرکت‌کننده<?= $st['need'] ? ' (حداقل ' . fa_num((string) $st['need']) . ')' : '' ?></small></div></div>
         <?php if ($r['mode'] === 'paid'): ?><div class="stat"><span class="stat-ic">🎟️</span><div><b><?= fa_num((string) $st['sold']) ?></b><small>تیکت فروخته‌شده<?= $st['need_tickets'] ? ' (حداقل ' . fa_num((string) $st['need_tickets']) . ')' : '' ?></small></div></div>

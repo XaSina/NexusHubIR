@@ -5,6 +5,12 @@ require_cap('*');
 if (is_post()) {
     csrf_check();
     $id = (int) ($_POST['id'] ?? 0);
+    if (($_POST['act'] ?? '') === 'opts') {
+        save_settings(['footer_raffle_link' => !empty($_POST['footer_raffle_link']) ? '1' : '0',
+            'raffle_ended_access' => in_array($_POST['raffle_ended_access'] ?? '', ['all', 'participants', 'winners'], true) ? $_POST['raffle_ended_access'] : 'winners']);
+        flash('تنظیمات ذخیره شد ✅');
+        redirect('admin/raffles.php');
+    }
     if (($_POST['act'] ?? '') === 'delete') {
         $r = row('SELECT * FROM raffles WHERE id = ?', [$id]);
         if ($r && in_array($r['status'], ['draft', 'cancelled', 'failed', 'drawn'], true)) {
@@ -28,6 +34,12 @@ adm_head('قرعه‌کشی‌ها', 'raffles');
     <div class="rfl-head-t"><span class="rfl-head-ic">🎰</span><div><h2>قرعه‌کشی‌ها</h2><small><?= fa_num((string) count($list)) ?> قرعه‌کشی · <?= fa_num((string) $cnt['active']) ?> فعال · <?= fa_num((string) $cnt['drawn']) ?> برگزار شده</small></div></div>
     <a class="rfl-new" href="raffle-edit.php"><span><?= adm_icon('plus', 18) ?></span> قرعه‌کشی جدید</a>
 </div>
+<form method="post" class="rfl-opts" id="rflOpts"><?= csrf_field() ?><input type="hidden" name="act" value="opts">
+    <label class="rfl-opt"><span class="rfl-sw"><input type="checkbox" name="footer_raffle_link" value="1" <?= setting_on('footer_raffle_link') ? 'checked' : '' ?>><i></i></span> لینک «قرعه‌کشی» توی فوتر سایت</label>
+    <label class="rfl-opt">صفحه‌ی قرعه‌کشی‌های تموم‌شده (بعد از زمان نمایش نتیجه) باز باشه برای:
+        <select name="raffle_ended_access"><?php foreach (['winners' => '🏆 فقط برنده‌ها', 'participants' => '👥 فقط شرکت‌کننده‌ها', 'all' => '🌍 همه'] as $k => $t): ?><option value="<?= $k ?>" <?= setting('raffle_ended_access', 'winners') === $k ? 'selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
+</form>
+<script>document.addEventListener('change', function (e) { if (e.target.closest('#rflOpts')) e.target.closest('form').submit(); });</script>
 <?php if (!$list): ?>
     <div class="card"><div class="empty-state"><span>🎰</span>هنوز قرعه‌کشی‌ای نساختی. «قرعه‌کشی جدید» رو بزن.</div></div>
 <?php else: ?>
@@ -47,7 +59,7 @@ adm_head('قرعه‌کشی‌ها', 'raffles');
             <?php if ($st['pending']): ?><span class="rfl-warn">🧾 <?= fa_num((string) $st['pending']) ?> فیش منتظر</span><?php endif; ?>
         </div>
         <?php if ($r['status'] === 'drawn' && $res): ?>
-            <div class="rfl-win">🏆 <b><?= e($res[0]['full'] ?? $res[0]['name']) ?></b><?= count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '' ?></div>
+            <div class="rfl-win">🏆 <b><?= e(raffle_member_full((int) $res[0]['member_id'], (string) ($res[0]['full'] ?? $res[0]['name']))) ?></b><?= count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '' ?></div>
         <?php else: ?>
             <div class="rfl-prog"><span class="rfl-bar"><i style="width:<?= $pct ?>%"></i></span><small><?= $paid ? '🎟️' : '👥' ?> <?= fa_num((string) $have) ?><?= $need ? ' / ' . fa_num((string) $need) : '' ?></small></div>
         <?php endif; ?>

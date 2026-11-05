@@ -1326,3 +1326,43 @@ html.perf-calm .rfl-card { animation: none; }
 }
 /* the wheel glow must not widen the page on phones */
 .rf-admin-card, .lw-prev-card, .lw-admin { overflow: hidden; }
+
+/* theme gallery (raffle + lucky wheel): every option is its own card with air around it */
+.rf-gallery { gap: 22px !important; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important; margin-top: 6px; }
+.rf-gallery .theme-opt { padding: 12px 12px 10px; border-radius: 20px; background: rgba(var(--a-ink), .025); border: 1.5px solid var(--a-line); transition: border-color .3s, box-shadow .3s, transform .3s var(--ease); }
+.rf-gallery .theme-opt:hover { transform: translateY(-2px); border-color: rgba(var(--primary-rgb), .4); }
+.rf-gallery .theme-opt:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .14), 0 18px 40px -24px rgba(var(--primary-rgb), .9); }
+.rf-gallery .theme-opt .rfx { border-radius: 16px; }
+.rf-gallery .theme-opt .t-name { margin-top: 10px; padding: 0 4px; }
+
+/* every plain panel button gets a real look: glass, soft edge, glow on hover */
+.abtn:not(.abtn-primary):not(.abtn-danger):not(.abtn-ok):not(.tb-add) {
+    color: var(--a-text); background: linear-gradient(180deg, rgba(var(--a-ink), .08), rgba(var(--a-ink), .025));
+    border: 1px solid rgba(var(--a-ink), .13); box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 8px 20px -14px rgba(0,0,0,.7); }
+.abtn:not(.abtn-primary):not(.abtn-danger):not(.abtn-ok):not(.tb-add) svg { color: var(--primary); transition: transform .3s var(--ease); }
+.abtn:not(.abtn-primary):not(.abtn-danger):not(.abtn-ok):not(.tb-add):hover {
+    color: var(--a-text); transform: translateY(-1px); border-color: rgba(var(--primary-rgb), .55);
+    background: linear-gradient(180deg, rgba(var(--primary-rgb), .16), rgba(var(--primary-rgb), .05)); box-shadow: 0 12px 26px -14px rgba(var(--primary-rgb), .9), inset 0 1px 0 rgba(255,255,255,.08); }
+.abtn:not(.abtn-primary):not(.abtn-danger):not(.abtn-ok):not(.tb-add):hover svg { transform: scale(1.1); }
+/* header actions on the raffle / wheel pages */
+.rfl-hbtn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; border-radius: 14px; font-weight: 800; font-size: .86rem; color: var(--a-text);
+    background: linear-gradient(var(--a-pop), var(--a-pop)) padding-box, linear-gradient(120deg, rgba(var(--primary-rgb), .9), rgba(var(--secondary-rgb), .6), rgba(var(--primary-rgb), .9)) border-box;
+    border: 1.5px solid transparent; box-shadow: 0 10px 24px -16px rgba(var(--primary-rgb), .9); transition: transform .25s var(--ease), box-shadow .25s; }
+.rfl-hbtn span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: #fff; background: var(--grad); }
+.rfl-hbtn:hover { color: var(--a-text); transform: translateY(-2px); box-shadow: 0 16px 30px -14px rgba(var(--primary-rgb), 1); }
+.rfl-hbtn.is-go span { background: linear-gradient(135deg, #3ddc84, #18a957); }
+.rfl-hbtn.is-warn span { background: linear-gradient(135deg, #ffb02e, #ff7a3d); }
+.rfl-hbtn.is-dim span { background: rgba(var(--a-ink), .12); color: var(--a-text2); }
+.rfl-head form { display: inline-flex; }
+.rfl-head button.rfl-hbtn { cursor: pointer; font-family: inherit; }
+.rfl-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* site toggles on the list pages */
+.rfl-opts { display: flex; flex-wrap: wrap; gap: 10px; margin: -6px 0 18px; }
+.rfl-opt { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; background: var(--a-surface); border: 1px solid var(--a-line); font-size: .84rem; }
+.rfl-opt select { height: 34px; border-radius: 10px; padding: 0 10px; font: inherit; font-size: .82rem; color: var(--a-text); background: var(--a-surface2); border: 1px solid var(--a-line); }
+.rfl-sw { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+.rfl-sw input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 1; margin: 0; }
+.rfl-sw i { position: absolute; inset: 0; border-radius: 20px; background: rgba(var(--a-ink), .15); transition: background .3s; }
+.rfl-sw i::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .3s var(--ease); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.rfl-sw input:checked + i { background: var(--grad); }
+.rfl-sw input:checked + i::after { transform: translateX(-18px); }

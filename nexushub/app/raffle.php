@@ -40,6 +40,33 @@ function raffle_public_name(array $m): string
     return trim((string) ($m['first_name'] ?? '')) ?: 'کاربر';
 }
 
+/**
+ * Who may open a raffle's page. Running raffles and the result window are open to everyone;
+ * after that the owner decides (setting raffle_ended_access): all / participants / winners only.
+ */
+function raffle_page_allowed(array $r, ?array $me): bool
+{
+    if (current_user()) return true;
+    if (in_array($r['status'], ['active', 'cancelled'], true)) return true;
+    if ($r['status'] === 'drawn' && raffle_result_live($r)) return true;
+    $rule = (string) setting('raffle_ended_access', 'winners');
+    if ($rule === 'all') return true;
+    if (!$me) return false;
+    $mid = (int) $me['id'];
+    if ($rule === 'participants') return (bool) val('SELECT 1 FROM raffle_entries WHERE raffle_id = ? AND member_id = ?', [$r['id'], $mid])
+        || (bool) val("SELECT 1 FROM raffle_requests WHERE raffle_id = ? AND member_id = ? AND status = 'approved'", [$r['id'], $mid]);
+    foreach (json_decode((string) ($r['results'] ?? ''), true) ?: [] as $w) if ((int) $w['member_id'] === $mid) return true;
+    return false;
+}
+
+/** full name of a member by id (for results saved before full names were stored) */
+function raffle_member_full(int $mid, string $fallback = ''): string
+{
+    static $cache = [];
+    if (!isset($cache[$mid])) { $m = $mid ? row('SELECT first_name, last_name FROM members WHERE id = ?', [$mid]) : null; $cache[$mid] = $m ? raffle_full_name($m) : $fallback; }
+    return $cache[$mid] ?: $fallback;
+}
+
 function raffle_full_name(array $m): string
 {
     return trim(trim((string) ($m['first_name'] ?? '')) . ' ' . trim((string) ($m['last_name'] ?? ''))) ?: 'کاربر';
@@ -419,7 +446,7 @@ function raffle_state(array $r, ?array $me, bool $admin = false): array
     return [
         'id' => (int) $r['id'], 'status' => $r['status'], 'mode' => $r['mode'], 'left' => $st['left'], 'draw_at' => date('c', strtotime($r['draw_at'])),
         'participants' => $st['participants'], 'need' => $st['need'], 'sold' => $st['sold'], 'need_tickets' => $st['need_tickets'],
-        'results' => array_map(fn($w) => ['prize' => $w['prize'], 'name' => $admin ? ($w['full'] ?? $w['name']) : ($st['pool'][(int) $w['member_id']]['name'] ?? preg_replace('~\s+\S\.$~u', '', (string) $w['name'])), 'ticket' => $w['ticket'] ?? null, 'chance' => $w['chance'] ?? 0, 'me' => $me && (int) $w['member_id'] === (int) $me['id']],
+        'results' => array_map(fn($w) => ['prize' => $w['prize'], 'name' => $admin ? ($st['pool'][(int) $w['member_id']]['full'] ?? $w['full'] ?? raffle_member_full((int) $w['member_id'], (string) $w['name'])) : ($st['pool'][(int) $w['member_id']]['name'] ?? preg_replace('~\s+\S\.$~u', '', (string) $w['name'])), 'ticket' => $w['ticket'] ?? null, 'chance' => $w['chance'] ?? 0, 'me' => $me && (int) $w['member_id'] === (int) $me['id']],
             json_decode((string) ($r['results'] ?? ''), true) ?: []),
         'wheel' => raffle_wheel($r, $st['pool'], $admin),
         'admin' => $admin,

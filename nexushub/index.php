@@ -444,6 +444,13 @@ switch ($seg[0] ?? '') {
             serve_private((string) $req['receipt']);
         }
         if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['raffle_ref'][(int) $raffle['id']] = (string) $_GET['ref'];
+        $raffle = raffle_maybe_draw($raffle);
+        if (!raffle_page_allowed($raffle, current_member())) {
+            http_response_code(403);
+            page_out('raffle_locked', ['raffle' => $raffle, 'bodyClass' => 'page-raffle'], ['title' => $raffle['title'] . ' | ' . setting('site_title'), 'noindex' => true,
+                'url' => site_url('raffle/' . rawurlencode($raffle['slug'])), 'crumbs' => [['خانه', site_url('')], ['قرعه‌کشی‌ها', site_url('raffle')]]]);
+            break;
+        }
         $prz = raffle_prizes($raffle);
         page_out('raffle', ['raffle' => $raffle, 'bodyClass' => 'page-raffle'], [
             'title' => $raffle['title'] . ' | قرعه‌کشی ' . setting('site_title'),

@@ -11,14 +11,14 @@
 @keyframes nxwRays { to { transform: rotate(360deg); } }
 /* rim: neon gradient ring with an inner bevel */
 .nxw-rim { position: absolute; inset: 1.2%; border-radius: 50%;
-    background: conic-gradient(from 0deg, var(--primary), var(--secondary), color-mix(in srgb, var(--primary) 60%, #fff), var(--secondary), var(--primary));
+    background: conic-gradient(from 0deg, var(--acc1, var(--primary)), var(--acc2, var(--secondary)), color-mix(in srgb, var(--acc1, var(--primary)) 60%, #fff), var(--acc2, var(--secondary)), var(--acc1, var(--primary)));
     box-shadow: 0 0 0 1.5px rgba(255,255,255,.18), 0 0 0 5px rgba(5,6,14,.9), 0 0 38px -4px var(--nxw-glow), 0 26px 60px -20px rgba(0,0,0,.85); }
 .nxw-rim::before { content: ""; position: absolute; inset: 1.4%; border-radius: 50%; background: linear-gradient(160deg, #1a1d33, #07080f 55%, #141729); box-shadow: inset 0 2px 0 rgba(255,255,255,.12), inset 0 -2px 6px rgba(0,0,0,.6); }
 .nxw-rim::after { content: ""; position: absolute; inset: 6.4%; border-radius: 50%; background: #04050b; box-shadow: 0 0 0 1.5px rgba(var(--primary-rgb), .85), 0 0 14px rgba(var(--primary-rgb), .55), inset 0 0 0 1px rgba(0,0,0,.8); }
 .nxw-bulbs { position: absolute; inset: 0; z-index: 1; }
 .nxw-bulbs { container-type: size; }
 .nxw-bulbs i { position: absolute; left: 50%; top: 50%; width: 2.2%; aspect-ratio: 1; border-radius: 50%; }
-.nxw-bulbs i { transform: translate(-50%, -50%) rotate(var(--a)) translateY(-46.8cqh); background: radial-gradient(circle at 35% 35%, #fff, color-mix(in srgb, var(--primary) 35%, #fff) 45%, var(--primary) 80%);
+.nxw-bulbs i { transform: translate(-50%, -50%) rotate(var(--a)) translateY(-46.8cqh); background: radial-gradient(circle at 35% 35%, #fff, color-mix(in srgb, var(--acc1, var(--primary)) 35%, #fff) 45%, var(--acc1, var(--primary)) 80%);
     box-shadow: 0 0 0 1px rgba(0,0,0,.55); animation: nxwChase 1.6s linear infinite; animation-delay: calc(var(--k) * -.05s); }
 @keyframes nxwChase { 0%, 100% { opacity: 1; box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 9px 2px rgba(var(--primary-rgb), .95); } 40%, 80% { opacity: .35; box-shadow: 0 0 0 1px rgba(0,0,0,.55); } }
 .nxw-spinning .nxw-bulbs i { animation-duration: .5s; }
@@ -52,9 +52,18 @@
 @keyframes nxwTick { 45% { transform: translateX(-50%) rotate(-15deg); } }
 /* hub */
 .nxw-hub { position: absolute; z-index: 4; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; padding: 4%;
-    background: conic-gradient(from 210deg, var(--primary), var(--secondary), var(--primary)); box-shadow: 0 10px 28px rgba(0,0,0,.65), 0 0 0 2px rgba(0,0,0,.7), 0 0 24px -2px rgba(var(--primary-rgb), .7); }
-.nxw-hub img, .nxw-hub b { position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #06070d; box-shadow: 0 0 0 2px #06070d, inset 0 0 10px #000; font-size: 1.8rem; }
-.nxw-hub::after { content: ""; position: absolute; z-index: 2; inset: 4%; border-radius: 50%; pointer-events: none; background: radial-gradient(90% 55% at 35% 12%, rgba(255,255,255,.32), transparent 60%); }
+    background: conic-gradient(from 210deg, var(--acc1, var(--primary)), var(--acc2, var(--secondary)), var(--acc1, var(--primary))); box-shadow: 0 10px 28px rgba(0,0,0,.65), 0 0 0 2px rgba(0,0,0,.7), 0 0 24px -2px rgba(var(--primary-rgb), .7); }
+/* centre: a glowing orb in the wheel colours (no logo) */
+.nxw-orb { position: relative; z-index: 1; display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+    background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.55), transparent 32%), radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--acc1, var(--primary)) 70%, #000), #05060d 78%);
+    box-shadow: 0 0 0 2px #06070d, inset 0 0 14px rgba(0,0,0,.8), inset 0 -6px 14px color-mix(in srgb, var(--acc2, var(--secondary)) 45%, transparent); }
+.nxw-orb i { position: absolute; inset: 14%; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.28); border-top-color: transparent; border-left-color: transparent; animation: nxwOrb 6s linear infinite; }
+.nxw-orb i + i { inset: 28%; border-color: color-mix(in srgb, var(--acc2, var(--secondary)) 70%, #fff); border-bottom-color: transparent; border-right-color: transparent; animation-duration: 4s; animation-direction: reverse; opacity: .8; }
+.nxw-orb b { position: absolute; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(45deg); border-radius: 22%;
+    background: linear-gradient(135deg, #fff, color-mix(in srgb, var(--acc1, var(--primary)) 55%, #fff) 45%, var(--acc1, var(--primary)));
+    box-shadow: 0 0 14px 3px color-mix(in srgb, var(--acc1, var(--primary)) 70%, transparent), 0 0 0 2px rgba(0,0,0,.4); }
+@keyframes nxwOrb { to { transform: rotate(360deg); } }
+.nxw-spinning .nxw-orb i { animation-duration: 1.2s; }
 .nxw-hub-ring { position: absolute; inset: -9%; border-radius: 50%; border: 1.5px solid rgba(var(--primary-rgb), .55); opacity: 0; }
 .nxw-spinning .nxw-hub-ring { animation: nxwPulse 1s ease-out infinite; }
 @keyframes nxwPulse { 0% { opacity: .9; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.25); } }
@@ -68,7 +77,7 @@
 @keyframes nxwBob { 50% { transform: translateY(-5px) rotate(-4deg); } }
 .nxw-winner small { display: block; font-size: .78rem; color: var(--muted, #aab); }
 .nxw-winner b { display: block; margin: 6px 0 4px; font-size: 1.45rem; line-height: 1.5; color: #fff;
-    background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--primary) 55%, #fff), #fff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nxwShine 2.4s linear infinite; }
+    background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--acc1, var(--primary)) 55%, #fff), #fff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nxwShine 2.4s linear infinite; }
 @keyframes nxwShine { to { background-position: 200% 0; } }
 .nxw-winner .w-prize { margin-top: 6px; padding: 6px 12px; display: inline-block; border-radius: 12px; font-weight: 800; color: #ffd23f; background: rgba(255,210,63,.1); border: 1px solid rgba(255,210,63,.35); }
 .nxw-winner .w-code { margin-top: 10px; display: flex; gap: 6px; justify-content: center; direction: ltr; }
@@ -84,5 +93,17 @@ html.perf-safe .nxw-spinning .nxw-bulbs i:nth-child(odd) { animation: nxwBlink .
 @keyframes nxwBlink { 50% { opacity: .3; } }
 html.perf-safe .nxw-rim { box-shadow: 0 0 0 1.5px rgba(255,255,255,.18), 0 0 0 5px rgba(5,6,14,.9); }
 html.perf-safe .nxw-pointer { filter: none; }
-html.perf-safe .nxw-winner .w-medal, html.perf-safe .nxw-winner b, html.perf-safe .nxw-idle .nxw-disc { animation: none; }
+html.perf-safe .nxw-orb i, html.perf-safe .nxw-winner .w-medal, html.perf-safe .nxw-winner b, html.perf-safe .nxw-idle .nxw-disc { animation: none; }
 html.perf-safe .nxw-winner b { background: none; color: #fff; }
+/* labels: HTML text laid along each slice (turns with the disc; sized by wheel.js to always fit) */
+.nxw-labels { position: absolute; inset: 0; pointer-events: none; }
+.nxw-l { position: absolute; left: 50%; top: 50%; width: var(--w, 40%); height: var(--h, 10%); margin-top: calc(var(--h, 10%) / -2);
+    transform-origin: 0 50%; transform: rotate(var(--rot)) translateX(var(--x, 0)); direction: rtl;
+    display: flex; align-items: center; justify-content: flex-start; overflow: hidden; transition: opacity .35s ease; }
+.nxw-l.is-left { justify-content: flex-end; }
+.nxw-l > span { display: block; max-width: 100%; white-space: nowrap; line-height: 1.12; font-family: Vazirmatn, Tahoma, sans-serif; font-weight: 800; color: #fff; text-align: right;
+    text-shadow: 0 1px 2px rgba(0,0,0,.75), 0 0 8px rgba(0,0,0,.35); -webkit-font-smoothing: antialiased; }
+.nxw-l.is-left > span { text-align: left; }
+.nxw-l > span.two { white-space: normal; overflow-wrap: anywhere; }
+.nxw-l > span.cut { overflow: hidden; text-overflow: ellipsis; }
+.nxw-l.win > span { text-shadow: 0 0 10px rgba(255,255,255,.7), 0 1px 2px rgba(0,0,0,.8); }

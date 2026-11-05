@@ -181,6 +181,7 @@ switch ($seg[1] ?? '') {
         if (!$r || ($r['status'] === 'draft' && !current_user())) json_out(['ok' => false, 'error' => 'قرعه‌کشی پیدا نشد.'], 404);
         $act = $seg[1];
         $me = current_member();
+        if (!raffle_page_allowed($r, $me)) json_out(['ok' => false, 'error' => 'این قرعه‌کشی تموم شده و صفحه‌ش فقط برای برنده‌ها بازه.'], 403);
         if ($act !== 'raffle-state' && !$me) {
             $_SESSION['after_login'] = 'raffle/' . $r['slug'];
             json_out(['ok' => false, 'login' => true, 'url' => url('auth'), 'error' => 'برای شرکت اول وارد حسابت شو یا ثبت‌نام کن.'], 401);

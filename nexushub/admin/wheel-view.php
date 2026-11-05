@@ -51,9 +51,9 @@ adm_head($w['title'], 'wheels');
 <div class="rfl-head">
     <div class="rfl-head-t"><span class="rfl-head-ic">🎡</span><div><h2><?= e($w['title']) ?> <?php if ($private): ?><span class="badge">🔒 فقط برای خودم</span><?php else: ?><span class="badge <?= $badge[0] ?>"><?= e($badge[1]) ?></span><?php endif; ?></h2>
         <small><?= $private ? 'گردونه‌ی شخصی — فقط اینجا می‌چرخه' : fa_num((string) $tot) . ' چرخش · ' . fa_num((string) $people) . ' نفر · ' . fa_num((string) $won) . ' جایزه' ?></small></div></div>
-    <div class="row-flex">
-        <?php if (!$private): ?><a class="abtn abtn-sm" href="<?= e(wheel_url($w)) ?>" target="_blank"><?= icon('external', 15) ?> صفحه روی سایت</a><?php endif; ?>
-        <a class="abtn abtn-sm" href="wheel-edit.php?id=<?= $id ?>"><?= adm_icon('edit', 15) ?> ویرایش</a>
+    <div class="rfl-tools">
+        <?php if (!$private): ?><a class="rfl-hbtn" href="<?= e(wheel_url($w)) ?>" target="_blank"><span><?= icon('external', 15) ?></span> صفحه روی سایت</a><?php endif; ?>
+        <a class="rfl-hbtn" href="wheel-edit.php?id=<?= $id ?>"><span><?= adm_icon('edit', 15) ?></span> ویرایش</a>
     </div>
 </div>
 
