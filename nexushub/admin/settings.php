@@ -141,8 +141,8 @@ adm_head('تنظیمات', 'settings');
         </div>
         <div class="card">
             <div class="card-head"><h3>🧩 کدهای اضافه</h3></div>
-            <?= f_textarea('head_code', 'کد داخل &lt;head&gt; (مثلاً گوگل آنالیتیکس)', $s['head_code'], ['rows' => 5, 'code' => true]) ?>
-            <?= f_textarea('footer_code', 'کد قبل از &lt;/body&gt;', $s['footer_code'], ['rows' => 5, 'code' => true]) ?>
+            <?= f_textarea('head_code', 'کد داخل <head> (مثلاً گوگل آنالیتیکس)', $s['head_code'], ['rows' => 5, 'code' => true]) ?>
+            <?= f_textarea('footer_code', 'کد قبل از </body>', $s['footer_code'], ['rows' => 5, 'code' => true]) ?>
         </div>
         <div class="card">
             <div class="card-head"><h3>✅ فایل‌های تأیید دامنه (اینماد و …)</h3></div>
