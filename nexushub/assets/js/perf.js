@@ -64,7 +64,7 @@
         return score >= 62 ? 'ultra' : score >= 42 ? 'balanced' : score >= 25 ? 'lite' : 'off';
     }
     function fitOf(mode, score) {                     // how well a mode suits this device, in %
-        var need = (touch ? { ultra: 95, balanced: 80, lite: 30, off: 0 } : { ultra: 62, balanced: 42, lite: 25, off: 0 })[mode];   // phone GPUs need more headroom
+        var need = (touch ? { ultra: 95, balanced: 80, lite: 30, off: 0 } : { ultra: 62, balanced: 42, lite: 25, off: 0 })[mode];   // phone GPUs need more headroom (browsers report at most 8 GB of memory, whatever the phone has)
         return Math.max(5, Math.min(100, Math.round(100 - Math.max(0, need - score) * 1.6)));
     }
     function runTest() {
@@ -119,7 +119,7 @@
         box.innerHTML = '<div class="pf-head"><b>⚡ عملکرد سایت</b><button type="button" class="pf-x" aria-label="بستن">✕</button></div>'
             + '<div class="pf-score" data-l="' + (sc == null ? 'mid' : sc >= 75 ? 'good' : sc >= 45 ? 'mid' : 'low') + '">' + '<div class="pf-ring">' + ring + '<span>' + (sc == null ? '…' : fa(sc) + '٪') + '</span></div>'
             + '<div><b>' + (sc == null ? 'در حال تست دستگاه…' : 'توان دستگاه شما') + '</b><small>' + (t ? 'حالت پیشنهادی برای دستگاه شما: «' + NAMES[rec] + '»' : 'چند ثانیه صبر کنید') + '</small>'
-            + (i ? '<small class="pf-info" dir="rtl">' + fa(i.cores) + ' هسته · ' + fa(i.mem) + 'GB حافظه · ' + fa(i.fps) + ' فریم' + (i.gpu ? ' · <span dir="ltr">' + i.gpu.replace(/</g, '') + '</span>' : '') + '</small>' : '') + '</div></div>'
+            + (i ? '<small class="pf-info" dir="rtl">' + fa(i.cores) + ' هسته · ' + (i.mem >= 8 ? '۸GB+ حافظه' : fa(i.mem) + 'GB حافظه') + ' · ' + fa(i.fps) + ' فریم' + (i.gpu ? ' · <span dir="ltr">' + i.gpu.replace(/</g, '') + '</span>' : '') + '</small>' : '') + '</div></div>'
             + '<div class="pf-list">' + MODES.map(function (m) {
                 var k = m[0], fit = sc == null || k === 'auto' ? null : fitOf(k, sc);
                 return '<button type="button" class="pf-opt' + (cur === k ? ' on' : '') + '" data-m="' + k + '"><span class="pf-ic">' + m[3] + '</span><span class="pf-t"><b>' + m[1]
