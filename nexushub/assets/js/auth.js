@@ -8,7 +8,7 @@
     var $ = function (s, c) { return (c || document).querySelector(s); };
     var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
     var body = document.body, root = document.documentElement;
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var reduce = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || document.documentElement.classList.contains('perf-off');
     var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;   // phones: no auto-focus (the keyboard would push the page)
     $$('.nx-warp-core img').forEach(function (i) { if (i.complete && i.naturalWidth) i.classList.add('ok'); });
     var fa = function (s) { return String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };

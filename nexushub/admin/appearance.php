@@ -7,7 +7,7 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
     'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin',
-    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_made', 'to_top_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
+    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_made', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
 
 if (is_post()) {
     csrf_check();
@@ -323,6 +323,7 @@ adm_head('ظاهر سایت', 'appearance');
             <div class="card-head"><h3>🧭 بخش‌های کلی سایت</h3></div>
             <?= f_switch('warp_on', 'انیمیشن جابه‌جایی بین صفحه‌ها', setting_on('warp_on'), 'پرده و لوگوی وسط صفحه موقع رفتن به صفحه‌ی دیگه') ?>
             <?= f_switch('to_top_on', 'دکمه‌ی «بازگشت به بالا»', setting_on('to_top_on'), 'دایره‌ی پایین صفحه با نوار پیشرفت اسکرول') ?>
+            <?= f_switch('perf_widget_on', 'دکمه‌ی «عملکرد سایت» کنار صفحه', setting_on('perf_widget_on'), 'هر بازدیدکننده خودش حالت کامل، متعادل، سبک یا بدون انیمیشن رو انتخاب می‌کنه. (توی پنل همیشه هست)') ?>
             <div class="alert alert-info small">متن «درباره»، کپی‌رایت، نمادهای اعتماد و شبکه‌های اجتماعی در تب «🔗 فوتر و شبکه‌ها» هستن.</div>
         </div>
     </div>

@@ -5,3 +5,4 @@ nexushub/uploads/*
 !nexushub/uploads/index.html
 .DS_Store
 Thumbs.db
+nexushub/app/logs/*.log

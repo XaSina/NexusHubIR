@@ -1,0 +1,59 @@
+/* NEXUS | HUB — performance modes panel + the "no animation" mode. Opaque and transform/opacity only. */
+.pf-tab { position: fixed; left: 0; top: 58%; z-index: 190; width: 30px; height: 46px; padding: 0; display: grid; place-items: center; cursor: pointer;
+    border: 1px solid rgba(var(--primary-rgb, 255,31,61), .35); border-left: 0; border-radius: 0 14px 14px 0;
+    background: rgb(var(--surface-rgb, 18,18,24)); color: var(--primary, #ff1f3d); box-shadow: 0 6px 18px -8px rgba(0,0,0,.6);
+    opacity: .82; transition: opacity .2s ease, width .2s ease; -webkit-tap-highlight-color: transparent; }
+.pf-tab:hover, .pf-tab:focus-visible { opacity: 1; width: 36px; }
+.pf-box { position: fixed; z-index: 195; left: 44px; top: 50%; width: min(360px, calc(100vw - 24px)); max-height: calc(100vh - 40px); overflow-y: auto;
+    padding: 16px; border-radius: 20px; direction: rtl; text-align: right; font-family: inherit; color: var(--text, #f2f2f5);
+    background: rgb(var(--surface-rgb, 18,18,24)); border: 1px solid rgba(var(--primary-rgb, 255,31,61), .28); box-shadow: 0 24px 60px -20px rgba(0,0,0,.75);
+    opacity: 0; transform: translate3d(-8px, -50%, 0); transition: opacity .2s ease, transform .25s ease; }
+.pf-box.in { opacity: 1; transform: translate3d(0, -50%, 0); }
+.theme-light .pf-box, .theme-light .pf-tab { background: #fff; color: #15151c; }
+.pf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 1rem; }
+.pf-x { width: 32px; height: 32px; border-radius: 10px; border: 1px solid rgba(127,127,127,.25); background: transparent; color: inherit; cursor: pointer; }
+.pf-score { display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 16px; background: color-mix(in srgb, rgb(var(--surface-rgb, 18,18,24)) 92%, #808080); margin-bottom: 12px; --c: #ffb020; }
+.pf-score[data-l="good"] { --c: #3ddc84; } .pf-score[data-l="low"] { --c: #ff5a5a; }
+.pf-score > div:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pf-score small { color: var(--muted, #9a9aa6); font-size: .76rem; line-height: 1.6; }
+.pf-info { opacity: .85; }
+.pf-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; display: grid; place-items: center; }
+.pf-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.pf-tr { fill: none; stroke: rgba(127,127,127,.2); stroke-width: 5; }
+.pf-bar { fill: none; stroke: var(--c); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 169.6; transition: stroke-dashoffset .6s ease; }
+.pf-ring span { position: relative; font-weight: 900; color: var(--c); font-size: .95rem; }
+.pf-list { display: flex; flex-direction: column; gap: 6px; }
+.pf-opt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 14px; cursor: pointer; text-align: right; font: inherit; color: inherit;
+    background: transparent; border: 1px solid rgba(127,127,127,.2); transition: border-color .2s, background .2s; }
+.pf-opt:hover { border-color: rgba(var(--primary-rgb, 255,31,61), .5); }
+.pf-opt.on { border-color: var(--primary, #ff1f3d); background: color-mix(in srgb, rgb(var(--surface-rgb, 18,18,24)) 88%, var(--primary, #ff1f3d)); }
+.pf-ic { font-size: 1.15rem; width: 26px; text-align: center; flex-shrink: 0; }
+.pf-t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.pf-t b { font-size: .88rem; } .pf-t b em { font-style: normal; font-size: .68rem; font-weight: 700; padding: 1px 8px; border-radius: 20px; margin-right: 6px; color: #fff; background: var(--primary, #ff1f3d); }
+.pf-t small { color: var(--muted, #9a9aa6); font-size: .72rem; line-height: 1.6; }
+.pf-fit { display: block; height: 4px; border-radius: 4px; background: rgba(127,127,127,.2); margin-top: 4px; overflow: hidden; --c: #ffb020; }
+.pf-fit[data-l="good"] { --c: #3ddc84; } .pf-fit[data-l="low"] { --c: #ff5a5a; }
+.pf-fit u { display: block; height: 100%; width: var(--f); background: var(--c); border-radius: inherit; }
+.pf-pc { font-size: .78rem; font-weight: 800; flex-shrink: 0; color: var(--muted, #9a9aa6); }
+.pf-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.pf-foot small { color: var(--muted, #9a9aa6); font-size: .74rem; }
+.pf-re { padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(127,127,127,.25); background: transparent; color: inherit; font: inherit; font-size: .82rem; cursor: pointer; }
+@media (max-width: 640px) {
+    .pf-tab { top: 64%; width: 26px; height: 40px; }
+    .pf-box { left: 10px; right: 10px; top: auto; bottom: 10px; width: auto; max-height: 78vh; transform: translate3d(0, 14px, 0); }
+    .pf-box.in { transform: none; }
+}
+
+/* ---------- "no animation" mode ---------- */
+html.perf-off *, html.perf-off *::before, html.perf-off *::after {
+    animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
+
+/* ---------- see-through boxes become opaque (some GPUs drew them in two shades) ---------- */
+html.perf-safe .reactions, html.perf-safe .react, html.perf-safe .share-btn, html.perf-safe .sh-trust span, html.perf-safe .tag-cloud a,
+html.perf-safe .post-tags a, html.perf-safe .acc-stat, html.perf-safe .acc-info-item, html.perf-safe .f-about, html.perf-safe .f-trust,
+html.perf-safe .mkt-it, html.perf-safe .pg-num, html.perf-safe .pg-btn, html.perf-safe .chip:not(.chip-hot):not(.chip-feat), html.perf-safe .np-foot {
+    background: color-mix(in srgb, rgb(var(--surface-rgb)) 93%, rgb(var(--text-rgb))) !important; }
+html.perf-safe .rate-chip, html.perf-safe .react.mine { background: color-mix(in srgb, rgb(var(--surface-rgb)) 84%, var(--primary)) !important; }
+html.perf-safe .sh-grid { display: none !important; }
+html.perf-safe .sh-orbs { opacity: .6; }

@@ -1410,42 +1410,62 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
    pseudo-elements or full-screen animated layers — they then paint stripes of random pixels and leave cards
    half-drawn. Phones keep the same look with effects that need no extra GPU layers.
    ====================================================================== */
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
+/* mode: perf-safe */
+
     /* the browser decides which layers it needs (no permanent ones) */
-    *, *::before, *::after { will-change: auto !important; }
+    html.perf-safe *, html.perf-safe *::before, html.perf-safe *::after { will-change: auto !important; }
+
     /* blend modes and filters make every frame re-composite whole areas */
-    *, *::before, *::after { mix-blend-mode: normal !important; }
-    .bg-blob, .nxp-aurora, .nxp-emoji, .pd-emoji b, .cf-icon, .rc-ic, .pl-ring, .pl-ring.r1 { filter: none !important; }
+    html.perf-safe *, html.perf-safe *::before, html.perf-safe *::after { mix-blend-mode: normal !important; }
+
+    html.perf-safe .bg-blob, html.perf-safe .nxp-aurora, html.perf-safe .nxp-emoji, html.perf-safe .pd-emoji b, html.perf-safe .cf-icon, html.perf-safe .rc-ic, html.perf-safe .pl-ring, html.perf-safe .pl-ring.r1 { filter: none !important; }
+
     /* gradient borders drawn with mask-composite -> a plain tinted border */
-    .glass::before { display: none !important; }
-    .glass { border-color: rgba(var(--primary-rgb), .16); }
-    body.cards-gradient .glass, body.cards-holo .glass { border-color: rgba(var(--primary-rgb), .42); }
+    html.perf-safe .glass::before { display: none !important; }
+
+    html.perf-safe .glass { border-color: rgba(var(--primary-rgb), .16); }
+
+    html.perf-safe body.cards-gradient .glass, html.perf-safe body.cards-holo .glass { border-color: rgba(var(--primary-rgb), .42); }
+
     /* full-screen background: still, unmasked, faint */
-    .bg-layer, .bg-layer *, .bg-layer *::before, .bg-layer *::after { animation: none !important; }
-    .bg-hex, .bg-grid, .sh-grid { -webkit-mask: none !important; mask: none !important; }
-    .bg-hex { opacity: .14 !important; }
-    .bg-hex::after { display: none; }
-    .bg-grid { transform: none !important; inset: 0 !important; top: 0 !important; opacity: .18; }
-    .ticker-track { -webkit-mask: none !important; mask: none !important; }
-    .sh-orbs i { animation: none !important; }
+    html.perf-safe .bg-layer, html.perf-safe .bg-layer *, html.perf-safe .bg-layer *::before, html.perf-safe .bg-layer *::after { animation: none !important; }
+
+    html.perf-safe .bg-hex, html.perf-safe .bg-grid, html.perf-safe .sh-grid { -webkit-mask: none !important; mask: none !important; }
+
+    html.perf-safe .bg-hex { opacity: .14 !important; }
+
+    html.perf-safe .bg-hex::after { display: none; }
+
+    html.perf-safe .bg-grid { transform: none !important; inset: 0 !important; top: 0 !important; opacity: .18; }
+
+    html.perf-safe .ticker-track { -webkit-mask: none !important; mask: none !important; }
+
+    html.perf-safe .sh-orbs i { animation: none !important; }
+
     /* scroll reveals: fade only (moving many cards at once is what left them half-drawn) */
-    .js-reveal [data-reveal], .js-reveal [data-reveal].in { transform: none !important; translate: none !important; }
-    .js-reveal [data-reveal] { transition: opacity .55s ease var(--rd, 0ms) !important; }
-    .js-reveal [data-reveal] .cover, .js-reveal [data-reveal].in .cover,
-    .js-reveal [data-reveal] .pc-body > *, .js-reveal [data-reveal].in .pc-body > *,
-    .js-reveal .sec-head[data-reveal] .sec-title, .js-reveal .sec-head[data-reveal] .sec-icon { transform: none !important; transition: none !important; opacity: 1 !important; }
-    .js-reveal [data-reveal] .pc-media::before { display: none !important; }
-    .pcard-card .pc-media::before { display: none !important; }
+    html.perf-safe .js-reveal [data-reveal], html.perf-safe .js-reveal [data-reveal].in { transform: none !important; translate: none !important; }
+
+    html.perf-safe .js-reveal [data-reveal] { transition: opacity .55s ease var(--rd, 0ms) !important; }
+
+    html.perf-safe .js-reveal [data-reveal] .cover, html.perf-safe .js-reveal [data-reveal].in .cover, html.perf-safe .js-reveal [data-reveal] .pc-body > *, html.perf-safe .js-reveal [data-reveal].in .pc-body > *, html.perf-safe .js-reveal .sec-head[data-reveal] .sec-title, html.perf-safe .js-reveal .sec-head[data-reveal] .sec-icon { transform: none !important; transition: none !important; opacity: 1 !important; }
+
+    html.perf-safe .js-reveal [data-reveal] .pc-media::before { display: none !important; }
+
+    html.perf-safe .pcard-card .pc-media::before { display: none !important; }
+
     /* page arrival: fade only */
-    html:not(.warp-in) .site-header { animation-name: nxFadeOnly !important; }
-    html:not(.warp-in) main { animation: none !important; }   /* a page-tall animated layer is the biggest texture a phone can be asked for */
-    .site-footer { content-visibility: visible !important; }
-}
+    html.perf-safe:not(.warp-in) .site-header { animation-name: nxFadeOnly !important; }
+
+    html.perf-safe:not(.warp-in) main { animation: none !important; }
+   /* a page-tall animated layer is the biggest texture a phone can be asked for */
+    html.perf-safe .site-footer { content-visibility: visible !important; }
+
 @keyframes nxFadeOnly { from { opacity: 0; } }
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
+/* mode: perf-safe */
+
     /* Telegram card ripples grew to ~1500 px squares; on phones they are still rings */
-    .tg-cta-bg i { animation: none !important; opacity: .3; transform: translate(-50%, -50%) scale(1); }
-}
+    html.perf-safe .tg-cta-bg i { animation: none !important; opacity: .3; transform: translate(-50%, -50%) scale(1); }
+
 
 /* ======================================================================
    Phone-safe rendering, part 2: one flat, opaque page
@@ -1453,44 +1473,63 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
    see-through texture on every frame; on weaker GPUs its tiles fail and show stripes / half-drawn cards.
    Phones draw the background once on the page itself and use opaque cards. Light fades stay.
    ====================================================================== */
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
-    .bg-layer, .cursor-glow { display: none !important; }
-    html { background: rgb(var(--bg-rgb)); }
-    body { background:
+/* mode: perf-safe */
+
+    html.perf-safe .bg-layer, html.perf-safe .cursor-glow { display: none !important; }
+
+    html.perf-safe { background: rgb(var(--bg-rgb)); }
+
+    html.perf-safe body { background:
         radial-gradient(120% 520px at 85% 0, rgba(var(--primary-rgb), .16), transparent 70%),
         radial-gradient(100% 480px at 0 380px, rgba(var(--secondary-rgb), .07), transparent 70%),
         rgb(var(--bg-rgb)) no-repeat; }
+
     /* opaque surfaces: no see-through blending anywhere on the page */
-    .glass, .pcard-card, .pcard-shop, .trend-item, .widget, .post-body, .post-head, .comments, .site-header .header-inner, .drawer-panel { background: rgb(var(--surface-rgb)) !important; }
-    .theme-light .glass, .theme-light .pcard-card, .theme-light .widget { background: #fff !important; }
-    .site-header .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
+    html.perf-safe .glass, html.perf-safe .pcard-card, html.perf-safe .pcard-shop, html.perf-safe .trend-item, html.perf-safe .widget, html.perf-safe .post-body, html.perf-safe .post-head, html.perf-safe .comments, html.perf-safe .site-header .header-inner, html.perf-safe .drawer-panel { background: rgb(var(--surface-rgb)) !important; }
+
+    html.perf-safe .theme-light .glass, html.perf-safe .theme-light .pcard-card, html.perf-safe .theme-light .widget { background: #fff !important; }
+
+    html.perf-safe .site-header .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
+
     /* reveal: a short, light fade; nothing moves */
-    .js-reveal [data-reveal] { transition: opacity .4s ease var(--rd, 0ms) !important; }
-}
+    html.perf-safe .js-reveal [data-reveal] { transition: opacity .4s ease var(--rd, 0ms) !important; }
+
 
 
 /* ======================================================================
    Phone-safe rendering, part 3: nothing moves or resizes while the page scrolls
    ====================================================================== */
 .read-progress { width: 100% !important; transform: scaleX(0); transform-origin: right center; transition: transform .1s linear; }
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
+/* mode: perf-calm */
+
     /* the header kept changing its height on scroll, shifting the whole page by a few pixels each time */
-    .site-header, .site-header.scrolled { padding-top: 8px; transition: none !important; }
-    .site-header.scrolled .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
-    html:not(.warp-in) .site-header { animation: none !important; }
+    html.perf-calm .site-header, html.perf-calm .site-header.scrolled { padding-top: 8px; transition: none !important; }
+
+    html.perf-calm .site-header.scrolled .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
+
+    html.perf-calm:not(.warp-in) .site-header { animation: none !important; }
+
     /* nothing animates inside the sticky header */
-    .site-header *, .site-header *::before, .site-header *::after { animation: none !important; transition-property: color, background-color, border-color, opacity !important; }
-    .read-progress { transition: none; box-shadow: none; }
+    html.perf-calm .site-header *, html.perf-calm .site-header *::before, html.perf-calm .site-header *::after { animation: none !important; transition-property: color, background-color, border-color, opacity !important; }
+
+    html.perf-calm .read-progress { transition: none; box-shadow: none; }
+
     /* cards are simply there: a fading card is its own layer, and these GPUs mix such layers up while scrolling */
-    .js-reveal [data-reveal], .js-reveal [data-reveal].in { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
-    .js-reveal [data-reveal] *, .js-reveal [data-reveal].in * { transition-delay: 0s !important; }
-    .post-cover .cover, .parallax .cover { transform: none !important; inset: 0 !important; height: 100% !important; }
+    html.perf-calm .js-reveal [data-reveal], html.perf-calm .js-reveal [data-reveal].in { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+
+    html.perf-calm .js-reveal [data-reveal] *, html.perf-calm .js-reveal [data-reveal].in * { transition-delay: 0s !important; }
+
+    html.perf-calm .post-cover .cover, html.perf-calm .parallax .cover { transform: none !important; inset: 0 !important; height: 100% !important; }
+
     /* light motion that never runs during a scroll: taps, menus, buttons */
-    .btn:active, .icon-btn:active { transform: scale(.97); transition: transform .12s ease; }
-}
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    html.perf-calm .btn:active, html.perf-calm .icon-btn:active { transform: scale(.97); transition: transform .12s ease; }
+
+/* mode: perf-safe */
+
     /* the last two large looping effects (they kept running while the page scrolled) */
-    .pulse-ring, .pulse-ring.d2, .nxp-shine, .nxp-shine * { animation: none !important; }
-    .pulse-ring { opacity: .35; }
-    .nxp-shine { display: none !important; }
-}
+    html.perf-safe .pulse-ring, html.perf-safe .pulse-ring.d2, html.perf-safe .nxp-shine, html.perf-safe .nxp-shine * { animation: none !important; }
+
+    html.perf-safe .pulse-ring { opacity: .35; }
+
+    html.perf-safe .nxp-shine { display: none !important; }
+

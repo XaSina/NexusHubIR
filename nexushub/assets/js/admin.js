@@ -675,7 +675,7 @@
        Phones get shorter, lighter versions; nothing runs with "reduce motion". ---------- */
     (function () {
         var mq = function (q) { return window.matchMedia && window.matchMedia(q).matches; };
-        var reduce = mq('(prefers-reduced-motion: reduce)'), lite = mq('(hover: none), (max-width: 900px)');
+        var reduce = mq('(prefers-reduced-motion: reduce)') || document.documentElement.classList.contains('perf-off'), lite = mq('(hover: none), (max-width: 900px)') || document.documentElement.classList.contains('perf-calm');
         var root = document.documentElement;
         var faD = function (t) { return String(t).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
         var enD = function (t) { return String(t).replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }); };

@@ -46,9 +46,14 @@ require NX_APP . '/seo.php';
 
 nx_session_start();
 
+register_shutdown_function(function () {
+    $er = error_get_last();
+    if ($er && in_array($er['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) nx_log_error(new ErrorException($er['message'], 0, $er['type'], $er['file'], $er['line']));
+});
 set_exception_handler(function (Throwable $e) {
     http_response_code(500);
     error_log('[NexusHub] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    nx_log_error($e);
     $debug = (bool) config('debug');
     echo '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><title>خطا</title>'
         . '<body style="background:#050507;color:#eee;font-family:tahoma;padding:40px;text-align:center">'

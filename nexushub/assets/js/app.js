@@ -6,7 +6,8 @@
     var NX = window.NX || {};
     var $ = function (s, c) { return (c || document).querySelector(s); };
     var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var reduce = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || document.documentElement.classList.contains('perf-off');
+    var perfSafe = document.documentElement.classList.contains('perf-safe'), perfCalm = document.documentElement.classList.contains('perf-calm');
     var finePointer = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
     var faDigits = function (s) { return String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
     var store = {
@@ -140,7 +141,7 @@
        Glows are pre-rendered once into small sprites (drawImage is cheap); phones run at 30fps, low-res, paused while scrolling. */
     var cv = $('#bgCanvas');
     // phones: no animated full-screen background at all (the page paints a still gradient instead — see style.css)
-    if (cv && !reduce && !(window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches)) {
+    if (cv && !reduce && !perfSafe) {
         var ctx = cv.getContext('2d');
         var lite = window.matchMedia('(hover: none), (max-width: 900px)').matches;
         var W, H, dpr = 1, parts = [], cols = [], running = true, scrolling = false, scrollT, tick = 0;
@@ -285,7 +286,7 @@
 
     /* ---------- Tilt + shine: the card leans toward the mouse with eased motion, its picture drifts inside for depth.
        Delegated (works for cards added later, e.g. page 2), one rAF loop only while a card is moving. ---------- */
-    if (finePointer && !reduce) {
+    if (finePointer && !reduce && !perfSafe) {
         var TILT = 8, active = [], tiltRaf = 0;
         var stateOf = function (el) { if (!el._tl) el._tl = { el: el, rx: 0, ry: 0, tx: 0, ty: 0, l: 0, tl: 0, px: 0, py: 0, tpx: 0, tpy: 0, img: el.querySelector('.cover') }; return el._tl; };
         var step = function () {
@@ -330,7 +331,7 @@
     var ring = toTop ? ($('.tt-prog', toTop) || $('circle', toTop)) : null;
     // phones: nothing on the page may move or change size while it scrolls (weaker GPUs then mix up layers:
     // ghosted text, the header drawn inside cards). Parallax off, progress bar drawn with a transform only.
-    var calm = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches;
+    var calm = perfCalm;
     if (calm) par = null;
     var lastScrolled = null, lastShow = null, lastOff = -1;
     function onScroll() {

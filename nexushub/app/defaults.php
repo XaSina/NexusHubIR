@@ -30,6 +30,7 @@ function default_settings(): array
         'footer_cta_text' => 'جدیدترین اخبار گیم و تکنولوژی رو زودتر از همه توی تلگرام بخون.',
         'footer_made' => 'Designed with ❤ for NEXUS',
         'to_top_on' => '1',
+        'perf_widget_on' => '1',
         'warp_on' => '1',
         'auth_tagline' => 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥',
         'auth_btn_label' => 'ورود و ثبت‌نام',

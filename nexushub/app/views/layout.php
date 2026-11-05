@@ -95,11 +95,12 @@ $jsCfg['cart'] = $cartN;
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <?php $decorHtml = decor_html('site'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
+<?= perf_head() ?>
 <?php if (setting('custom_css')): ?><style><?= str_ireplace('</style', '', (string) setting('custom_css')) ?></style><?php endif; ?>
 <?php if (empty($meta['noindex'])) echo seo_jsonld($meta, $title, (string) $desc, $image, site_url($ogLogo)); ?>
 <?= setting('head_code') ?>
 </head>
-<body class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
+<body<?= setting_on('perf_widget_on') ? '' : ' data-no-perf' ?> class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">
 <?php if (setting_on('maintenance') && current_user()): ?>
 <div class="mnt-bar" role="status">🔧 <b>حالت تعمیر روشن است</b> — بازدیدکنندگان صفحه‌ی تعمیر را می‌بینند؛ فقط شما (مدیر) سایت را می‌بینید. <a href="?maintenance_preview=1">دیدن صفحه‌ی تعمیر</a> · <a href="<?= e(url('admin/settings.php?tab=advanced')) ?>">خاموش کردن</a></div>
 <?php endif; ?>
@@ -329,5 +330,6 @@ $jsCfg['cart'] = $cartN;
 <?php if ($shopOn || $me): ?><script src="<?= e(asset('js/shop.js')) ?>" defer></script><?php endif; ?>
 <?php if (str_contains((string) ($bodyClass ?? ''), 'page-account')): ?><script src="<?= e(asset('js/pw.js')) ?>" defer></script><?php endif; ?>
 <?= setting('footer_code') ?>
+<?= perf_foot() ?>
 </body>
 </html>

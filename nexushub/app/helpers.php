@@ -39,6 +39,42 @@ function is_https(): bool
         || (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 }
 
+/** performance mode: class on <html> chosen before the first paint (see assets/js/perf.js) */
+function perf_head(): string
+{
+    $js = "(function(){var d=document.documentElement,lv;try{var m=localStorage.getItem('nx_perf')||'auto',a=localStorage.getItem('nx_perf_auto'),"
+        . "t=matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches;lv=m!=='auto'?m:(a||(t?'lite':'ultra'));"
+        . "if(m==='auto'&&!a&&matchMedia('(prefers-reduced-motion: reduce)').matches)lv='off'}catch(e){lv='lite'}"
+        . "if(!/^(ultra|balanced|lite|off)$/.test(lv))lv='lite';d.classList.add('perf-'+lv);if(lv!=='ultra')d.classList.add('perf-safe');"
+        . "if(lv==='lite'||lv==='off')d.classList.add('perf-calm');d.setAttribute('data-perf',lv)})();";
+    return '<script>' . $js . '</script>' . "\n" . '<link rel="stylesheet" href="' . e(asset('css/perf.css')) . '">';
+}
+
+function perf_foot(): string
+{
+    return '<script src="' . e(asset('js/perf.js')) . '" defer></script>';
+}
+
+/** remember the last site errors (app/ is not reachable from the web); shown in Settings > Advanced */
+function nx_log_error(Throwable $e): void
+{
+    try {
+        $file = NX_APP . '/logs/errors.log';
+        if (!is_dir(dirname($file))) @mkdir(dirname($file), 0755, true);
+        $root = defined('NX_ROOT') ? NX_ROOT : dirname(NX_APP);
+        $line = date('Y-m-d H:i:s') . ' | ' . substr((string) ($_SERVER['REQUEST_URI'] ?? ''), 0, 160) . ' | '
+            . str_replace(["\r", "\n"], ' ', $e->getMessage()) . ' @ ' . str_replace($root, '', $e->getFile()) . ':' . $e->getLine() . "\n";
+        $old = is_file($file) ? array_slice(file($file) ?: [], -49) : [];
+        @file_put_contents($file, implode('', $old) . $line, LOCK_EX);
+    } catch (Throwable $x) {}
+}
+
+function nx_recent_errors(int $n = 20): array
+{
+    $file = NX_APP . '/logs/errors.log';
+    return is_file($file) ? array_reverse(array_slice(file($file, FILE_IGNORE_NEW_LINES) ?: [], -$n)) : [];
+}
+
 /** آدرس کامل سایت (با دامنه) */
 function site_url(string $path = ''): string
 {

@@ -92,6 +92,7 @@ function adm_head(string $title, string $active = ''): void
 <link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">
 <?php $decorHtml = decor_html('admin'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
+<?= perf_head() ?>
 </head>
 <body class="adm-body cards-<?= e(isset(card_styles()[(string) setting('card_style', 'glass')]) ? (string) setting('card_style', 'glass') : 'glass') ?>">
 <div class="adm-bg" aria-hidden="true"><i></i><i></i></div>
@@ -173,6 +174,7 @@ window.NXA = <?= json_encode([
 <script src="<?= e(asset('js/admin.js')) ?>"></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 <?php foreach ($scripts as $s): ?><script src="<?= e(asset('js/' . $s)) ?>"></script><?php endforeach; ?>
+<?= perf_foot() ?>
 </body>
 </html>
 <?php

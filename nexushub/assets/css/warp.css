@@ -173,7 +173,9 @@ html.warp-in .wc-bar::after, html.warp-out .wc-bar::after { animation: wcTip .95
 @keyframes wcTip { 0% { opacity: 0; transform: translateX(0); } 8% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; transform: translateX(140px); } }
 @media (prefers-reduced-motion: reduce) { html.warp-in .wc-bar::before, html.warp-out .wc-bar::before { animation: none; transform: none; } }
 /* phones: no masked spinning rings / masked grid in the transition (they glitched on some GPUs) */
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
-    .wf-grid, .wf-sweep, .wc-ring.r1 { display: none !important; }
-    .nx-warp * { will-change: auto !important; }
-}
+/* mode: perf-safe */
+
+    html.perf-safe .wf-grid, html.perf-safe .wf-sweep, html.perf-safe .wc-ring.r1 { display: none !important; }
+
+    html.perf-safe .nx-warp * { will-change: auto !important; }
+

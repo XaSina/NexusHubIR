@@ -183,11 +183,15 @@
    phones have, which painted random stripes across the page. It now only needs to cover its own box. */
 .nxp-theme-flow { overflow: hidden; isolation: isolate; }
 .nxp-theme-flow::before { width: 220%; height: auto; aspect-ratio: 1; max-width: none; max-height: none; }
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
-    .nxp-theme-flow::before { animation: none !important; }
-    .nxp-aurora i, .nxp-theme-flow .nxp-title { animation: none !important; }
-    .nxp *, .nxp *::before, .nxp *::after { will-change: auto !important; }
-}
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
-    .nxp-theme-neon, .nxp-theme-glass { background: rgb(var(--surface-rgb)) !important; }
-}
+/* mode: perf-safe */
+
+    html.perf-safe .nxp-theme-flow::before { animation: none !important; }
+
+    html.perf-safe .nxp-aurora i, html.perf-safe .nxp-theme-flow .nxp-title { animation: none !important; }
+
+    html.perf-safe .nxp *, html.perf-safe .nxp *::before, html.perf-safe .nxp *::after { will-change: auto !important; }
+
+/* mode: perf-safe */
+
+    html.perf-safe .nxp-theme-neon, html.perf-safe .nxp-theme-glass { background: rgb(var(--surface-rgb)) !important; }
+

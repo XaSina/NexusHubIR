@@ -148,6 +148,12 @@ adm_head('تنظیمات', 'settings');
             <?= f_textarea('footer_code', 'کد قبل از </body>', $s['footer_code'], ['rows' => 5, 'code' => true]) ?>
         </div>
         <div class="card">
+            <div class="card-head"><h3>🧯 آخرین خطاهای سایت</h3></div>
+            <?php $errs = nx_recent_errors(15); if (!$errs): ?><p class="muted small">هیچ خطایی ثبت نشده ✅</p>
+            <?php else: ?><p class="muted small">اگه صفحه‌ای «خطایی رخ داد» نشون داد، دلیلش اینجا نوشته می‌شه — یه اسکرین‌شات از همین کادر کافیه.</p>
+            <pre class="ltr small" style="white-space:pre-wrap;max-height:260px;overflow:auto;margin:0;padding:12px;border-radius:12px;background:rgba(0,0,0,.35)"><?= e(implode("\n", $errs)) ?></pre><?php endif; ?>
+        </div>
+        <div class="card">
             <div class="card-head"><h3>✅ فایل‌های تأیید دامنه (اینماد و …)</h3></div>
             <?= f_textarea('verify_files', 'نام فایل‌ها (هر خط یکی)', (string) ($s['verify_files'] ?? ''), ['rows' => 4, 'code' => true, 'placeholder' => '35243901.txt', 'hint' => 'اسم فایلی که اینماد (یا هر سایت دیگه) گفته رو اینجا بنویس، مثلاً 35243901.txt — دیگه لازم نیست فایلی آپلود کنی؛ سایت خودش اون آدرس رو خالی تحویل می‌ده. حتماً دامنه‌ی ثبت‌شده در اینماد درست باشه: nexushubstore.ir']) ?>
             <?php foreach (array_filter(array_map('trim', preg_split('~[\r\n,]+~', (string) ($s['verify_files'] ?? '')))) as $vfn): ?>
