@@ -15,6 +15,9 @@ $newest = $posts[0]['published_at'] ?? null;
 <?php if (shop_on()): ?><url><loc><?= e(site_url('shop')) ?></loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 <?php foreach (rows("SELECT slug, image, updated_at FROM products WHERE status IN ('active','soldout')") as $pr): ?><url><loc><?= e(site_url('shop/' . rawurlencode($pr['slug']))) ?></loc><?= $lm($pr['updated_at']) ?><priority>0.6</priority><?= $img($pr['image']) ?></url>
 <?php endforeach; endif; ?>
+<?php try { $rfs = rows("SELECT slug, updated_at FROM raffles WHERE status IN ('active','drawn')"); } catch (Throwable $e) { $rfs = []; } if ($rfs): ?><url><loc><?= e(site_url('raffle')) ?></loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+<?php foreach ($rfs as $rf): ?><url><loc><?= e(site_url('raffle/' . rawurlencode($rf['slug']))) ?></loc><?= $lm($rf['updated_at']) ?><priority>0.6</priority></url>
+<?php endforeach; endif; ?>
 <?php foreach ($posts as $p): ?><url><loc><?= e(site_url('post/' . rawurlencode($p['slug']))) ?></loc><?= $lm($p['updated_at']) ?><?= $img($p['cover']) ?></url>
 <?php endforeach; ?>
 </urlset>

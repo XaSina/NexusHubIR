@@ -656,7 +656,7 @@ function after_login_url(bool $consume = true): string
 {
     $to = (string) ($_SESSION['after_login'] ?? '');
     if ($consume) unset($_SESSION['after_login']);
-    return preg_match('~^(checkout|orders|order/[A-Z0-9]+|support(/[A-Z0-9]+)?)$~i', $to) ? url($to) : url('account');
+    return preg_match('~^(checkout|orders|order/[A-Z0-9]+|support(/[A-Z0-9]+)?|raffle/[a-z0-9-]+)$~i', $to) ? url($to) : url('account');
 }
 
 /* =========================================================================

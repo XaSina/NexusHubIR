@@ -53,6 +53,7 @@ function adm_nav(): array
     shop_expire_due();
     $toReview = (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')");
     $openT = (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'");
+    try { $raffleReq = (int) val("SELECT COUNT(*) FROM raffle_requests WHERE status = 'pending'"); } catch (Throwable $e) { $raffleReq = 0; }
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
         ['سفارش‌ها', 'orders.php', 'orders', 'shop', 'orders', $toReview],
@@ -66,6 +67,7 @@ function adm_nav(): array
         ['کتابخانه رسانه', 'media.php', 'image', 'media', 'media', 0],
         ['استوری‌ها', 'stories.php', 'story', '*', 'stories', 0],
         ['تبلیغات', 'ads.php', 'ads', '*', 'ads', 0],
+        ['قرعه‌کشی', 'raffles.php', 'gift', '*', 'raffles', $raffleReq],
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
         ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],

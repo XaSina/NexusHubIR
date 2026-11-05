@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 7;
+const NX_DB_VERSION = 8;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void

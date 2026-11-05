@@ -423,6 +423,37 @@ switch ($seg[0] ?? '') {
         require NX_APP . '/api.php';
         break;
 
+    /* ======================= Raffles ======================= */
+    case 'raffle':
+        raffles_due();
+        track_visit();
+        $slug = (string) ($seg[1] ?? '');
+        if ($slug === '') {
+            $list = rows("SELECT * FROM raffles WHERE status IN ('active','drawn','failed') ORDER BY (status = 'active') DESC, draw_at DESC LIMIT 40");
+            page_out('raffles', ['list' => $list, 'bodyClass' => 'page-raffles'], ['title' => 'قرعه‌کشی‌ها | ' . setting('site_title'),
+                'description' => 'قرعه‌کشی‌های ' . setting('site_title') . ' — شرکت کن و جایزه ببر', 'url' => site_url('raffle'),
+                'crumbs' => [['خانه', site_url('')], ['قرعه‌کشی‌ها', site_url('raffle')]]]);
+            break;
+        }
+        $raffle = row('SELECT * FROM raffles WHERE slug = ?', [$slug]);
+        if (!$raffle || ($raffle['status'] === 'draft' && !current_user())) not_found();
+        if (($seg[2] ?? '') === 'receipt') {   // a member's own receipt, or any for the admin
+            $req = row('SELECT * FROM raffle_requests WHERE id = ? AND raffle_id = ?', [(int) ($seg[3] ?? 0), $raffle['id']]);
+            $me = current_member();
+            if (!$req || !$req['receipt'] || (!current_user() && (!$me || (int) $me['id'] !== (int) $req['member_id']))) not_found();
+            serve_private((string) $req['receipt']);
+        }
+        if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['raffle_ref'][(int) $raffle['id']] = (string) $_GET['ref'];
+        $prz = raffle_prizes($raffle);
+        page_out('raffle', ['raffle' => $raffle, 'bodyClass' => 'page-raffle'], [
+            'title' => $raffle['title'] . ' | قرعه‌کشی ' . setting('site_title'),
+            'description' => '🎁 جایزه: ' . implode('، ', array_column($prz, 'title')) . ' — ' . str_excerpt((string) $raffle['description'], 200),
+            'image' => $raffle['image'] && !str_ends_with(strtolower((string) $raffle['image']), '.svg') ? site_url($raffle['image']) : '',
+            'url' => site_url('raffle/' . rawurlencode($raffle['slug'])), 'noindex' => $raffle['status'] === 'draft',
+            'crumbs' => [['خانه', site_url('')], ['قرعه‌کشی‌ها', site_url('raffle')], [$raffle['title'], site_url('raffle/' . rawurlencode($raffle['slug']))]],
+        ]);
+        break;
+
     case 'sitemap.xml':
         header('Content-Type: application/xml; charset=utf-8');
         echo view('sitemap');

@@ -173,6 +173,32 @@ switch ($seg[1] ?? '') {
         member_login($m);
         json_out(['ok' => true, 'name' => $m['first_name'], 'code' => $m['member_code'], 'redirect' => after_login_url(), 'csrf' => csrf_token()]);
 
+    /* ---------- raffles ---------- */
+    case 'raffle-state':
+    case 'raffle-join':
+    case 'raffle-buy':
+        $r = row('SELECT * FROM raffles WHERE id = ?', [(int) ($_POST['id'] ?? 0)]);
+        if (!$r || ($r['status'] === 'draft' && !current_user())) json_out(['ok' => false, 'error' => 'قرعه‌کشی پیدا نشد.'], 404);
+        $act = $seg[1];
+        $me = current_member();
+        if ($act !== 'raffle-state' && !$me) {
+            $_SESSION['after_login'] = 'raffle/' . $r['slug'];
+            json_out(['ok' => false, 'login' => true, 'url' => url('auth'), 'error' => 'برای شرکت اول وارد حسابت شو یا ثبت‌نام کن.'], 401);
+        }
+        if ($act === 'raffle-join') {
+            $res = raffle_join($r, $me, (string) ($_SESSION['raffle_ref'][(int) $r['id']] ?? ''));
+            if (!$res['ok']) json_out($res, 422);
+        } elseif ($act === 'raffle-buy') {
+            if (time() - (int) ($_SESSION['last_raffle_buy'] ?? 0) < 15) json_out(['ok' => false, 'error' => 'چند ثانیه صبر کن و دوباره بفرست.'], 429);
+            $res = raffle_request_tickets($r, $me, (int) en_num((string) ($_POST['qty'] ?? '0')), $_FILES['receipt'] ?? []);
+            if (!$res['ok']) json_out($res, 422);
+            $_SESSION['last_raffle_buy'] = time();
+        } else {
+            $r = raffle_maybe_draw($r);
+        }
+        $r = row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
+        json_out(['ok' => true] + raffle_state($r, $me));
+
     case 'auth-register':
         if (!setting_on('members_register')) json_out(['ok' => false, 'error' => 'ثبت‌نام در حال حاضر غیرفعال است.'], 403);
         if (!empty($_POST['website'])) json_out(['ok' => false, 'error' => 'درخواست نامعتبر.'], 422); // honeypot

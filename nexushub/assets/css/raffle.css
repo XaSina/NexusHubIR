@@ -1,0 +1,158 @@
+/* NEXUS | HUB — raffles: hero, countdown, prizes, the wheel, winner reveal. transform/opacity only;
+   the light performance modes (html.perf-safe / perf-calm / perf-off) drop the looping effects. */
+.rf-page { margin-top: 26px; }
+.rf-hero { position: relative; overflow: hidden; isolation: isolate; border-radius: calc(var(--radius) + 4px); padding: 44px 28px 30px; text-align: center;
+    border: 1px solid rgba(var(--primary-rgb), .35); background: radial-gradient(120% 140% at 50% -20%, rgba(var(--primary-rgb), .32), transparent 60%), rgb(var(--surface-rgb)); }
+.rf-hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: var(--img, none) center / cover no-repeat; opacity: .18; }
+.rf-hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.rf-hero-bg i { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(var(--secondary-rgb), .35), transparent 65%); width: 340px; height: 340px; }
+.rf-hero-bg i:nth-child(1) { top: -140px; right: -80px; animation: rfOrb 14s ease-in-out infinite alternate; }
+.rf-hero-bg i:nth-child(2) { bottom: -160px; left: -60px; background: radial-gradient(circle, rgba(var(--primary-rgb), .4), transparent 65%); animation: rfOrb 18s ease-in-out infinite alternate-reverse; }
+.rf-hero-bg i:nth-child(3) { top: 30%; left: 40%; width: 200px; height: 200px; opacity: .5; animation: rfOrb 11s ease-in-out infinite alternate; }
+@keyframes rfOrb { to { transform: translate3d(40px, 30px, 0) scale(1.15); } }
+.rf-hero-in { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.rf-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 30px; font-size: .78rem; font-weight: 800; background: rgba(var(--text-rgb), .08); border: 1px solid var(--line); }
+.rf-st-active { color: #3ddc84; border-color: rgba(61,220,132,.45); background: rgba(61,220,132,.12); }
+.rf-st-active::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #3ddc84; animation: rfBlink 1.4s ease-in-out infinite; }
+.rf-st-drawn { color: #ffc53d; border-color: rgba(255,197,61,.45); background: rgba(255,197,61,.12); }
+.rf-st-failed, .rf-st-cancelled { color: var(--muted); }
+@keyframes rfBlink { 50% { opacity: .25; } }
+.rf-title { margin: 4px 0 0; font-size: clamp(1.5rem, 4.2vw, 2.4rem); line-height: 1.5; background: linear-gradient(120deg, #fff 30%, rgba(var(--primary-rgb), 1)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.theme-light .rf-title { background: none; color: var(--text); }
+.rf-mode-line { margin: 0; color: var(--muted); font-size: .88rem; }
+.rf-when { margin: 2px 0 0; color: var(--muted); font-size: .85rem; display: inline-flex; align-items: center; gap: 6px; }
+/* countdown: flip-style tiles */
+.rf-count { display: flex; gap: 10px; margin-top: 10px; direction: ltr; }
+.rf-count > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rf-count b { min-width: 68px; padding: 12px 6px; border-radius: 16px; font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; color: #fff;
+    background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--surface-rgb)) 70%, var(--primary)), rgb(var(--surface-rgb)));
+    border: 1px solid rgba(var(--primary-rgb), .45); box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); position: relative; overflow: hidden; }
+.rf-count b::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(0,0,0,.35); }
+.rf-count b.tick { animation: rfFlip .45s cubic-bezier(.34,1.56,.64,1); }
+@keyframes rfFlip { 0% { transform: rotateX(80deg); opacity: .3; } 100% { transform: none; opacity: 1; } }
+.rf-count small { font-size: .72rem; color: var(--muted); }
+.theme-light .rf-count b { color: var(--text); }
+/* progress to the minimum */
+.rf-progress { width: min(520px, 100%); margin-top: 8px; }
+.rf-pbar { position: relative; height: 12px; border-radius: 12px; background: rgba(var(--text-rgb), .08); overflow: hidden; border: 1px solid var(--line); }
+.rf-pbar i { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 1s cubic-bezier(.16,1,.3,1); }
+.rf-pbar i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transform: translateX(-100%); animation: rfSheen 2.4s ease-in-out infinite; }
+@keyframes rfSheen { to { transform: translateX(100%); } }
+.rf-plabel { display: flex; justify-content: space-between; margin-top: 6px; font-size: .8rem; color: var(--muted); }
+.rf-plabel b { color: var(--text); }
+/* prizes */
+.rf-prizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 18px 0; }
+.rf-prize { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 12px; border-radius: 18px; text-align: center;
+    background: rgb(var(--surface-rgb)); border: 1px solid rgba(var(--primary-rgb), .25); animation: rfRise .7s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--i) * 90ms); }
+.rf-prize:first-child { border-color: rgba(255,197,61,.6); background: radial-gradient(120% 120% at 50% 0, rgba(255,197,61,.14), transparent 60%), rgb(var(--surface-rgb)); }
+.rf-medal { position: absolute; top: 10px; right: 12px; font-size: 1.2rem; }
+.rf-pz-emoji { font-size: 2.4rem; line-height: 1.2; animation: rfFloat 3.2s ease-in-out infinite; }
+.rf-prize b { font-size: .98rem; } .rf-prize small { color: var(--muted); font-size: .74rem; }
+@keyframes rfRise { from { opacity: 0; transform: translate3d(0, 18px, 0); } }
+@keyframes rfFloat { 50% { transform: translate3d(0, -6px, 0); } }
+/* layout */
+.rf-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.rf-main, .rf-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.rf-wheel-card, .rf-act, .rf-how, .rf-people, .rf-desc { padding: 20px; border-radius: var(--radius); }
+.rf-wheel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.rf-live { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 20px; font-size: .78rem; font-weight: 800; color: #fff; background: #ff2b4a; }
+.rf-live i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: rfBlink 1s infinite; }
+/* ---------- the wheel ---------- */
+.rf-wheel-wrap { position: relative; width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto 0; }
+.rf-disc { position: absolute; inset: 7%; border-radius: 50%; transform: rotate(0deg); }
+.rf-disc svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.rf-disc.spin { transition: transform var(--dur, 7.5s) cubic-bezier(.12,.68,.06,1); }
+.rf-disc.idle { animation: rfIdle 60s linear infinite; }
+@keyframes rfIdle { to { transform: rotate(360deg); } }
+.rf-seg-t { font: 800 11px Vazirmatn, sans-serif; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
+.rf-seg.win path { stroke: #fff; stroke-width: 3; }
+.rf-seg.win { animation: rfWinSeg .9s ease-in-out 3; }
+@keyframes rfWinSeg { 50% { opacity: .55; } }
+.rf-lights { position: absolute; inset: 2%; border-radius: 50%; border: 10px solid color-mix(in srgb, rgb(var(--surface-rgb)) 70%, var(--primary));
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 0 0 0 2px rgba(var(--primary-rgb), .5); }
+.rf-lights i { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #fff3c4; transform: rotate(var(--a)) translate(0, calc(-1 * var(--r))); opacity: .35; }
+.rf-lights i:nth-child(odd) { animation: rfBulb 1s steps(1) infinite; } .rf-lights i:nth-child(even) { animation: rfBulb 1s steps(1) .5s infinite; }
+.spinning .rf-lights i { animation-duration: .25s; }
+@keyframes rfBulb { 0% { opacity: 1; } 50% { opacity: .25; } }
+.rf-pointer { position: absolute; top: -1%; left: 50%; z-index: 3; width: 34px; height: 46px; margin-left: -17px; transform-origin: 50% 20%;
+    background: linear-gradient(180deg, #fff, #ffd5dc); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.rf-pointer::after { content: ""; position: absolute; left: 50%; top: 6px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--primary); }
+.rf-pointer.tick { animation: rfTick .12s ease-out; }
+@keyframes rfTick { 50% { transform: rotate(-18deg); } }
+.rf-hub { position: absolute; left: 50%; top: 50%; z-index: 2; width: 19%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; padding: 5px;
+    background: conic-gradient(var(--primary), var(--secondary), var(--primary)); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+.rf-hub img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; display: block; }
+.rf-confetti { position: absolute; inset: -20%; width: 140%; height: 140%; pointer-events: none; z-index: 4; }
+.rf-winner { position: absolute; left: 50%; top: 50%; z-index: 5; width: min(92%, 330px); transform: translate(-50%, -50%) scale(.6); opacity: 0; padding: 18px; border-radius: 20px; text-align: center;
+    background: rgb(var(--surface-rgb)); border: 2px solid #ffc53d; box-shadow: 0 20px 60px rgba(0,0,0,.6); transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s ease; }
+.rf-winner.in { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.rf-winner .w-medal { font-size: 2.6rem; display: block; }
+.rf-winner b { display: block; font-size: 1.35rem; margin: 4px 0; }
+.rf-winner small { color: var(--muted); display: block; }
+.rf-winner .w-prize { color: #ffc53d; font-weight: 800; }
+.rf-wheel-note { text-align: center; color: var(--muted); font-size: .86rem; margin: 12px 0 0; }
+.rf-results { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.rf-res { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, rgb(var(--surface-rgb)) 90%, #ffc53d); border: 1px solid rgba(255,197,61,.35); animation: rfRise .6s cubic-bezier(.16,1,.3,1) both; }
+.rf-res .m { font-size: 1.5rem; } .rf-res b { display: block; } .rf-res small { color: var(--muted); font-size: .78rem; }
+.rf-res.me { border-color: #3ddc84; }
+.rf-replay { display: block; margin: 12px auto 0; }
+/* action card */
+.rf-act h3, .rf-how h3, .rf-people h3, .rf-desc h3 { margin: 0 0 10px; font-size: 1.02rem; display: flex; align-items: center; gap: 6px; }
+.rf-join-big { position: relative; overflow: hidden; }
+.rf-join-big::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%); transform: translateX(-120%); animation: rfBtnShine 3s ease-in-out infinite; }
+@keyframes rfBtnShine { 60%, 100% { transform: translateX(120%); } }
+.rf-me { margin-top: 12px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, rgb(var(--surface-rgb)) 90%, var(--primary)); border: 1px solid rgba(var(--primary-rgb), .3); }
+.rf-me-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .88rem; padding: 4px 0; }
+.rf-me-row b { font-size: 1.05rem; }
+.rf-chance { font-size: 1.6rem !important; font-weight: 900; color: var(--primary); }
+.rf-ok { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: rgba(61,220,132,.12); border: 1px solid rgba(61,220,132,.4); color: #3ddc84; font-weight: 800; }
+.rf-invite { display: flex; gap: 6px; margin-top: 8px; }
+.rf-invite input { flex: 1; min-width: 0; direction: ltr; font-size: .78rem; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--line); background: rgba(var(--text-rgb), .04); color: var(--text); }
+.rf-tickets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rf-tickets span { padding: 4px 10px; border-radius: 10px; font-size: .8rem; font-weight: 800; background: rgba(var(--primary-rgb), .15); border: 1px dashed rgba(var(--primary-rgb), .6); direction: ltr; }
+.rf-price { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(var(--text-rgb), .04); border: 1px solid var(--line); }
+.rf-price b { font-size: 1.2rem; } .rf-price small { font-size: .74rem; color: var(--muted); }
+.rf-buy { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.rf-qty { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.rf-qty button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(var(--text-rgb), .05); color: var(--text); font-size: 1.3rem; cursor: pointer; }
+.rf-qty input { width: 90px; height: 44px; text-align: center; font: 800 1.2rem Vazirmatn, sans-serif; border-radius: 12px; border: 1px solid rgba(var(--primary-rgb), .5); background: transparent; color: var(--text); }
+.rf-total { text-align: center; font-size: .9rem; } .rf-total b { color: var(--primary); font-size: 1.15rem; }
+.rf-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line); text-align: center; }
+.rf-cardno { font-size: 1.15rem; letter-spacing: 1px; }
+.rf-file input { display: none; }
+.rf-file span { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; border: 1.5px dashed rgba(var(--primary-rgb), .5); cursor: pointer; font-size: .86rem; }
+.rf-file.has span { border-style: solid; color: #3ddc84; border-color: rgba(61,220,132,.6); }
+.rf-req { display: flex; justify-content: space-between; font-size: .8rem; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.rf-how ul { margin: 0; padding-right: 18px; color: var(--muted); font-size: .86rem; line-height: 2; }
+.rf-how b { color: var(--text); }
+.rf-plist { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.rf-pp { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: .84rem; }
+.rf-pp .n { color: var(--muted); font-size: .74rem; text-align: center; }
+.rf-pp .bar { grid-column: 2 / 4; height: 4px; border-radius: 4px; background: rgba(var(--text-rgb), .08); overflow: hidden; margin-top: -4px; }
+.rf-pp .bar i { display: block; height: 100%; width: var(--w); background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: inherit; }
+.rf-pp.me b { color: var(--primary); }
+.rf-desc .prose { font-size: .92rem; }
+/* list page */
+.rf-list-head { text-align: center; margin: 10px 0 22px; } .rf-list-head h1 { margin: 0 0 6px; }
+.rf-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.rf-card { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: var(--radius); transition: translate .4s cubic-bezier(.16,1,.3,1), border-color .3s; }
+.rf-card:hover { translate: 0 -4px; border-color: rgba(var(--primary-rgb), .5); }
+.rf-card-top { display: flex; justify-content: space-between; align-items: center; }
+.rf-card-mode { font-size: .76rem; color: var(--muted); }
+.rf-card-emoji { font-size: 2.6rem; line-height: 1.3; }
+.rf-card-title { font-size: 1.08rem; } .rf-card-prize { font-size: .88rem; } .rf-card-meta { font-size: .8rem; color: var(--muted); }
+.rf-card-failed, .rf-card-cancelled { opacity: .7; }
+@media (max-width: 900px) {
+    .rf-grid { grid-template-columns: minmax(0, 1fr); }
+    .rf-hero { padding: 32px 16px 24px; }
+    .rf-count b { min-width: 58px; font-size: 1.6rem; padding: 10px 4px; }
+    .rf-wheel-card, .rf-act, .rf-how, .rf-people, .rf-desc { padding: 16px; }
+}
+@media (max-width: 380px) { .rf-count { gap: 6px; } .rf-count b { min-width: 50px; font-size: 1.35rem; } }
+/* light modes: no looping decoration, nothing moves except the wheel itself */
+html.perf-safe .rf-hero-bg, html.perf-safe .rf-pbar i::after, html.perf-safe .rf-join-big::after { display: none; }
+html.perf-safe .rf-pz-emoji, html.perf-safe .rf-disc.idle, html.perf-safe .rf-st-active::before { animation: none; }
+html.perf-safe .rf-lights i { animation: none; opacity: .7; }
+html.perf-safe .spinning .rf-lights i:nth-child(odd) { animation: rfBulb .5s steps(1) infinite; }
+html.perf-safe .rf-pointer { filter: none; }
+html.perf-calm .rf-prize, html.perf-calm .rf-res { animation: none; }
