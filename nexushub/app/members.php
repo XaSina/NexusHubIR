@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 8;
+const NX_DB_VERSION = 9;
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -47,6 +47,11 @@ function nx_migrate(): void
     if ($v < 7) {
         // v7: the default admin display name becomes the brand name
         q("UPDATE users SET display_name = 'NexusHub' WHERE display_name IN ('مدیر NEXUS', 'مدیر nexus')");
+    }
+    if ($v < 9) {
+        // v9: how long a finished raffle keeps its result box on the site
+        $rc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'raffles'"), 'COLUMN_NAME');
+        if ($rc && !in_array('result_hours', $rc, true)) db()->exec("ALTER TABLE `raffles` ADD COLUMN `result_hours` INT UNSIGNED NOT NULL DEFAULT 24 AFTER `box_accent`");
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

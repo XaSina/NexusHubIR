@@ -7,7 +7,7 @@ $r = $id ? row('SELECT * FROM raffles WHERE id = ?', [$id]) : null;
 if ($id && !$r) { flash('قرعه‌کشی پیدا نشد.', 'error'); redirect('admin/raffles.php'); }
 $r = $r ?: ['id' => 0, 'slug' => '', 'title' => '', 'description' => '', 'image' => '', 'mode' => 'free', 'prizes' => json_encode([['title' => '', 'emoji' => '🎁']]),
     'draw_at' => date('Y-m-d H:i:s', strtotime('+1 day')), 'min_participants' => 20, 'min_tickets' => 0, 'ticket_price' => 50000, 'max_tickets_user' => 100,
-    'ticket_bonus' => 100, 'max_referrals' => 0, 'status' => 'draft', 'box_on' => 1, 'box_places' => 'home_top,sidebar,post_bottom', 'box_theme' => 'neon', 'box_accent' => ''];
+    'ticket_bonus' => 100, 'max_referrals' => 0, 'status' => 'draft', 'box_on' => 1, 'box_places' => 'home_top,sidebar,post_bottom', 'box_theme' => 'neon', 'box_accent' => '', 'result_hours' => 24];
 $locked = in_array($r['status'], ['drawn', 'failed'], true);
 $errors = [];
 
@@ -35,6 +35,7 @@ if (is_post()) {
     $d['box_places'] = implode(',', array_intersect((array) ($_POST['box_places'] ?? []), array_keys(shop_banner_places())));
     $d['box_theme'] = array_key_exists($_POST['box_theme'] ?? '', ad_themes()) ? $_POST['box_theme'] : 'neon';
     $d['box_accent'] = valid_hex((string) ($_POST['box_accent'] ?? ''), '') ?: null;
+    $d['result_hours'] = max(0, min(720, (int) en_num((string) ($_POST['result_hours'] ?? 24))));
     $want = (string) ($_POST['status'] ?? 'draft');
     if (!$locked) $d['status'] = in_array($want, ['draft', 'active', 'cancelled'], true) ? $want : 'draft';
 
@@ -44,7 +45,7 @@ if (is_post()) {
     if ($d['mode'] === 'paid' && $d['ticket_price'] <= 0) $errors[] = 'قیمت هر تیکت رو مشخص کن.';
 
     if (!$errors) {
-        $row = array_intersect_key($d, array_flip(['title', 'description', 'image', 'mode', 'prizes', 'draw_at', 'min_participants', 'min_tickets', 'ticket_price', 'max_tickets_user', 'ticket_bonus', 'max_referrals', 'status', 'box_on', 'box_places', 'box_theme', 'box_accent']));
+        $row = array_intersect_key($d, array_flip(['title', 'description', 'image', 'mode', 'prizes', 'draw_at', 'min_participants', 'min_tickets', 'ticket_price', 'max_tickets_user', 'ticket_bonus', 'max_referrals', 'status', 'box_on', 'box_places', 'box_theme', 'box_accent', 'result_hours']));
         $row['updated_at'] = now();
         if ($r['id']) {
             $sets = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($row)));
@@ -111,17 +112,32 @@ adm_head($r['id'] ? 'ویرایش قرعه‌کشی' : 'قرعه‌کشی جدی
             <?= f_jdate('draw_at', 'زمان برگزاری (شمسی)', $r['draw_at'], 'سر همین ساعت گردونه روی سایت زنده می‌چرخه') ?>
             <?php if (!$locked): ?><?= f_select('status', 'وضعیت', ['draft' => 'پیش‌نویس (فقط خودت می‌بینی)', 'active' => 'فعال — مردم می‌تونن شرکت کنن', 'cancelled' => 'لغو شده'], $r['status']) ?><?php endif; ?>
         </div>
-        <div class="card">
-            <div class="card-head"><h3>📣 کادر تبلیغ قرعه‌کشی</h3></div>
-            <?= f_switch('box_on', 'نمایش کادر شمارش معکوس روی سایت', (bool) $r['box_on'], 'مثل تبلیغ‌ها، با زمان باقی‌مونده و تعداد شرکت‌کننده‌ها') ?>
-            <div class="af"><span class="af-label">جاهای نمایش</span>
-                <div class="rf-places"><?php foreach (shop_banner_places() as $k => $nm): ?><label class="rf-place"><input type="checkbox" name="box_places[]" value="<?= $k ?>" <?= in_array($k, $places, true) ? 'checked' : '' ?>> <?= e($nm) ?></label><?php endforeach; ?></div>
-            </div>
-            <?= f_select('box_theme', 'تم کادر', array_map(fn($t) => $t['name'] . ' — ' . $t['desc'], ad_themes()), $r['box_theme']) ?>
-            <?= f_color('box_accent', 'رنگ کادر', (string) ($r['box_accent'] ?: setting('color_primary', '#ff1f3d'))) ?>
-        </div>
     </div>
 </div>
+<?php $sample = raffle_box_ad($r + ['id' => 0, 'image' => ''], ['participants' => 12, 'need' => (int) $r['min_participants'], 'sold' => 12, 'need_tickets' => (int) $r['min_tickets']]); ?>
+<div class="card">
+    <div class="card-head"><h3>📣 کادر تبلیغ قرعه‌کشی روی سایت</h3></div>
+    <div class="grid g3">
+        <?= f_switch('box_on', 'نمایش کادر روی سایت', (bool) $r['box_on'], 'مثل تبلیغ‌ها، با شمارش معکوس و تعداد شرکت‌کننده‌ها') ?>
+        <label class="af"><span class="af-label">کجای سایت نمایش داده بشه؟ (چند مورد)</span>
+            <select name="box_places[]" multiple data-multi data-placeholder="هیچ جایی انتخاب نشده">
+                <?php foreach (shop_banner_places() as $k => $nm): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($nm) ?></option><?php endforeach; ?>
+            </select></label>
+        <?= f_text('result_hours', 'بعد از قرعه‌کشی، نتیجه تا چند ساعت روی سایت بمونه؟', (string) (int) ($r['result_hours'] ?? 24), ['type' => 'number', 'min' => 0, 'max' => 720, 'hint' => 'تو این مدت کادر «قرعه‌کشی انجام شد — مشاهده‌ی برنده» نشون داده می‌شه و هر کی وارد صفحه بشه گردونه خودکار براش می‌چرخه. ۰ = بلافاصله برداشته بشه']) ?>
+    </div>
+    <?= f_color('box_accent', 'رنگ کادر', (string) ($r['box_accent'] ?: setting('color_primary', '#ff1f3d'))) ?>
+    <div class="af"><span class="af-label">تم کادر</span></div>
+    <div class="theme-gallery">
+        <?php foreach (ad_themes() as $k => $t): ?>
+            <label class="theme-opt">
+                <input type="radio" name="box_theme" value="<?= e($k) ?>" <?= $r['box_theme'] === $k ? 'checked' : '' ?>>
+                <?= render_ad(['theme' => $k, 'countdown' => 0, 'heading' => $r['title'] ?: 'قرعه‌کشی بزرگ', 'body' => '🎁 ' . (($prizes[0]['title'] ?? '') ?: 'جایزه‌ی ویژه'), 'button_text' => ''] + $sample, true) ?>
+                <div class="t-name"><b><?= e($t['name']) ?></b><small><?= e($t['desc']) ?></small></div>
+            </label>
+        <?php endforeach; ?>
+    </div>
+</div>
+<input type="hidden" name="box_places[]" value="">
 <div class="sticky-save"><button class="abtn abtn-primary" type="submit"><?= icon('check', 18) ?> ذخیره</button><a class="abtn" href="raffles.php">بازگشت</a></div>
 </form>
 <script>

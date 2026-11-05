@@ -188,7 +188,7 @@
         (function poll() {
             api('raffle-state', {}).then(function (st) {
                 if (st.ok) update(st);
-                if (S.status === 'drawn') { refreshAll(); play(); return; }
+                if (S.status === 'drawn') { try { localStorage.setItem('nx_rf_seen_' + S.id, '1'); } catch (e) {} refreshAll(); play(); return; }
                 if (S.status === 'failed') { refreshAll(); $('#rfWheelNote').textContent = 'ℹ️ قرعه‌کشی به حد نصاب نرسید و برگزار نشد.'; $('#rfLive').hidden = true; return; }
                 if (++tries < 60) setTimeout(poll, 2500);
             });
@@ -245,8 +245,14 @@
     var note = $('#rfWheelNote');
     if (S.status === 'drawn') {
         renderResults();
-        if (S.now - S.drawnAt < 600) setTimeout(play, 900);            // just happened: play it for whoever arrives now
-        else { $('#rfReplay').hidden = false; note.textContent = '🏆 این قرعه‌کشی برگزار شده؛ می‌تونی دوباره پخشش کنی.'; }
+        // during the result window everyone who has not watched it yet sees the wheel spin by itself (once per browser)
+        var seenKey = 'nx_rf_seen_' + S.id, seen = false;
+        try { seen = !!localStorage.getItem(seenKey); } catch (e) {}
+        if (S.show || ((S.resultLive || S.now - S.drawnAt < 600) && !seen)) {
+            try { localStorage.setItem(seenKey, '1'); } catch (e) {}
+            note.textContent = '🎡 قرعه‌کشی انجام شده — الان گردونه رو برات می‌چرخونیم…';
+            setTimeout(play, 1100);
+        } else { $('#rfReplay').hidden = false; note.textContent = '🏆 این قرعه‌کشی برگزار شده؛ می‌تونی دوباره پخشش کنی.'; }
     } else if (S.status === 'active') {
         note.textContent = S.mode === 'paid' ? 'روی گردونه شماره‌ی تیکت‌ها هست؛ سر ساعت یکی‌شون برنده می‌شه.' : 'اسم شرکت‌کننده‌ها روی گردونه‌ست؛ هر کی شانس بیشتری داره خونه‌ی بزرگ‌تری داره.';
         if (S.left <= 0) goLive();

@@ -304,6 +304,25 @@ function raffle_box_ad(array $r, array $st): array
     ];
 }
 
+/** a finished raffle keeps its result on the site for `result_hours` hours */
+function raffle_result_live(array $r): bool
+{
+    return $r['status'] === 'drawn' && !empty($r['drawn_at']) && (int) ($r['result_hours'] ?? 24) > 0
+        && strtotime((string) $r['drawn_at']) + (int) ($r['result_hours'] ?? 24) * 3600 > time();
+}
+
+function raffle_result_ad(array $r): array
+{
+    $res = json_decode((string) ($r['results'] ?? ''), true) ?: [];
+    $who = $res ? $res[0]['name'] . (count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '') : '';
+    return [
+        'id' => 0, 'no_label' => true, 'format' => 'card', 'theme' => (string) ($r['box_theme'] ?: 'neon'),
+        'accent' => (string) ($r['box_accent'] ?: setting('color_primary', '#ff1f3d')), 'image' => (string) $r['image'],
+        'link' => raffle_url($r) . '?show=1', 'new_tab' => 0, 'heading' => $r['title'], 'emoji' => '🏆', 'badge' => 'برگزار شد',
+        'body' => '🎉 قرعه‌کشی انجام شد!' . ($who ? "\n" . '🏆 برنده: ' . $who : ''), 'button_text' => 'مشاهده‌ی برنده و گردونه',
+    ];
+}
+
 function raffle_slot(string $position): string
 {
     static $list = null;
@@ -311,14 +330,16 @@ function raffle_slot(string $position): string
         $list = [];
         try {
             raffles_due();
-            $list = rows("SELECT * FROM raffles WHERE status = 'active' AND box_on = 1 AND draw_at > ? ORDER BY draw_at", [now()]);
+            $list = array_values(array_filter(rows("SELECT * FROM raffles WHERE box_on = 1 AND ((status = 'active' AND draw_at > ?) OR (status = 'drawn' AND drawn_at IS NOT NULL)) ORDER BY draw_at", [now()]),
+                fn($r) => $r['status'] === 'active' || raffle_result_live($r)));
         } catch (Throwable $e) {}
     }
     $out = '';
     foreach ($list as $r) {
         $places = array_filter(array_map('trim', explode(',', (string) $r['box_places'])));
         if (!in_array($position, $places, true)) continue;
-        $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . render_ad(raffle_box_ad($r, raffle_stats($r)), true) . '</div>';
+        $ad = $r['status'] === 'drawn' ? raffle_result_ad($r) : raffle_box_ad($r, raffle_stats($r));
+        $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . render_ad($ad, true) . '</div>';
     }
     return $out;
 }

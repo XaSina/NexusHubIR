@@ -107,5 +107,5 @@ $medals = ['🥇', '🥈', '🥉'];
         </aside>
     </div>
 </section>
-<script>window.NX_RAFFLE = <?= json_encode($state + ['price' => (int) $r['ticket_price'], 'cap' => (int) $r['max_tickets_user'], 'invite' => $me && $mode === 'referral' ? raffle_url($r) . '?ref=' . rawurlencode($me['member_code']) : '', 'logged' => (bool) $me, 'prizes' => $prizes, 'bonusPct' => (float) $r['ticket_bonus'], 'maxRef' => (int) $r['max_referrals'], 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time()], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
+<script>window.NX_RAFFLE = <?= json_encode($state + ['price' => (int) $r['ticket_price'], 'cap' => (int) $r['max_tickets_user'], 'invite' => $me && $mode === 'referral' ? raffle_url($r) . '?ref=' . rawurlencode($me['member_code']) : '', 'logged' => (bool) $me, 'prizes' => $prizes, 'bonusPct' => (float) $r['ticket_bonus'], 'maxRef' => (int) $r['max_referrals'], 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time(), 'resultLive' => raffle_result_live($r), 'show' => !empty($_GET['show'])], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
 <script src="<?= e(asset('js/raffle.js')) ?>" defer></script>

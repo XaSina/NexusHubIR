@@ -429,6 +429,7 @@ return [
   `box_places` VARCHAR(255) NULL,
   `box_theme` VARCHAR(30) NOT NULL DEFAULT 'neon',
   `box_accent` VARCHAR(20) NULL,
+  `result_hours` INT UNSIGNED NOT NULL DEFAULT 24,
   `results` TEXT NULL,
   `draw_seed` VARCHAR(64) NULL,
   `drawn_at` DATETIME NULL,
