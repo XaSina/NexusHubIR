@@ -29,11 +29,53 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 <div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e($logo) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
 
 <!-- ============ Scene ============ -->
+<?php
+/* periodic wave path (two identical periods across 2880 units, so a -50% slide loops seamlessly) */
+$auWave = function (float $base, array $terms): string {
+    $pts = [];
+    for ($x = 0; $x <= 2880; $x += 60) {
+        $y = $base;
+        foreach ($terms as [$a, $k, $ph]) $y += $a * sin(2 * M_PI * $k * $x / 1440 + $ph);
+        $pts[] = [$x, $y];
+    }
+    $n = count($pts); $d = sprintf('M%.1f %.1f', $pts[0][0], $pts[0][1]);
+    for ($i = 0; $i < $n - 1; $i++) {   // Catmull-Rom -> cubic Bezier: smooth crest at any width
+        $p0 = $pts[max(0, $i - 1)]; $p1 = $pts[$i]; $p2 = $pts[$i + 1]; $p3 = $pts[min($n - 1, $i + 2)];
+        $d .= sprintf(' C%.1f %.1f %.1f %.1f %.1f %.1f', $p1[0] + ($p2[0] - $p0[0]) / 6, $p1[1] + ($p2[1] - $p0[1]) / 6, $p2[0] - ($p3[0] - $p1[0]) / 6, $p2[1] - ($p3[1] - $p1[1]) / 6, $p2[0], $p2[1]);
+    }
+    return $d;
+};
+$auWaves = [
+    ['w1', $auWave(118, [[30, 1, .4], [14, 3, 1.9]])],
+    ['w2', $auWave(150, [[26, 2, 2.6], [10, 5, .3]])],
+    ['w3', $auWave(186, [[22, 1, 4.1], [9, 4, 1.2]])],
+];
+?>
 <div class="au-scene" aria-hidden="true">
     <div class="au-space"></div>
+    <div class="au-aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+    <div class="au-beam"></div>
     <div class="au-nebula"><i></i><i></i><i></i></div>
     <canvas id="auFx"></canvas>
     <div class="au-planet-wrap"><div class="au-planet"></div></div>
+    <div class="au-hz">
+        <div class="au-hz-glow"></div>
+        <?php foreach ($auWaves as [$wc, $wd]): ?>
+        <div class="au-wave <?= $wc ?>"><svg viewBox="0 0 2880 320" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="g<?= $wc ?>" x1="0" y1="0" x2="2880" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" style="stop-color:var(--primary)"/><stop offset=".25" style="stop-color:var(--secondary)"/><stop offset=".5" style="stop-color:var(--primary)"/><stop offset=".75" style="stop-color:var(--secondary)"/><stop offset="1" style="stop-color:var(--primary)"/>
+                </linearGradient>
+                <linearGradient id="f<?= $wc ?>" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".55" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+                <mask id="m<?= $wc ?>" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#f<?= $wc ?>)"/></mask>
+            </defs>
+            <path class="wf" d="<?= $wd ?> L2880 320 L0 320 Z" fill="url(#g<?= $wc ?>)" mask="url(#m<?= $wc ?>)"/>
+            <path class="wl" d="<?= $wd ?>" fill="none" stroke="url(#g<?= $wc ?>)" vector-effect="non-scaling-stroke"/>
+        </svg></div>
+        <?php endforeach; ?>
+        <div class="au-hz-floor"></div>
+    </div>
+    <div class="au-fgrain"></div>
     <div class="au-bloom"></div>
     <div class="au-vignette"></div>
     <div class="au-flash"></div>
@@ -65,11 +107,11 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>
     <p class="au-tagline"><span id="auType"></span><i class="au-caret"></i></p>
-    <button class="au-start nb" id="auStart" type="button">
-        <span class="nb-edge" aria-hidden="true"></span>
-        <span class="nb-face" aria-hidden="true"><i class="nb-sheen"></i></span>
-        <span class="au-start-label nb-label">ورود و ثبت‌نام</span>
-        <span class="nb-orb" aria-hidden="true"><span class="nb-arrows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></span>
+    <button class="au-start cta" id="auStart" type="button">
+        <span class="cta-ring" aria-hidden="true"></span>
+        <span class="cta-face" aria-hidden="true"><i class="cta-shine"></i></span>
+        <span class="au-start-label cta-label">ورود و ثبت‌نام</span>
+        <span class="cta-ic" aria-hidden="true"><span class="cta-arrows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></span>
     </button>
 </main>
 

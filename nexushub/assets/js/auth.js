@@ -463,7 +463,7 @@
         }
         b.addEventListener('pointerdown', function (e) {
             if (reduce) return;
-            var r = b.getBoundingClientRect(), s = document.createElement('i'); s.className = 'nb-ripple';
+            var r = b.getBoundingClientRect(), s = document.createElement('i'); s.className = 'cta-ripple';
             s.style.left = (e.clientX - r.left) + 'px'; s.style.top = (e.clientY - r.top) + 'px'; b.appendChild(s);
             setTimeout(function () { s.remove(); }, 750);
         });

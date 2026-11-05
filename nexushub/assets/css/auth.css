@@ -834,3 +834,113 @@ button { cursor: pointer; border: 0; background: none; }
 @media (max-height: 700px) and (min-width: 641px) {
     .au-stage { place-items: safe center; overflow-y: auto; }
 }
+
+/* ======================================================================
+   v10 — "Aurora Horizon": refined background, flowing light waves at the bottom, premium start button.
+   Everything moves with transform/opacity only (compositor), no blur filters, no per-frame painting.
+   ====================================================================== */
+/* old scene pieces retired */
+.au-planet-wrap, .au-nebula, .au-horizon-glow, .au-bloom { display: none !important; }
+
+/* deep space base with a slight colour cast from the theme */
+.au-space { background:
+    radial-gradient(120% 80% at 50% 115%, color-mix(in srgb, var(--primary) 16%, transparent) 0, transparent 55%),
+    radial-gradient(90% 70% at 50% -20%, color-mix(in srgb, var(--secondary) 10%, transparent) 0, transparent 60%),
+    linear-gradient(180deg, #07070c 0%, #05050a 55%, #040408 100%) !important; }
+
+/* aurora: three huge soft colour fields drifting very slowly */
+.au-aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; opacity: 0; transition: opacity 2.2s ease; }
+.s1 .au-aurora { opacity: 1; }
+.au-aurora i { position: absolute; border-radius: 50%; will-change: transform; }
+.au-aurora .a1 { width: 90vmax; height: 60vmax; left: -30vmax; top: -22vmax; background: radial-gradient(closest-side, rgba(var(--primary-rgb), .20), rgba(var(--primary-rgb), .06) 55%, transparent); animation: auA1 34s ease-in-out infinite alternate; }
+.au-aurora .a2 { width: 80vmax; height: 56vmax; right: -28vmax; top: 4vh; background: radial-gradient(closest-side, rgba(var(--secondary-rgb), .16), rgba(var(--secondary-rgb), .05) 55%, transparent); animation: auA2 41s ease-in-out infinite alternate; }
+.au-aurora .a3 { width: 70vmax; height: 40vmax; left: 15vw; bottom: 2vh; background: radial-gradient(closest-side, rgba(var(--primary-rgb), .14), transparent); animation: auA3 29s ease-in-out infinite alternate; }
+@keyframes auA1 { to { transform: translate3d(12vw, 8vh, 0) scale(1.12); } }
+@keyframes auA2 { to { transform: translate3d(-10vw, 10vh, 0) scale(.9); } }
+@keyframes auA3 { to { transform: translate3d(-8vw, -6vh, 0) scale(1.15); } }
+
+/* soft spotlight from the top centre onto the logo */
+.au-beam { position: absolute; left: 50%; top: -10vh; width: 120vmin; height: 90vh; margin-left: -60vmin; pointer-events: none;
+    background: radial-gradient(50% 60% at 50% 0%, rgba(255,255,255,.07), rgba(var(--primary-rgb), .04) 45%, transparent 75%); }
+
+/* the horizon: three translucent light waves flowing sideways, crisp crest lines, glow rising behind them */
+.au-hz { position: absolute; left: 0; right: 0; bottom: 0; height: 38vh; min-height: 220px; pointer-events: none; overflow: hidden;
+    opacity: 0; transform: translate3d(0, 40px, 0); transition: opacity 1.6s ease .2s, transform 1.8s cubic-bezier(.16,1,.3,1) .2s; }
+.s1 .au-hz { opacity: 1; transform: none; }
+.au-hz-glow { position: absolute; left: -10%; right: -10%; bottom: 0; height: 80%;
+    background: radial-gradient(60% 70% at 50% 100%, rgba(var(--primary-rgb), .26), rgba(var(--primary-rgb), .08) 45%, transparent 75%); }
+.au-wave { position: absolute; left: 0; bottom: 0; width: 200%; height: 100%; will-change: transform; }
+.au-wave svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.au-wave .wl { stroke-width: 1.4px; }
+.au-wave.w1 { opacity: .30; animation: auFlow 46s linear infinite; }
+.au-wave.w2 { opacity: .42; animation: auFlow 33s linear infinite reverse; }
+.au-wave.w3 { opacity: .62; animation: auFlow 24s linear infinite; }
+.au-wave.w3 .wl { stroke-width: 1.8px; }
+@keyframes auFlow { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+/* ground fade: the waves melt into the page bottom */
+.au-hz-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; background: linear-gradient(to bottom, transparent, rgba(4,4,8,.75) 60%, #040408); }
+
+/* film grain: kills gradient banding, reads as "high quality" (static, generated once) */
+.au-fgrain { position: absolute; inset: 0; pointer-events: none; opacity: .07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* edges darken gently (no hard vignette ring) */
+.au-vignette { background: radial-gradient(130% 100% at 50% 40%, transparent 55%, rgba(0,0,0,.55)) !important; }
+
+@media (hover: none), (max-width: 900px) {
+    .au-aurora .a3 { animation: none; }
+    .au-hz { height: 30vh; min-height: 190px; }
+    .au-wave { width: 300%; }            /* calmer, longer swells on narrow screens */
+    .au-wave.w1 { animation-duration: 60s; } .au-wave.w2 { animation-duration: 44s; } .au-wave.w3 { animation-duration: 32s; }
+    .au-wave.w1 .wl { display: none; }
+}
+@keyframes auFlow3 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-33.333%, 0, 0); } }
+@media (hover: none), (max-width: 900px) { .au-wave.w1, .au-wave.w2, .au-wave.w3 { animation-name: auFlow3; } }
+@media (prefers-reduced-motion: reduce) { .au-aurora i, .au-wave { animation: none !important; } }
+.warping .au-hz { transform: translate3d(0, 30px, 0); opacity: 0; transition: opacity .6s ease, transform .9s cubic-bezier(.7,0,.2,1); }
+
+/* ---------- start button: white, crisp, premium ---------- */
+.au-start.cta { position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; gap: 16px;
+    height: 60px; padding: 0 8px 0 0; padding-inline: 28px 8px; border: 0 !important; border-radius: 18px; background: none !important;
+    color: #0b0b12; font-weight: 800; letter-spacing: 0; cursor: pointer;
+    box-shadow: 0 18px 50px -18px rgba(var(--primary-rgb), .75), 0 2px 6px rgba(0,0,0,.35) !important;
+    transform: translate3d(var(--mx, 0px), var(--my, 0px), 0); transition: opacity .7s ease, transform .5s cubic-bezier(.22,1,.36,1), box-shadow .4s ease !important; }
+.au-start.cta::before, .au-start.cta::after, .au-start.cta .au-start-ring, .au-start.cta .au-start-glow { display: none !important; }
+.cta-ring { position: absolute; inset: 0; z-index: -2; border-radius: inherit; overflow: hidden; }
+.cta-ring::before { content: ""; position: absolute; left: 50%; top: 50%; width: 300%; aspect-ratio: 1; margin: -150% 0 0 -150%;
+    background: conic-gradient(from 0deg, var(--primary), var(--secondary), #fff, var(--primary)); animation: nbSpin 5s linear infinite; }
+.cta-face { position: absolute; inset: 2px; z-index: -1; border-radius: 16px; overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f1f2f7 100%); box-shadow: inset 0 -2px 0 rgba(0,0,0,.06), inset 0 1px 0 #fff; }
+.cta-shine { position: absolute; top: 0; bottom: 0; left: -45%; width: 35%; background: linear-gradient(100deg, transparent, rgba(var(--primary-rgb), .16), transparent);
+    transform: skewX(-18deg); animation: ctaShine 5s cubic-bezier(.65,0,.35,1) 1.6s infinite; }
+@keyframes ctaShine { 0%, 62% { transform: skewX(-18deg) translateX(0); } 100% { transform: skewX(-18deg) translateX(480%); } }
+.cta-label { position: relative; font-size: 1.06rem; font-weight: 900; color: #0b0b12; white-space: nowrap; transition: transform .45s cubic-bezier(.22,1,.36,1); }
+.cta-ic { position: relative; width: 44px; height: 44px; flex-shrink: 0; border-radius: 13px; overflow: hidden; display: grid; place-items: center; color: #fff;
+    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, var(--secondary)));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 6px 14px -6px rgba(var(--primary-rgb), .9); transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+.cta-arrows { position: relative; width: 20px; height: 20px; }
+.cta-arrows svg { position: absolute; inset: 0; width: 20px; height: 20px; transition: transform .45s cubic-bezier(.65,0,.35,1); }
+.cta-arrows svg:last-child { transform: translateX(170%); }
+.au-start.cta:hover .cta-arrows svg:first-child, .au-start.cta.fired .cta-arrows svg:first-child { transform: translateX(-170%); }
+.au-start.cta:hover .cta-arrows svg:last-child, .au-start.cta.fired .cta-arrows svg:last-child { transform: none; }
+.au-start.cta:hover .cta-ic { transform: scale(1.06); }
+.au-start.cta:hover .cta-label { transform: translateX(3px); }
+.au-start.cta:hover { box-shadow: 0 22px 60px -18px rgba(var(--primary-rgb), .95), 0 2px 6px rgba(0,0,0,.35) !important; }
+.au-start.cta:active .cta-face { background: linear-gradient(180deg, #f4f5fa, #e9eaf1); }
+.au-start.cta:focus-visible { outline: 2px solid rgba(255,255,255,.8); outline-offset: 4px; }
+.cta-ripple { position: absolute; z-index: 0; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: rgba(var(--primary-rgb), .22); pointer-events: none; animation: nbRipple .7s cubic-bezier(.16,1,.3,1) forwards; }
+@media (max-width: 640px) { .au-start.cta { height: 56px; padding-inline: 24px 7px; border-radius: 17px; } .cta-face { border-radius: 15px; } .cta-ic { width: 42px; height: 42px; } .cta-label { font-size: 1rem; } }
+@media (prefers-reduced-motion: reduce) { .cta-ring::before, .cta-shine { animation: none; } }
+/* light themes keep the same contrast */
+.theme-light .au-start.cta { box-shadow: 0 16px 40px -18px rgba(var(--primary-rgb), .7), 0 2px 6px rgba(0,0,0,.18) !important; }
+
+/* the arrows: an older `.au-start svg` rule sized/positioned every svg in the button */
+.au-start.cta .cta-arrows svg { position: absolute; inset: 0; width: 20px; height: 20px; margin: 0; transform: none; }
+.au-start.cta .cta-arrows svg:last-child { transform: translateX(170%); }
+.au-start.cta:hover .cta-arrows svg:first-child, .au-start.cta.fired .cta-arrows svg:first-child { transform: translateX(-170%); }
+.au-start.cta:hover .cta-arrows svg:last-child, .au-start.cta.fired .cta-arrows svg:last-child { transform: none; }
+.au-start.cta .cta-arrows svg { box-sizing: border-box; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; z-index: auto; color: #fff; }
+/* the waves stay below the button on short screens */
+.au-hz { height: 30vh; min-height: 170px; max-height: 340px; }
+@media (hover: none), (max-width: 900px) { .au-hz { height: 24vh; min-height: 150px; } }
+@media (max-height: 700px) { .au-hz { height: 22vh; min-height: 120px; } }
