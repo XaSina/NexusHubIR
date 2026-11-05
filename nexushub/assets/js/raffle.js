@@ -78,28 +78,58 @@
 
     /* ---------- the wheel ---------- */
     var disc = $('#rfDisc'), wrap = $('#rfWheelWrap'), pointer = $('#rfPointer'), segs = [], rot = 0, busy = false;
-    (function lights() {
-        var L = $('.rf-lights'); if (!L) return; var h = ''; for (var i = 0; i < 24; i++) h += '<i style="--a:' + (i * 15) + 'deg"></i>'; L.innerHTML = h;
-        var place = function () { L.style.setProperty('--r', Math.max(0, L.offsetWidth / 2 - 5) + 'px'); }; place(); window.addEventListener('resize', place);
+    (function dress() {
+        // chasing bulbs on the metal rim, a fixed glass reflection and a jewelled pointer
+        var L = $('.rf-lights', wrap); if (!L) return; var h = '', N = 28;
+        for (var i = 0; i < N; i++) h += '<i style="--a:' + (i * 360 / N).toFixed(2) + 'deg;--k:' + i + '"></i>';
+        L.innerHTML = h;
+        var place = function () { L.style.setProperty('--r', Math.max(0, L.offsetWidth / 2 - L.offsetWidth * .028) + 'px'); }; place(); window.addEventListener('resize', place);
+        if (!$('.rf-gloss', wrap)) { var g = document.createElement('div'); g.className = 'rf-gloss'; g.setAttribute('aria-hidden', 'true'); disc.parentNode.insertBefore(g, disc.nextSibling); }
+        if (pointer && !pointer.firstChild) pointer.innerHTML = '<svg viewBox="0 0 40 58" aria-hidden="true"><defs>'
+            + '<linearGradient id="rfPg" x1="0" x2="1"><stop offset="0" stop-color="#8a5800"/><stop offset=".35" stop-color="#ffe9a6"/><stop offset=".6" stop-color="#ffc23d"/><stop offset="1" stop-color="#9a6400"/></linearGradient>'
+            + '<radialGradient id="rfGem" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".3" style="stop-color:var(--primary)"/><stop offset="1" style="stop-color:color-mix(in srgb, var(--primary) 45%, #000)"/></radialGradient></defs>'
+            + '<path d="M20 57 C15 44 3 33 3 20 A17 17 0 0 1 37 20 C37 33 25 44 20 57Z" fill="url(#rfPg)" stroke="#6b4300" stroke-width="1.2"/>'
+            + '<circle cx="20" cy="20" r="10.5" fill="#2a1a00" opacity=".55"/><circle cx="20" cy="20" r="9" fill="url(#rfGem)"/><ellipse cx="16.5" cy="16" rx="3" ry="2.2" fill="#fff" opacity=".85"/></svg>';
     })();
-    var COLORS = ['var(--primary)', 'var(--secondary)', 'color-mix(in srgb, var(--primary) 55%, #120812)', 'color-mix(in srgb, var(--secondary) 50%, #0c0814)'];
+    // rich alternating palette: brand colours + deep night + gold
+    var PAL = [
+        ['color-mix(in srgb, var(--primary) 55%, #000)', 'var(--primary)', 'color-mix(in srgb, var(--primary) 70%, #fff)'],
+        ['#07060d', '#1a1530', '#2f2752'],
+        ['color-mix(in srgb, var(--secondary) 55%, #000)', 'var(--secondary)', 'color-mix(in srgb, var(--secondary) 70%, #fff)'],
+        ['#120a1c', '#2b1d44', '#47306e'],
+        ['#7a4a00', '#e3a21a', '#ffd772']
+    ];
     function buildWheel() {
-        var list = S.wheel && S.wheel.length ? S.wheel : [{ label: S.mode === 'paid' ? 'تیکت' : 'شرکت کن!', w: 1, win: null }];
-        var total = list.reduce(function (a, s) { return a + s.w; }, 0), a0 = 0, n = list.length;
-        var fs = n <= 10 ? 10 : n <= 20 ? 8 : n <= 32 ? 6.2 : 5, maxc = n <= 10 ? 14 : n <= 20 ? 11 : 8;
-        var svg = '<svg viewBox="-100 -100 200 200" aria-hidden="true">';
+        var base = S.wheel && S.wheel.length ? S.wheel : [{ label: S.mode === 'paid' ? 'تیکت' : 'شرکت کن!', w: 1, win: null }];
+        var list = base.slice();
+        if (base.length > 1 || (S.wheel && S.wheel.length)) while (list.length < 8) list = list.concat(base.slice(0, Math.min(base.length, 8 - list.length)));  // few names: repeat them so the wheel looks full
+        var total = list.reduce(function (a, s) { return a + s.w; }, 0), a0 = 0, n = list.length, np = PAL.length;
+        var pt = function (a, r) { var t = (a - 90) * Math.PI / 180; return (Math.cos(t) * r).toFixed(2) + ' ' + (Math.sin(t) * r).toFixed(2); };
+        var defs = '<defs>' + PAL.map(function (c, k) {
+            return '<radialGradient id="rfG' + k + '" cx="0" cy="0" r="96" gradientUnits="userSpaceOnUse"><stop offset=".18" style="stop-color:' + c[0] + '"/><stop offset=".72" style="stop-color:' + c[1] + '"/><stop offset="1" style="stop-color:' + c[2] + '"/></radialGradient>';
+        }).join('') + '</defs>';
+        var body = '', lines = '', pegs = '', labels = '';
         segs = list.map(function (s, i) {
             var a1 = a0 + s.w / total * 360, seg = { a0: a0, a1: a1, mid: (a0 + a1) / 2, win: s.win, label: s.label };
-            var p = function (a, r) { var t = (a - 90) * Math.PI / 180; return (Math.cos(t) * r).toFixed(2) + ' ' + (Math.sin(t) * r).toFixed(2); };
-            var large = a1 - a0 > 180 ? 1 : 0;
-            var path = n === 1 ? '<circle r="96"' : '<path d="M0 0 L' + p(a0, 96) + ' A96 96 0 ' + large + ' 1 ' + p(a1, 96) + ' Z"';
-            var lab = s.label.length > maxc ? s.label.slice(0, maxc - 1) + '…' : s.label;
-            svg += '<g class="rf-seg" data-i="' + i + '">' + path + ' style="fill:' + COLORS[(i === n - 1 && n > 1 && i % 4 === 0) ? 2 : i % 4] + '" stroke="rgba(0,0,0,.35)" stroke-width=".6"/>'
-                + '<text class="rf-seg-t" style="font-size:' + fs + 'px" transform="rotate(' + (seg.mid - 90).toFixed(2) + ') translate(88 0)" text-anchor="end" dominant-baseline="middle">' + esc(lab) + '</text></g>';
+            var k = i % np; if (i === n - 1 && n > 1 && k === 0) k = 2;
+            var path = n === 1 ? '<circle r="96"' : '<path d="M0 0 L' + pt(a0, 96) + ' A96 96 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + pt(a1, 96) + ' Z"';
+            body += '<g class="rf-seg" data-i="' + i + '">' + path + ' fill="url(#rfG' + k + ')"/></g>';
+            if (n > 1) { lines += '<line x1="0" y1="0" x2="' + pt(a0, 96).replace(' ', '" y2="') + '"/>'; if (n <= 80) pegs += '<circle cx="' + pt(a0, 91).replace(' ', '" cy="') + '" r="' + (n <= 24 ? 1.9 : 1.3) + '"/>'; }
+            var span = (a1 - a0) * Math.PI / 180, fs = Math.min(9.5, span * 58 * .78, Math.max(5.4, 60 / (s.label.length * .58)));
+            if (fs >= 2.4 || n === 1) {
+                if (n === 1) fs = 10;
+                var maxc = Math.max(3, Math.floor(60 / (fs * .58))), lab = s.label.length > maxc ? s.label.slice(0, maxc - 1) + '…' : s.label;
+                var left = seg.mid > 180 && n > 1;   // left half: turn the label over so it never reads upside down
+                labels += '<text class="rf-seg-t' + (k === 4 ? ' dk' : '') + '" data-i="' + i + '" style="font-size:' + fs.toFixed(2) + 'px" transform="rotate(' + (left ? seg.mid + 90 : seg.mid - 90).toFixed(2) + ') translate(' + (left ? -85 : 85) + ' 0)" text-anchor="' + (left ? 'end' : 'start') + '" direction="rtl" dominant-baseline="middle">' + esc(lab) + '</text>';
+            }
             a0 = a1; return seg;
         });
-        disc.innerHTML = svg + '<circle r="97" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/></svg>';
-        if (!OFF && !CALM && S.status === 'active') disc.classList.add('idle'); else disc.classList.remove('idle');
+        disc.innerHTML = '<svg viewBox="-100 -100 200 200" aria-hidden="true">' + defs + body
+            + '<g class="rf-lines">' + lines + '</g>' + labels
+            + '<circle r="95.4" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.6"/><circle r="93.6" fill="none" stroke="rgba(255,255,255,.12)" stroke-width=".6"/>'
+            + '<g class="rf-pegs">' + pegs + '</g><circle r="27" fill="rgba(0,0,0,.35)"/></svg>';
+        disc.classList.toggle('idle', !OFF && !CALM && S.status === 'active');
+        disc.classList.toggle('dense', n > 60);
     }
     function curRot() {
         var m = getComputedStyle(disc).transform; if (!m || m === 'none') return 0;
@@ -110,21 +140,25 @@
     function spinTo(idx, dur) {
         return new Promise(function (done) {
             var s = segs[idx]; if (!s) return done();
-            var span = s.a1 - s.a0, aim = s.a0 + span * (.25 + Math.random() * .5);   // land somewhere inside the segment, not always the middle
+            var span = s.a1 - s.a0, aim = s.a0 + span * (.25 + Math.random() * .5);   // land somewhere inside the slice, not always the middle
             var base = curRot(); disc.classList.remove('idle'); disc.style.transition = 'none'; disc.style.transform = 'rotate(' + base + 'deg)'; void disc.offsetWidth;
-            var target = base + (OFF ? 0 : 360 * (dur > 6 ? 8 : 5)) + (((-aim - base) % 360) + 360) % 360;
+            var target = base + (OFF ? 0 : 360 * (dur > 6 ? 9 : 6)) + (((-aim - base) % 360) + 360) % 360;
             rot = target;
             if (OFF) { disc.style.transform = 'rotate(' + target + 'deg)'; return done(); }
             wrap.classList.add('spinning');
-            disc.style.transition = 'transform ' + dur + 's cubic-bezier(.12,.68,.06,1)';
+            disc.style.transition = 'transform ' + dur + 's cubic-bezier(.1,.7,.05,1)';
             disc.style.transform = 'rotate(' + target + 'deg)';
-            var last = -1, t0 = performance.now();
-            (function watch() {
+            var last = -1, t0 = performance.now(), lastTick = 0;
+            (function watch(now) {
                 var i = segAt(curRot());
-                if (i !== last && pointer) { last = i; pointer.classList.remove('tick'); void pointer.offsetWidth; pointer.classList.add('tick'); }
+                if (i !== last && pointer && now - lastTick > 45) { last = i; lastTick = now; pointer.classList.remove('tick'); void pointer.offsetWidth; pointer.classList.add('tick'); }
                 if (performance.now() - t0 < dur * 1000 + 80) requestAnimationFrame(watch); else { wrap.classList.remove('spinning'); done(); }
-            })();
+            })(t0);
         });
+    }
+    function winIdx(i) {   // the winner may own several slices (repeats / tickets): pick one of them
+        var all = []; segs.forEach(function (s, k) { if (s.win === i) all.push(k); });
+        return all.length ? all[Math.floor(Math.random() * all.length)] : -1;
     }
     function wait(ms) { return new Promise(function (r) { setTimeout(r, OFF ? 0 : ms); }); }
 
@@ -148,7 +182,7 @@
     function renderResults() {
         var el = $('#rfResults'); if (!el) return;
         el.innerHTML = (S.results || []).map(function (r, i) {
-            return '<div class="rf-res' + (S.me && S.people.some(function (p) { return p.me && p.name === r.name; }) ? ' me' : '') + '"><span class="m">' + (MED[i] || '🏅') + '</span><span><b>' + esc(r.name) + (r.ticket ? ' — تیکت #' + fa(r.ticket) : '') + '</b><small>' + esc(r.prize) + ' · شانسش ' + fa(r.chance) + '٪ بود</small></span></div>';
+            return '<div class="rf-res' + (r.me ? ' me' : '') + '"><span class="m">' + (MED[i] || '🏅') + '</span><span><b>' + esc(r.name) + (r.ticket ? ' — تیکت #' + fa(r.ticket) : '') + '</b><small>' + esc(r.prize) + ' · شانسش ' + fa(r.chance) + '٪ بود</small></span></div>';
         }).join('');
     }
     function showWinner(r, i) {
@@ -162,26 +196,37 @@
         if (busy || !S.results || !S.results.length) return;
         busy = true; $('#rfReplay').hidden = true; $('#rfResults').innerHTML = '';
         try { wrap.scrollIntoView({ behavior: OFF || CALM ? 'auto' : 'smooth', block: 'center' }); } catch (e) {}
-        var note = $('#rfWheelNote'), seq = Promise.resolve();
+        var note = $('#rfWheelNote'), seq = Promise.resolve(), hit = 0;
         S.results.forEach(function (r, i) {
             seq = seq.then(function () {
                 note.textContent = '🎡 در حال چرخش برای ' + (['جایزه‌ی اول', 'جایزه‌ی دوم', 'جایزه‌ی سوم'][i] || 'جایزه‌ی بعدی') + ': ' + r.prize + ' …';
-                var idx = -1; segs.forEach(function (s, k) { if (s.win === i) idx = k; });
-                return spinTo(idx < 0 ? 0 : idx, i === 0 ? 8 : 5.5);
+                var idx = winIdx(i); hit = idx < 0 ? 0 : idx;
+                $$seg().forEach(function (g) { g.classList.remove('win'); });
+                return spinTo(hit, i === 0 ? 8.5 : 6);
             }).then(function () {
-                $$seg().forEach(function (g) { g.classList.toggle('win', +g.getAttribute('data-i') === segs.findIndex(function (s) { return s.win === i; })); });
+                $$seg().forEach(function (g) { g.classList.toggle('win', +g.getAttribute('data-i') === hit); });
                 return showWinner(r, i);
             }).then(function () { renderResults(); return wait(500); });
         });
         seq.then(function () { busy = false; note.textContent = '🏆 قرعه‌کشی تموم شد — به برنده‌ها تبریک!'; $('#rfReplay').hidden = false; renderResults(); });
     }
-    function $$seg() { return [].slice.call(disc.querySelectorAll('.rf-seg')); }
-    $('#rfReplay').addEventListener('click', function () { buildWheel(); play(); });
+    function $$seg() { return [].slice.call(disc.querySelectorAll('.rf-seg, .rf-seg-t')); }
+    function testSpin() {   // admin preview before the draw: a random slice, nothing is saved
+        if (busy || segs.length < 1) return; busy = true;
+        var note = $('#rfWheelNote'), k = Math.floor(Math.random() * segs.length);
+        $$seg().forEach(function (g) { g.classList.remove('win'); });
+        note.textContent = '🎡 چرخش آزمایشی… (نتیجه‌ی واقعی نیست و ذخیره نمی‌شه)';
+        spinTo(k, 6).then(function () {
+            $$seg().forEach(function (g) { g.classList.toggle('win', +g.getAttribute('data-i') === k); });
+            note.textContent = '🎯 گردونه روی «' + segs[k].label + '» ایستاد — فقط آزمایشی بود.'; busy = false;
+        });
+    }
+    $('#rfReplay').addEventListener('click', function () { if (S.results && S.results.length) { buildWheel(); play(); } else if (S.admin) testSpin(); });
 
     /* ---------- live: at the draw time poll the server until the result is in ---------- */
     var live = false;
     function goLive() {
-        if (live) return; live = true;
+        if (live || S.admin) return; live = true;
         $('#rfLive').hidden = false; if (cnt) cnt.hidden = true;
         $('#rfWheelNote').textContent = '⏳ قرعه‌کشی شروع شد… گردونه تا چند لحظه دیگه می‌چرخه';
         var tries = 0;
@@ -197,7 +242,7 @@
     function refreshAll() { renderProg(); renderMine(); renderPeople(); if (!busy) buildWheel(); var stc = $('#rfStatus'); if (stc) { stc.className = 'rf-chip rf-st-' + S.status; stc.textContent = { active: 'در حال ثبت‌نام', drawn: 'برگزار شد', failed: 'برگزار نشد', cancelled: 'لغو شد', draft: 'پیش‌نویس' }[S.status] || S.status; } }
 
     // keep the counts fresh while people are joining
-    setInterval(function () { if (S.status === 'active' && !live && document.visibilityState === 'visible') api('raffle-state', {}).then(function (st) { if (st.ok) { update(st); endAt = Date.now() + st.left * 1000; refreshAll(); } }); }, 25000);
+    setInterval(function () { if (!S.admin && S.status === 'active' && !live && document.visibilityState === 'visible') api('raffle-state', {}).then(function (st) { if (st.ok) { update(st); endAt = Date.now() + st.left * 1000; refreshAll(); } }); }, 25000);
 
     /* ---------- actions ---------- */
     document.addEventListener('click', function (e) {
@@ -243,7 +288,13 @@
     /* ---------- start ---------- */
     refreshAll();
     var note = $('#rfWheelNote');
-    if (S.status === 'drawn') {
+    if (S.admin) {   // panel: the owner spins it whenever they like, with full names
+        renderResults();
+        $('#rfReplay').hidden = false;
+        note.textContent = S.status === 'drawn' ? '🏆 قرعه‌کشی برگزار شده — دکمه رو بزن تا گردونه بچرخه و برنده‌ها رو ببینی.'
+            : '👥 ' + fa(S.participants) + ' شرکت‌کننده روی گردونه‌ان. می‌تونی آزمایشی بچرخونیش؛ برنده‌ی واقعی سر ساعت (یا با «برگزاری همین الان») مشخص می‌شه.';
+        if (S.status !== 'drawn') $('#rfReplay').textContent = '🎡 چرخش آزمایشی';
+    } else if (S.status === 'drawn') {
         renderResults();
         // during the result window everyone who has not watched it yet sees the wheel spin by itself (once per browser)
         var seenKey = 'nx_rf_seen_' + S.id, seen = false;

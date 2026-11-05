@@ -285,18 +285,19 @@
             }).join('') + '<div class="nsel-mfoot"><button type="button" data-all>انتخاب همه</button><button type="button" data-none>هیچ‌کدام</button><button type="button" data-done class="ok">تایید</button></div>';
         };
         render();
-        btn.addEventListener('click', function (e) { e.stopPropagation(); menu.hidden = !menu.hidden; wrap.classList.toggle('open', !menu.hidden); if (!menu.hidden) place(); });
+        var setOpen = function (o) { menu.hidden = !o; wrap.classList.toggle('open', o); document.documentElement.classList.toggle('nsel-open', o); if (o) place(); };
+        btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(menu.hidden); });
         menu.addEventListener('click', function (e) {
             e.stopPropagation();
             var o = e.target.closest('[data-i]');
             if (o) { var opt = sel.options[+o.dataset.i]; opt.selected = !opt.selected; }
             else if (e.target.closest('[data-all]')) Array.prototype.forEach.call(sel.options, function (x) { x.selected = true; });
             else if (e.target.closest('[data-none]')) Array.prototype.forEach.call(sel.options, function (x) { x.selected = false; });
-            else if (e.target.closest('[data-done]')) { menu.hidden = true; wrap.classList.remove('open'); }
+            else if (e.target.closest('[data-done]')) setOpen(false);
             render();
             sel.dispatchEvent(new Event('change', { bubbles: true }));
         });
-        document.addEventListener('click', function () { if (!menu.hidden) { menu.hidden = true; wrap.classList.remove('open'); } });
+        document.addEventListener('click', function () { if (!menu.hidden) setOpen(false); });
     });
 
     /* ---------- Tag input ---------- */

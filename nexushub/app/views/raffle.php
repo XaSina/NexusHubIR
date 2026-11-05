@@ -15,6 +15,7 @@ $medals = ['🥇', '🥈', '🥉'];
     <div class="rf-hero" style="<?= $r['image'] ? '--img:url(\'' . e(media_url($r['image'])) . '\')' : '' ?>">
         <div class="rf-hero-bg" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="rf-hero-in">
+            <?php if ($r['image']): ?><div class="rf-hero-art"><img src="<?= e(media_url($r['image'])) ?>" alt="<?= e($r['title']) ?>"></div><?php endif; ?>
             <span class="rf-chip rf-st-<?= e($r['status']) ?>" id="rfStatus"><?= e(raffle_status_names()[$r['status']]) ?></span>
             <h1 class="rf-title"><?= e($r['title']) ?></h1>
             <p class="rf-mode-line"><?= $modeInfo[2] ?> <?= e($modeInfo[0]) ?> · <?= e($modeInfo[1]) ?></p>
@@ -69,7 +70,7 @@ $medals = ['🥇', '🥈', '🥉'];
                     <form class="rf-buy" id="rfBuy" enctype="multipart/form-data">
                         <div class="rf-qty"><button type="button" data-q="-1">−</button><input type="number" name="qty" id="rfQty" value="1" min="1" inputmode="numeric"><button type="button" data-q="1">+</button></div>
                         <div class="rf-total">مبلغ قابل پرداخت: <b id="rfTotal"><?= money((int) $r['ticket_price']) ?></b> تومان</div>
-                        <div class="rf-card"><small>کارت به کارت به:</small><b dir="ltr" class="rf-cardno"><?= e(trim(chunk_split((string) setting('shop_card_number'), 4, ' '))) ?></b><small><?= e(setting('shop_card_name')) ?> — <?= e(setting('shop_card_bank')) ?></small><button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e((string) setting('shop_card_number')) ?>"><?= icon('copy', 15) ?> کپی شماره کارت</button></div>
+                        <div class="rf-cardbox"><small>کارت به کارت به:</small><b dir="ltr" class="rf-cardno"><?= e(trim(chunk_split((string) setting('shop_card_number'), 4, ' '))) ?></b><small><?= e(setting('shop_card_name')) ?> — <?= e(setting('shop_card_bank')) ?></small><button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e((string) setting('shop_card_number')) ?>"><?= icon('copy', 15) ?> کپی شماره کارت</button></div>
                         <label class="rf-file"><input type="file" name="receipt" accept="image/*" required><span>📎 <em>انتخاب عکس فیش واریزی</em></span></label>
                         <button class="btn btn-primary btn-block" type="submit">ثبت خرید و ارسال فیش</button>
                         <small class="muted">بعد از تأیید فیش، شماره‌ی تیکت‌هات اینجا و توی اعلان‌ها نشون داده می‌شه.</small>

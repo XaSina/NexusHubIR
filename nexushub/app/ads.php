@@ -54,6 +54,20 @@ function ad_slot(string $position): string
     return $shop . '<div class="nxp-slot nxp-pos-' . e($position) . ($rotate ? ' nxp-rotate' : '') . '" data-reveal>' . $inner . '</div>';
 }
 
+/** the moving layers a theme draws behind an ad (embers, aurora, scan line …) */
+function ad_deco(string $theme): string
+{
+    return match ($theme) {
+        'fire' => '<span class="nxp-embers" aria-hidden="true">' . str_repeat('<i></i>', 10) . '</span>',
+        'aurora' => '<span class="nxp-aurora" aria-hidden="true"><i></i><i></i><i></i></span>',
+        'glitch' => '<span class="nxp-scan" aria-hidden="true"></span>',
+        'holo' => '<span class="nxp-holo" aria-hidden="true"></span>',
+        'glass' => '<span class="nxp-shine" aria-hidden="true"></span>',
+        'spotlight' => '<span class="nxp-spot" aria-hidden="true"></span>',
+        default => '',
+    };
+}
+
 function render_ad(array $a, bool $preview = false): string
 {
     $a += ['id' => 0, 'title' => '', 'format' => 'card', 'theme' => 'neon', 'accent' => '', 'image' => '', 'link' => '', 'html' => '', 'heading' => '',
@@ -67,15 +81,7 @@ function render_ad(array $a, bool $preview = false): string
     $target = !empty($a['new_tab']) ? ' target="_blank"' : '';
     $label = !empty($a['no_label']) ? '' : (string) setting('ad_label', 'تبلیغ');
 
-    $deco = match ($theme) {
-        'fire' => '<span class="nxp-embers" aria-hidden="true">' . str_repeat('<i></i>', 10) . '</span>',
-        'aurora' => '<span class="nxp-aurora" aria-hidden="true"><i></i><i></i><i></i></span>',
-        'glitch' => '<span class="nxp-scan" aria-hidden="true"></span>',
-        'holo' => '<span class="nxp-holo" aria-hidden="true"></span>',
-        'glass' => '<span class="nxp-shine" aria-hidden="true"></span>',
-        'spotlight' => '<span class="nxp-spot" aria-hidden="true"></span>',
-        default => '',
-    };
+    $deco = ad_deco($theme);
     $ribbon = ($theme === 'ribbon' || !empty($a['badge'])) ? '<span class="nxp-ribbon">' . e($a['badge'] ?: 'ویژه') . '</span>' : '';
     $device = $a['device'] ?? 'all';
     $cls = 'nxp nxp-theme-' . $theme . ' nxp-fmt-' . $format . ($device !== 'all' ? ' only-' . $device : '');

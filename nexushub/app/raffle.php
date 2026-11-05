@@ -36,8 +36,13 @@ function raffle_url(array $r): string
 
 function raffle_public_name(array $m): string
 {
-    $last = trim((string) ($m['last_name'] ?? ''));
-    return trim($m['first_name'] . ' ' . ($last !== '' ? mb_substr($last, 0, 1) . '.' : ''));
+    // visitors only ever see the first name; the full name stays in the admin panel
+    return trim((string) ($m['first_name'] ?? '')) ?: 'کاربر';
+}
+
+function raffle_full_name(array $m): string
+{
+    return trim(trim((string) ($m['first_name'] ?? '')) . ' ' . trim((string) ($m['last_name'] ?? ''))) ?: 'کاربر';
 }
 
 /** approved tickets per member (paid mode) */
@@ -60,7 +65,7 @@ function raffle_pool(array $r): array
         if ($r['mode'] === 'paid') { $w = $tickets[$mid] ?? 0; if ($w <= 0) continue; }
         elseif ($r['mode'] === 'referral') $w = 100 + (int) round((int) $e['bonus'] * (float) $r['ticket_bonus']);
         else $w = 100;
-        $pool[$mid] = ['member_id' => $mid, 'name' => raffle_public_name($e), 'code' => $e['member_code'], 'bonus' => (int) $e['bonus'],
+        $pool[$mid] = ['member_id' => $mid, 'name' => raffle_public_name($e), 'full' => raffle_full_name($e), 'code' => $e['member_code'], 'bonus' => (int) $e['bonus'],
             'tickets' => $tickets[$mid] ?? 0, 'w' => $w, 'joined' => $e['created_at']];
     }
     $total = array_sum(array_column($pool, 'w'));
@@ -224,21 +229,21 @@ function raffle_maybe_draw(array $r, bool $force = false): array
                 if (!$owner) break;
                 $won[$owner] = true;
                 $p = $st['pool'][$owner];
-                $results[] = ['prize' => $pz['title'], 'member_id' => $owner, 'name' => $p['name'], 'ticket' => $n, 'chance' => $p['chance']];
+                $results[] = ['prize' => $pz['title'], 'member_id' => $owner, 'name' => $p['name'], 'full' => $p['full'], 'ticket' => $n, 'chance' => $p['chance']];
             }
         } else {
             $pool = $st['pool'];
             foreach ($prizes as $pz) {
                 $p = raffle_pick($pool);
                 if (!$p) break;
-                $results[] = ['prize' => $pz['title'], 'member_id' => $p['member_id'], 'name' => $p['name'], 'chance' => $p['chance']];
+                $results[] = ['prize' => $pz['title'], 'member_id' => $p['member_id'], 'name' => $p['name'], 'full' => $p['full'], 'chance' => $p['chance']];
             }
         }
         q("UPDATE raffles SET status = 'drawn', results = ?, draw_seed = ?, drawn_at = ?, updated_at = ? WHERE id = ?",
             [json_encode($results, JSON_UNESCAPED_UNICODE), bin2hex(random_bytes(12)), now(), now(), $r['id']]);
         $pdo->commit();
         foreach ($results as $w) notify('m:' . $w['member_id'], 'raffle', (int) $r['id'], '🏆', 'تبریک! برنده‌ی قرعه‌کشی شدی', 'جایزه: ' . $w['prize'] . ' — «' . $r['title'] . '». به زودی باهات تماس می‌گیریم.', 'raffle/' . $r['slug'], 'success');
-        notify('admin', 'raffle', (int) $r['id'], '🏆', 'قرعه‌کشی برگزار شد', $r['title'] . ' — ' . implode('، ', array_column($results, 'name')), 'admin/raffle-view.php?id=' . $r['id'], 'success');
+        notify('admin', 'raffle', (int) $r['id'], '🏆', 'قرعه‌کشی برگزار شد', $r['title'] . ' — ' . implode('، ', array_column($results, 'full')), 'admin/raffle-view.php?id=' . $r['id'], 'success');
         return row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
@@ -258,31 +263,38 @@ function raffles_due(): void
 }
 
 /** segments for the wheel: names (free / referral, sized by chance) or ticket numbers (paid) */
-function raffle_wheel(array $r, array $pool): array
+function raffle_wheel(array $r, array $pool, bool $admin = false): array
 {
+    $cap = 300;
     $results = json_decode((string) ($r['results'] ?? ''), true) ?: [];
     $winners = [];
     foreach ($results as $i => $w) $winners[(int) $w['member_id']] = $i;
+    $nameOf = fn($mid) => isset($pool[$mid]) ? ($admin ? $pool[$mid]['full'] : $pool[$mid]['name']) : '';
     $seg = [];
     if ($r['mode'] === 'paid') {
         $ranges = rows("SELECT member_id, from_no, to_no FROM raffle_requests WHERE raffle_id = ? AND status = 'approved' ORDER BY from_no", [$r['id']]);
         $nums = [];
-        foreach ($ranges as $g) for ($n = (int) $g['from_no']; $n <= (int) $g['to_no'] && count($nums) < 5000; $n++) $nums[$n] = (int) $g['member_id'];
+        foreach ($ranges as $g) for ($n = (int) $g['from_no']; $n <= (int) $g['to_no'] && count($nums) < 20000; $n++) $nums[$n] = (int) $g['member_id'];
         $winNums = [];
         foreach ($results as $i => $w) if (isset($w['ticket'])) $winNums[(int) $w['ticket']] = $i;
         $keys = array_keys($nums);
-        if (count($keys) > 48) { shuffle($keys); $keys = array_slice(array_unique(array_merge(array_keys($winNums), array_slice($keys, 0, 48 - count($winNums)))), 0, 48); sort($keys); }
-        foreach ($keys as $n) $seg[] = ['label' => '#' . $n, 'w' => 1, 'win' => $winNums[$n] ?? null];
+        if (count($keys) > $cap) {
+            $rest = array_values(array_diff($keys, array_keys($winNums)));
+            shuffle($rest);
+            $keys = array_merge(array_keys($winNums), array_slice($rest, 0, $cap - count($winNums)));
+            sort($keys);
+        }
+        foreach ($keys as $n) $seg[] = ['label' => fa_num((string) $n) . ' · ' . $nameOf($nums[$n]), 'w' => 1, 'win' => $winNums[$n] ?? null];
     } else {
         $list = array_values($pool);
-        if (count($list) > 40) {
+        if (count($list) > $cap) {
             $keep = array_filter($list, fn($p) => isset($winners[$p['member_id']]));
             $rest = array_values(array_filter($list, fn($p) => !isset($winners[$p['member_id']])));
             shuffle($rest);
-            $list = array_merge($keep, array_slice($rest, 0, 40 - count($keep)));
-            shuffle($list);
+            $list = array_merge($keep, array_slice($rest, 0, $cap - count($keep)));
         }
-        foreach ($list as $p) $seg[] = ['label' => $p['name'], 'w' => max(1, $p['w']), 'win' => $winners[$p['member_id']] ?? null];
+        shuffle($list);   // neighbours on the wheel are random, not in join order
+        foreach ($list as $p) $seg[] = ['label' => $admin ? $p['full'] : $p['name'], 'w' => max(1, $p['w']), 'win' => $winners[$p['member_id']] ?? null];
     }
     return $seg;
 }
@@ -323,6 +335,59 @@ function raffle_result_ad(array $r): array
     ];
 }
 
+/**
+ * The raffle promo box — its own compact design (art tile, live tag, prize, progress, countdown, CTA),
+ * wrapped in the chosen ad theme so the theme's border / glow / moving layers still apply.
+ * Narrow places (sidebar, phones) re-flow through a container query.
+ */
+function raffle_box_html(array $r, ?array $st = null, bool $preview = false): string
+{
+    $theme = array_key_exists((string) ($r['box_theme'] ?? ''), ad_themes()) ? (string) $r['box_theme'] : 'neon';
+    $accent = valid_hex((string) ($r['box_accent'] ?? ''), '') ?: valid_hex((string) setting('color_primary', '#ff1f3d'), '#ff1f3d');
+    $drawn = ($r['status'] ?? '') === 'drawn';
+    $prizes = raffle_prizes($r);
+    $prize = ($prizes[0]['title'] ?? '') ?: 'جایزه‌ی ویژه';
+    $more = count($prizes) > 1 ? ' + ' . fa_num((string) (count($prizes) - 1)) . ' جایزه' : '';
+    $href = $preview ? '#' : raffle_url($r) . ($drawn ? '?show=1' : '');
+    $img = !empty($r['image']) ? media_url((string) $r['image']) : '';
+    $mode = raffle_modes()[$r['mode']] ?? raffle_modes()['free'];
+
+    $art = '<span class="rfx-art" aria-hidden="true"><span class="rfx-ring"></span>'
+        . ($img ? '<img src="' . e($img) . '" alt="" loading="lazy">' : '<span class="rfx-emoji">' . e($drawn ? '🏆' : ($prizes[0]['emoji'] ?? '🎁')) . '</span>')
+        . '</span>';
+    if ($drawn) {
+        $res = json_decode((string) ($r['results'] ?? ''), true) ?: [];
+        $who = $res ? $res[0]['name'] . (count($res) > 1 ? ' و ' . fa_num((string) (count($res) - 1)) . ' نفر دیگه' : '') : '';
+        $tag = '<span class="rfx-tag rfx-done">🏆 برگزار شد</span>';
+        $mid = '<span class="rfx-win"><small>برنده</small><b>' . e($who ?: '—') . '</b></span>';
+        $side = '<span class="rfx-cta">🎡 دیدن گردونه ' . icon('arrow-left', 15) . '</span>';
+    } else {
+        $st = $st ?: ['participants' => 0, 'need' => (int) ($r['min_participants'] ?? 0), 'sold' => 0, 'need_tickets' => (int) ($r['min_tickets'] ?? 0)];
+        $paid = $r['mode'] === 'paid';
+        $have = $paid ? (int) $st['sold'] : (int) $st['participants'];
+        $need = $paid ? (int) $st['need_tickets'] : (int) $st['need'];
+        $pct = $need ? min(100, round($have / max(1, $need) * 100)) : 100;
+        $left = max(0, strtotime((string) $r['draw_at']) - time());
+        $tag = '<span class="rfx-tag"><i class="rfx-dot"></i> قرعه‌کشی · ' . e($mode[0]) . '</span>';
+        $mid = '<span class="rfx-prog"><span class="rfx-bar"><i style="width:' . $pct . '%"></i></span><small>' . ($paid ? '🎟️ ' : '👥 ') . fa_num((string) $have)
+            . ($need ? ' از ' . fa_num((string) $need) : '') . ($paid ? ' تیکت' : ' نفر') . '</small></span>';
+        $side = '<span class="nxp-countdown rfx-cd" data-end="' . e(date('c', strtotime((string) $r['draw_at']))) . '">'
+            . '<b data-u="d">' . fa_num((string) intdiv($left, 86400)) . '</b><small>روز</small><b data-u="h">' . fa_num((string) intdiv($left % 86400, 3600)) . '</b><small>ساعت</small>'
+            . '<b data-u="m">' . fa_num((string) intdiv($left % 3600, 60)) . '</b><small>دقیقه</small><b data-u="s">' . fa_num((string) ($left % 60)) . '</b><small>ثانیه</small></span>'
+            . '<span class="rfx-cta">' . ($paid ? '🎟️ خرید تیکت' : '🎰 شرکت کن') . ' ' . icon('arrow-left', 15) . '</span>';
+    }
+    $title = e(($r['title'] ?? '') ?: 'قرعه‌کشی بزرگ');
+    return '<div class="nxp nxp-theme-' . $theme . ' rfx' . ($drawn ? ' rfx-is-done' : '') . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '">'
+        . ad_deco($theme) . ($theme === 'ribbon' ? '<span class="nxp-ribbon">ویژه</span>' : '')
+        . '<a class="nxp-inner rfx-in" href="' . e($href) . '">'
+        . $art
+        . '<span class="rfx-body">' . $tag
+        . '<strong class="nxp-title rfx-title"' . ($theme === 'glitch' ? ' data-text="' . $title . '"' : '') . '>' . $title . '</strong>'
+        . '<span class="rfx-prize">🎁 ' . e($prize) . '<em>' . e($more) . '</em></span>' . $mid . '</span>'
+        . '<span class="rfx-side">' . $side . '</span>'
+        . '</a></div>';
+}
+
 function raffle_slot(string $position): string
 {
     static $list = null;
@@ -338,15 +403,14 @@ function raffle_slot(string $position): string
     foreach ($list as $r) {
         $places = array_filter(array_map('trim', explode(',', (string) $r['box_places'])));
         if (!in_array($position, $places, true)) continue;
-        $ad = $r['status'] === 'drawn' ? raffle_result_ad($r) : raffle_box_ad($r, raffle_stats($r));
-        $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . render_ad($ad, true) . '</div>';
+        $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . raffle_box_html($r, $r['status'] === 'drawn' ? null : raffle_stats($r)) . '</div>';
     }
     return $out;
 }
 
 
 /** everything the raffle page needs (also returned by the API while the page is open) */
-function raffle_state(array $r, ?array $me): array
+function raffle_state(array $r, ?array $me, bool $admin = false): array
 {
     $st = raffle_stats($r);
     $mine = raffle_mine($r, $me);
@@ -355,9 +419,11 @@ function raffle_state(array $r, ?array $me): array
     return [
         'id' => (int) $r['id'], 'status' => $r['status'], 'mode' => $r['mode'], 'left' => $st['left'], 'draw_at' => date('c', strtotime($r['draw_at'])),
         'participants' => $st['participants'], 'need' => $st['need'], 'sold' => $st['sold'], 'need_tickets' => $st['need_tickets'],
-        'results' => json_decode((string) ($r['results'] ?? ''), true) ?: [],
-        'wheel' => raffle_wheel($r, $st['pool']),
-        'people' => array_slice(array_map(fn($p) => ['name' => $p['name'], 'chance' => $p['chance'], 'tickets' => $p['tickets'], 'bonus' => $p['bonus'], 'me' => $me && $p['member_id'] === (int) $me['id']], array_values($pool)), 0, 60),
+        'results' => array_map(fn($w) => ['prize' => $w['prize'], 'name' => $admin ? ($w['full'] ?? $w['name']) : $w['name'], 'ticket' => $w['ticket'] ?? null, 'chance' => $w['chance'] ?? 0, 'me' => $me && (int) $w['member_id'] === (int) $me['id']],
+            json_decode((string) ($r['results'] ?? ''), true) ?: []),
+        'wheel' => raffle_wheel($r, $st['pool'], $admin),
+        'admin' => $admin,
+        'people' => array_slice(array_map(fn($p) => ['name' => $admin ? $p['full'] : $p['name'], 'chance' => $p['chance'], 'tickets' => $p['tickets'], 'bonus' => $p['bonus'], 'me' => $me && $p['member_id'] === (int) $me['id']], array_values($pool)), 0, 300),
         'me' => $mine ? ['joined' => $mine['joined'], 'chance' => $mine['chance'], 'tickets' => $mine['tickets'], 'ranges' => $mine['ranges'], 'pending' => $mine['pending'], 'bonus' => $mine['bonus'], 'invited' => $mine['invited']] : null,
     ];
 }

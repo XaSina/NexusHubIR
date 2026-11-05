@@ -255,6 +255,12 @@ function preset_images(string $set = 'product'): array
         'assets/img/covers/tech.svg' => 'تکنولوژی', 'assets/img/covers/rumor.svg' => 'شایعه / لیک', 'assets/img/covers/live-event.svg' => 'رویداد زنده',
         'assets/img/covers/free-games.svg' => 'بازی رایگان',
     ];
+    if ($set === 'raffle') return [
+        'assets/img/presets/raffle-wheel.svg' => 'گردونه‌ی شانس', 'assets/img/presets/raffle-gift.svg' => 'جعبه‌ی جایزه', 'assets/img/presets/raffle-trophy.svg' => 'جام قهرمانی',
+        'assets/img/presets/raffle-tickets.svg' => 'تیکت قرعه‌کشی', 'assets/img/presets/raffle-jackpot.svg' => 'جک‌پات ۷۷۷', 'assets/img/presets/raffle-stars.svg' => 'ستاره‌ها',
+        'assets/img/presets/premium.svg' => 'پریمیوم تلگرام', 'assets/img/presets/stars.svg' => 'استارز', 'assets/img/presets/ton.svg' => 'تون',
+        'assets/img/presets/gift.svg' => 'گیفت کارت', 'assets/img/presets/game.svg' => 'بازی', 'assets/img/presets/telegram.svg' => 'تلگرام',
+    ];
     return [
         'assets/img/presets/premium.svg' => 'پریمیوم تلگرام', 'assets/img/presets/stars.svg' => 'استارز', 'assets/img/presets/ton.svg' => 'تون / کریپتو',
         'assets/img/presets/gift.svg' => 'گیفت کارت', 'assets/img/presets/game.svg' => 'بازی', 'assets/img/presets/account.svg' => 'اکانت / اشتراک',

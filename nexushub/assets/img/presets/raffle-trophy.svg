@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<style>
+  .spin{transform-box:fill-box;transform-origin:center;animation:spin 12s linear infinite}
+  .spin-r{transform-box:fill-box;transform-origin:center;animation:spin 26s linear infinite reverse}
+  .float{animation:float 3.6s ease-in-out infinite}
+  .tw{animation:tw 2.2s ease-in-out infinite}.d2{animation-delay:.7s}.d3{animation-delay:1.3s}.d4{animation-delay:1.8s}
+  .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.8s ease-in-out infinite}
+  .sweep{animation:sweep 4.5s ease-in-out infinite}
+  .rise{animation:rise 5s linear infinite}
+  .blink{animation:blink 1s steps(2,start) infinite}.blink2{animation:blink 1s steps(2,start) .5s infinite}
+  .rock{transform-box:fill-box;transform-origin:50% 100%;animation:rock 4s ease-in-out infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes float{50%{transform:translateY(-16px)}}
+  @keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+  @keyframes pulse{50%{transform:scale(1.1);opacity:.6}}
+  @keyframes sweep{0%{transform:translateX(-700px)}60%,100%{transform:translateX(1300px)}}
+  @keyframes rise{from{transform:translateY(620px)}to{transform:translateY(-80px)}}
+  @keyframes blink{to{visibility:hidden}}
+  @keyframes rock{50%{transform:rotate(-4deg)}}
+</style>
+<defs>
+  <radialGradient id="bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#3a0d1d"/><stop offset=".55" stop-color="#150812"/><stop offset="1" stop-color="#07050b"/></radialGradient>
+  <radialGradient id="glow" r="50%"><stop offset="0" stop-color="#ff3d5e" stop-opacity=".55"/><stop offset="1" stop-color="#ff3d5e" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".45" stop-color="#ffc53d"/><stop offset="1" stop-color="#c77a12"/></linearGradient>
+  <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a76"/><stop offset="1" stop-color="#c2102e"/></linearGradient>
+  <linearGradient id="shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<circle cx="400" cy="290" r="300" fill="url(#glow)" class="pulse"/>
+<g fill="#fff"><circle class="tw" cx="90" cy="90" r="3"/><circle class="tw d2" cx="700" cy="120" r="2.5"/><circle class="tw d3" cx="640" cy="470" r="3"/><circle class="tw d4" cx="150" cy="480" r="2.5"/><circle class="tw d2" cx="250" cy="70" r="2"/><circle class="tw d3" cx="560" cy="60" r="2"/></g>
+<rect class="rise" style="animation-delay:-0.00s" x="80" y="0" width="10" height="16" rx="2" fill="#ff3d5e" transform="rotate(0 85 8)"/><rect class="rise" style="animation-delay:-0.55s" x="138" y="0" width="10" height="16" rx="2" fill="#ffc53d" transform="rotate(23 143 8)"/><rect class="rise" style="animation-delay:-1.10s" x="196" y="0" width="10" height="16" rx="2" fill="#1fd1ff" transform="rotate(46 201 8)"/><rect class="rise" style="animation-delay:-1.65s" x="254" y="0" width="10" height="16" rx="2" fill="#3ddc84" transform="rotate(69 259 8)"/><rect class="rise" style="animation-delay:-2.20s" x="312" y="0" width="10" height="16" rx="2" fill="#7c4dff" transform="rotate(92 317 8)"/><rect class="rise" style="animation-delay:-2.75s" x="370" y="0" width="10" height="16" rx="2" fill="#ff3d5e" transform="rotate(115 375 8)"/><rect class="rise" style="animation-delay:-3.30s" x="428" y="0" width="10" height="16" rx="2" fill="#ffc53d" transform="rotate(138 433 8)"/><rect class="rise" style="animation-delay:-3.85s" x="486" y="0" width="10" height="16" rx="2" fill="#1fd1ff" transform="rotate(161 491 8)"/><rect class="rise" style="animation-delay:-4.40s" x="544" y="0" width="10" height="16" rx="2" fill="#3ddc84" transform="rotate(184 549 8)"/><rect class="rise" style="animation-delay:-4.95s" x="602" y="0" width="10" height="16" rx="2" fill="#7c4dff" transform="rotate(207 607 8)"/><rect class="rise" style="animation-delay:-5.50s" x="660" y="0" width="10" height="16" rx="2" fill="#ffc53d" transform="rotate(230 665 8)"/><g class="float">
+<path d="M300 120 H500 V200 C500 270 455 315 400 320 C345 315 300 270 300 200 Z" fill="url(#gold)" stroke="#a65d00" stroke-width="4"/>
+<path d="M300 140 H245 C245 210 280 240 315 245" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round"/>
+<path d="M500 140 H555 C555 210 520 240 485 245" fill="none" stroke="url(#gold)" stroke-width="16" stroke-linecap="round"/>
+<rect x="380" y="318" width="40" height="60" fill="url(#gold)"/><rect x="320" y="372" width="160" height="34" rx="8" fill="url(#gold)" stroke="#a65d00" stroke-width="3"/>
+<rect x="290" y="404" width="220" height="40" rx="10" fill="#2a0c16" stroke="url(#gold)" stroke-width="4"/>
+<path d="M400 160 l14 30 32 4 -24 22 7 32 -29 -16 -29 16 7 -32 -24 -22 32 -4 Z" fill="#fff6d0"/>
+</g>
+<text x="400" y="560" text-anchor="middle" font-family="Vazirmatn, Tahoma, sans-serif" font-weight="900" font-size="34" fill="#fff" letter-spacing="2">WINNER</text><rect class="sweep" x="0" y="0" width="160" height="600" fill="url(#shine)" transform="skewX(-18)"/>
+</svg>

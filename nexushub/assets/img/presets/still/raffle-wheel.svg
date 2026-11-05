@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<style>
+  .spin{transform-box:fill-box;transform-origin:center;}
+  .spin-r{transform-box:fill-box;transform-origin:center;}
+  .float{}
+  .tw{}.d2{animation-delay:.7s}.d3{animation-delay:1.3s}.d4{animation-delay:1.8s}
+  .pulse{transform-box:fill-box;transform-origin:center;}
+  .sweep{}
+  .rise{}
+  .blink{}.blink2{}
+  .rock{transform-box:fill-box;transform-origin:50% 100%;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes float{50%{transform:translateY(-16px)}}
+  @keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+  @keyframes pulse{50%{transform:scale(1.1);opacity:.6}}
+  @keyframes sweep{0%{transform:translateX(-700px)}60%,100%{transform:translateX(1300px)}}
+  @keyframes rise{from{transform:translateY(620px)}to{transform:translateY(-80px)}}
+  @keyframes blink{to{visibility:hidden}}
+  @keyframes rock{50%{transform:rotate(-4deg)}}
+</style>
+<defs>
+  <radialGradient id="bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#3a0d1d"/><stop offset=".55" stop-color="#150812"/><stop offset="1" stop-color="#07050b"/></radialGradient>
+  <radialGradient id="glow" r="50%"><stop offset="0" stop-color="#ff3d5e" stop-opacity=".55"/><stop offset="1" stop-color="#ff3d5e" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1a8"/><stop offset=".45" stop-color="#ffc53d"/><stop offset="1" stop-color="#c77a12"/></linearGradient>
+  <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a76"/><stop offset="1" stop-color="#c2102e"/></linearGradient>
+  <linearGradient id="shine" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<circle cx="400" cy="290" r="300" fill="url(#glow)" class="pulse"/>
+<g fill="#fff"><circle class="tw" cx="90" cy="90" r="3"/><circle class="tw d2" cx="700" cy="120" r="2.5"/><circle class="tw d3" cx="640" cy="470" r="3"/><circle class="tw d4" cx="150" cy="480" r="2.5"/><circle class="tw d2" cx="250" cy="70" r="2"/><circle class="tw d3" cx="560" cy="60" r="2"/></g>
+<circle cx="400" cy="280" r="200" fill="#2a0c16" stroke="url(#gold)" stroke-width="12"/><circle class="blink2" cx="588.0" cy="280.0" r="5" fill="#fff3c4"/><circle class="blink" cx="576.7" cy="344.3" r="5" fill="#fff3c4"/><circle class="blink2" cx="544.0" cy="400.8" r="5" fill="#fff3c4"/><circle class="blink" cx="494.0" cy="442.8" r="5" fill="#fff3c4"/><circle class="blink2" cx="432.6" cy="465.1" r="5" fill="#fff3c4"/><circle class="blink" cx="367.4" cy="465.1" r="5" fill="#fff3c4"/><circle class="blink2" cx="306.0" cy="442.8" r="5" fill="#fff3c4"/><circle class="blink" cx="256.0" cy="400.8" r="5" fill="#fff3c4"/><circle class="blink2" cx="223.3" cy="344.3" r="5" fill="#fff3c4"/><circle class="blink" cx="212.0" cy="280.0" r="5" fill="#fff3c4"/><circle class="blink2" cx="223.3" cy="215.7" r="5" fill="#fff3c4"/><circle class="blink" cx="256.0" cy="159.2" r="5" fill="#fff3c4"/><circle class="blink2" cx="306.0" cy="117.2" r="5" fill="#fff3c4"/><circle class="blink" cx="367.4" cy="94.9" r="5" fill="#fff3c4"/><circle class="blink2" cx="432.6" cy="94.9" r="5" fill="#fff3c4"/><circle class="blink" cx="494.0" cy="117.2" r="5" fill="#fff3c4"/><circle class="blink2" cx="544.0" cy="159.2" r="5" fill="#fff3c4"/><circle class="blink" cx="576.7" cy="215.7" r="5" fill="#fff3c4"/>
+<g class="spin"><path d="M400 280 L400.0 110.0 A170 170 0 0 1 485.0 132.8 Z" fill="#ff3d5e" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L485.0 132.8 A170 170 0 0 1 547.2 195.0 Z" fill="#ffb020" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L547.2 195.0 A170 170 0 0 1 570.0 280.0 Z" fill="#7c4dff" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L570.0 280.0 A170 170 0 0 1 547.2 365.0 Z" fill="#1fd1ff" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L547.2 365.0 A170 170 0 0 1 485.0 427.2 Z" fill="#ff3d5e" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L485.0 427.2 A170 170 0 0 1 400.0 450.0 Z" fill="#3ddc84" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L400.0 450.0 A170 170 0 0 1 315.0 427.2 Z" fill="#7c4dff" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L315.0 427.2 A170 170 0 0 1 252.8 365.0 Z" fill="#ffb020" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L252.8 365.0 A170 170 0 0 1 230.0 280.0 Z" fill="#ff3d5e" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L230.0 280.0 A170 170 0 0 1 252.8 195.0 Z" fill="#1fd1ff" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L252.8 195.0 A170 170 0 0 1 315.0 132.8 Z" fill="#7c4dff" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><path d="M400 280 L315.0 132.8 A170 170 0 0 1 400.0 110.0 Z" fill="#3ddc84" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="400" cy="280" r="170" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="8"/></g>
+<circle cx="400" cy="280" r="34" fill="url(#gold)" stroke="#7a3d00" stroke-width="3"/><circle cx="400" cy="280" r="12" fill="#c2102e"/>
+<path d="M400 112 l-22 -40 h44 Z" fill="url(#gold)" stroke="#7a3d00" stroke-width="3"/>
+<text x="400" y="560" text-anchor="middle" font-family="Vazirmatn, Tahoma, sans-serif" font-weight="900" font-size="34" fill="#fff" letter-spacing="2">LUCKY WHEEL</text><rect class="sweep" x="0" y="0" width="160" height="600" fill="url(#shine)" transform="skewX(-18)"/>
+</svg>

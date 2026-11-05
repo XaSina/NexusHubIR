@@ -56,6 +56,28 @@ adm_head($r['title'], 'raffles');
     </div>
 </div>
 
+<?php $wst = raffle_state($r, null, true); ?>
+<link rel="stylesheet" href="<?= e(asset('css/raffle.css')) ?>">
+<div class="card mb rf-admin-card">
+    <div class="card-head"><h3>🎡 گردونه‌ی قرعه‌کشی</h3><small class="muted">فقط برای تو: اسم کامل شرکت‌کننده‌ها روی گردونه‌ست</small></div>
+    <div class="rf-admin-wheel">
+        <div class="rf-wheel-wrap" id="rfWheelWrap">
+            <div class="rf-lights" aria-hidden="true"></div>
+            <div class="rf-pointer" id="rfPointer" aria-hidden="true"></div>
+            <div class="rf-disc" id="rfDisc"></div>
+            <div class="rf-hub"><img src="<?= e(logo_url()) ?>" alt=""></div>
+            <canvas class="rf-confetti" id="rfConfetti" aria-hidden="true"></canvas>
+            <div class="rf-winner" id="rfWinner" hidden></div>
+        </div>
+        <div class="rf-admin-side">
+            <p class="rf-wheel-note" id="rfWheelNote"></p>
+            <button type="button" class="abtn abtn-primary rf-replay" id="rfReplay">▶ چرخوندن گردونه</button>
+            <div class="rf-results" id="rfResults"></div>
+        </div>
+    </div>
+</div>
+<script>window.NX_RAFFLE = <?= json_encode($wst + ['admin' => true, 'logged' => false, 'prizes' => raffle_prizes($r), 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time(), 'show' => false], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
+
 <?php if ($results): ?>
 <div class="card mb"><div class="card-head"><h3>🏆 برنده‌ها</h3><small class="muted"><?= e(jdate('j F Y — H:i', strtotime((string) $r['drawn_at']))) ?></small></div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>جایزه</th><th>برنده</th><th>موبایل</th><?= $r['mode'] === 'paid' ? '<th>تیکت برنده</th>' : '' ?><th>شانسش</th></tr></thead><tbody>
@@ -94,4 +116,4 @@ adm_head($r['title'], 'raffles');
             <td><?= $r['mode'] === 'paid' ? fa_num((string) ($pp['tickets'] ?? 0)) : ($r['mode'] === 'referral' ? fa_num((string) $p['bonus']) : '') ?></td><td><?= $pp ? fa_num((string) $pp['chance']) . '٪' : '—' ?></td><td class="small muted"><?= e(jago($p['created_at'])) ?></td></tr>
     <?php endforeach; ?></tbody></table></div><?php endif; ?>
 </div>
-<?php adm_foot();
+<?php adm_foot(['raffle.js']);

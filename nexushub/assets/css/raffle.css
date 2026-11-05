@@ -57,31 +57,52 @@
 .rf-wheel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .rf-live { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 20px; font-size: .78rem; font-weight: 800; color: #fff; background: #ff2b4a; }
 .rf-live i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: rfBlink 1s infinite; }
-/* ---------- the wheel ---------- */
-.rf-wheel-wrap { position: relative; width: min(100%, 440px); aspect-ratio: 1; margin: 6px auto 0; }
-.rf-disc { position: absolute; inset: 7%; border-radius: 50%; transform: rotate(0deg); }
+/* ---------- the wheel: metal rim with chasing bulbs, gradient slices, fixed glass, jewelled pointer ---------- */
+.rf-wheel-wrap { position: relative; width: min(100%, 460px); aspect-ratio: 1; margin: 18px auto 6px; }
+.rf-wheel-wrap::before { content: ""; position: absolute; inset: -9%; z-index: -1; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(var(--primary-rgb), .38), rgba(var(--primary-rgb), .08) 70%, transparent); }
+.rf-wheel-wrap::after { content: ""; position: absolute; inset: -14%; z-index: -2; border-radius: 50%; pointer-events: none; opacity: .5;
+    background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.07) 0 6deg, transparent 6deg 18deg);
+    -webkit-mask: radial-gradient(closest-side, #000 35%, transparent); mask: radial-gradient(closest-side, #000 35%, transparent); animation: rfRays 40s linear infinite; }
+@keyframes rfRays { to { transform: rotate(360deg); } }
+.rf-lights { position: absolute; inset: 1.5%; border-radius: 50%;
+    background: conic-gradient(from 20deg, #6e4500, #ffe7a0, #c58a17, #fff3c9, #8d5a00, #ffd36a, #a46a06, #ffeaa9, #6e4500);
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,.55), 0 18px 50px -12px rgba(0,0,0,.75), 0 0 46px -6px rgba(var(--primary-rgb), .55), inset 0 0 0 1.5px rgba(255,255,255,.35); }
+.rf-lights::after { content: ""; position: absolute; inset: 5.4%; border-radius: 50%; background: #0b0910; box-shadow: inset 0 0 0 2px rgba(0,0,0,.6), 0 0 0 1.5px rgba(255,240,200,.45); }
+.rf-lights i { position: absolute; z-index: 1; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; transform: rotate(var(--a)) translate(0, calc(-1 * var(--r)));
+    background: radial-gradient(circle at 35% 35%, #fff, #ffe9a8 40%, #d89b16 75%); box-shadow: 0 0 0 1px rgba(90,55,0,.7);
+    animation: rfChase 1.4s linear infinite; animation-delay: calc(var(--k) * -.1s); }
+@keyframes rfChase { 0%, 100% { opacity: 1; box-shadow: 0 0 0 1px rgba(90,55,0,.7), 0 0 10px 3px rgba(255,214,102,.85); } 35%, 75% { opacity: .35; box-shadow: 0 0 0 1px rgba(90,55,0,.7); } }
+.spinning .rf-lights i { animation-duration: .45s; }
+.rf-disc { position: absolute; z-index: 1; inset: 7.4%; border-radius: 50%; transform: rotate(0deg); will-change: transform; }
 .rf-disc svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.rf-disc.spin { transition: transform var(--dur, 7.5s) cubic-bezier(.12,.68,.06,1); }
-.rf-disc.idle { animation: rfIdle 60s linear infinite; }
+.rf-disc.idle { animation: rfIdle 80s linear infinite; }
 @keyframes rfIdle { to { transform: rotate(360deg); } }
-.rf-seg-t { font: 800 11px Vazirmatn, sans-serif; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 2px; }
-.rf-seg.win path { stroke: #fff; stroke-width: 3; }
-.rf-seg.win { animation: rfWinSeg .9s ease-in-out 3; }
-@keyframes rfWinSeg { 50% { opacity: .55; } }
-.rf-lights { position: absolute; inset: 2%; border-radius: 50%; border: 10px solid color-mix(in srgb, rgb(var(--surface-rgb)) 70%, var(--primary));
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 0 0 0 2px rgba(var(--primary-rgb), .5); }
-.rf-lights i { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #fff3c4; transform: rotate(var(--a)) translate(0, calc(-1 * var(--r))); opacity: .35; }
-.rf-lights i:nth-child(odd) { animation: rfBulb 1s steps(1) infinite; } .rf-lights i:nth-child(even) { animation: rfBulb 1s steps(1) .5s infinite; }
-.spinning .rf-lights i { animation-duration: .25s; }
-@keyframes rfBulb { 0% { opacity: 1; } 50% { opacity: .25; } }
-.rf-pointer { position: absolute; top: -1%; left: 50%; z-index: 3; width: 34px; height: 46px; margin-left: -17px; transform-origin: 50% 20%;
-    background: linear-gradient(180deg, #fff, #ffd5dc); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
-.rf-pointer::after { content: ""; position: absolute; left: 50%; top: 6px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--primary); }
-.rf-pointer.tick { animation: rfTick .12s ease-out; }
-@keyframes rfTick { 50% { transform: rotate(-18deg); } }
-.rf-hub { position: absolute; left: 50%; top: 50%; z-index: 2; width: 19%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; padding: 5px;
-    background: conic-gradient(var(--primary), var(--secondary), var(--primary)); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
-.rf-hub img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; display: block; }
+.rf-lines line { stroke: rgba(255,226,150,.75); stroke-width: .7; }
+.rf-disc.dense .rf-lines line { stroke-width: .25; stroke: rgba(255,226,150,.4); }
+.rf-pegs circle { fill: #ffe39a; stroke: #7a4c00; stroke-width: .5; }
+.rf-seg-t { direction: rtl; unicode-bidi: plaintext; font-family: Vazirmatn, Tahoma, sans-serif; font-weight: 800; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.45); stroke-width: 1.6px; letter-spacing: -.1px; }
+.rf-seg-t.dk { fill: #2b1700; stroke: rgba(255,240,200,.5); }
+.rf-seg path, .rf-seg circle { transition: filter .3s; }
+.rf-seg.win path, .rf-seg.win circle { filter: brightness(1.45) saturate(1.2); stroke: #fff; stroke-width: 1.8; }
+.rf-seg.win { animation: rfWinSeg .7s ease-in-out 4; }
+.rf-seg-t.win { fill: #fff; stroke: #000; }
+@keyframes rfWinSeg { 50% { opacity: .5; } }
+.rf-gloss { position: absolute; z-index: 2; inset: 7.4%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(120% 80% at 30% 8%, rgba(255,255,255,.28), rgba(255,255,255,.06) 38%, transparent 55%), radial-gradient(closest-side, transparent 78%, rgba(0,0,0,.4));
+    box-shadow: inset 0 0 22px rgba(0,0,0,.55); }
+.rf-pointer { position: absolute; top: -2.5%; left: 50%; z-index: 4; width: 11%; min-width: 36px; aspect-ratio: 40 / 58; transform: translateX(-50%); transform-origin: 50% 34%;
+    filter: drop-shadow(0 6px 6px rgba(0,0,0,.55)); }
+.rf-pointer svg { display: block; width: 100%; height: 100%; }
+.rf-pointer.tick { animation: rfTick .14s ease-out; }
+@keyframes rfTick { 45% { transform: translateX(-50%) rotate(-16deg); } }
+.rf-hub { position: absolute; left: 50%; top: 50%; z-index: 3; width: 21%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; padding: 3.5%;
+    background: conic-gradient(from 30deg, #7a4c00, #ffe9a6, #c48a16, #fff2c4, #8e5c00, #ffd56d, #7a4c00);
+    box-shadow: 0 8px 24px rgba(0,0,0,.6), 0 0 0 1.5px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.4); }
+.rf-hub::after { content: ""; position: absolute; inset: 3.5%; border-radius: 50%; pointer-events: none; background: radial-gradient(90% 60% at 35% 15%, rgba(255,255,255,.4), transparent 55%); }
+.rf-hub img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #08070c; display: block; box-shadow: 0 0 0 2px #2a1a00, inset 0 0 8px #000; }
+.spinning .rf-hub { animation: rfHubGlow .9s ease-in-out infinite alternate; }
+@keyframes rfHubGlow { to { box-shadow: 0 8px 24px rgba(0,0,0,.6), 0 0 0 1.5px rgba(0,0,0,.6), 0 0 26px 4px rgba(255,205,90,.55); } }
 .rf-confetti { position: absolute; inset: -20%; width: 140%; height: 140%; pointer-events: none; z-index: 4; }
 .rf-winner { position: absolute; left: 50%; top: 50%; z-index: 5; width: min(92%, 330px); transform: translate(-50%, -50%) scale(.6); opacity: 0; padding: 18px; border-radius: 20px; text-align: center;
     background: rgb(var(--surface-rgb)); border: 2px solid #ffc53d; box-shadow: 0 20px 60px rgba(0,0,0,.6); transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s ease; }
@@ -117,7 +138,7 @@
 .rf-qty button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(var(--text-rgb), .05); color: var(--text); font-size: 1.3rem; cursor: pointer; }
 .rf-qty input { width: 90px; height: 44px; text-align: center; font: 800 1.2rem Vazirmatn, sans-serif; border-radius: 12px; border: 1px solid rgba(var(--primary-rgb), .5); background: transparent; color: var(--text); }
 .rf-total { text-align: center; font-size: .9rem; } .rf-total b { color: var(--primary); font-size: 1.15rem; }
-.rf-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line); text-align: center; }
+.rf-cardbox { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line); text-align: center; }
 .rf-cardno { font-size: 1.15rem; letter-spacing: 1px; }
 .rf-file input { display: none; }
 .rf-file span { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; border: 1.5px dashed rgba(var(--primary-rgb), .5); cursor: pointer; font-size: .86rem; }
@@ -152,7 +173,17 @@
 /* light modes: no looping decoration, nothing moves except the wheel itself */
 html.perf-safe .rf-hero-bg, html.perf-safe .rf-pbar i::after, html.perf-safe .rf-join-big::after { display: none; }
 html.perf-safe .rf-pz-emoji, html.perf-safe .rf-disc.idle, html.perf-safe .rf-st-active::before { animation: none; }
-html.perf-safe .rf-lights i { animation: none; opacity: .7; }
+html.perf-safe .rf-wheel-wrap::after { display: none; }
+html.perf-safe .rf-lights i { animation: none; opacity: .85; box-shadow: 0 0 0 1px rgba(90,55,0,.7); }
 html.perf-safe .spinning .rf-lights i:nth-child(odd) { animation: rfBulb .5s steps(1) infinite; }
+html.perf-safe .rf-lights { box-shadow: 0 0 0 1.5px rgba(0,0,0,.55), inset 0 0 0 1.5px rgba(255,255,255,.35); }
 html.perf-safe .rf-pointer { filter: none; }
+html.perf-safe .spinning .rf-hub, html.perf-safe .rf-seg.win { animation: none; }
+@keyframes rfBulb { 0% { opacity: 1; } 50% { opacity: .3; } }
 html.perf-calm .rf-prize, html.perf-calm .rf-res { animation: none; }
+/* the picture picked in the panel, shown on the hero */
+.rf-hero-art { width: 120px; aspect-ratio: 1; border-radius: 26px; overflow: hidden; margin-bottom: 4px; border: 1px solid rgba(var(--primary-rgb), .5);
+    box-shadow: 0 18px 40px -14px rgba(var(--primary-rgb), .8), inset 0 1px 0 rgba(255,255,255,.2); animation: rfFloat 4s ease-in-out infinite; }
+.rf-hero-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 600px) { .rf-hero-art { width: 92px; border-radius: 22px; } }
+html.perf-safe .rf-hero-art { animation: none; }
