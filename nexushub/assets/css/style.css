@@ -1403,3 +1403,46 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
 .f-trust-item.tb-off img { display: none; }
 .tb-wait { color: var(--muted); font-size: .66rem; line-height: 1.6; text-align: center; }
 .f-trust[hidden] { display: none !important; }
+
+/* ======================================================================
+   Phone-safe rendering (all touch devices)
+   Some phone GPUs (many Samsung models) run out of tile memory when a page has many composited layers, masked
+   pseudo-elements or full-screen animated layers — they then paint stripes of random pixels and leave cards
+   half-drawn. Phones keep the same look with effects that need no extra GPU layers.
+   ====================================================================== */
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    /* the browser decides which layers it needs (no permanent ones) */
+    *, *::before, *::after { will-change: auto !important; }
+    /* blend modes and filters make every frame re-composite whole areas */
+    *, *::before, *::after { mix-blend-mode: normal !important; }
+    .bg-blob, .nxp-aurora, .nxp-emoji, .pd-emoji b, .cf-icon, .rc-ic, .pl-ring, .pl-ring.r1 { filter: none !important; }
+    /* gradient borders drawn with mask-composite -> a plain tinted border */
+    .glass::before { display: none !important; }
+    .glass { border-color: rgba(var(--primary-rgb), .16); }
+    body.cards-gradient .glass, body.cards-holo .glass { border-color: rgba(var(--primary-rgb), .42); }
+    /* full-screen background: still, unmasked, faint */
+    .bg-layer, .bg-layer *, .bg-layer *::before, .bg-layer *::after { animation: none !important; }
+    .bg-hex, .bg-grid, .sh-grid { -webkit-mask: none !important; mask: none !important; }
+    .bg-hex { opacity: .14 !important; }
+    .bg-hex::after { display: none; }
+    .bg-grid { transform: none !important; inset: 0 !important; top: 0 !important; opacity: .18; }
+    .ticker-track { -webkit-mask: none !important; mask: none !important; }
+    .sh-orbs i { animation: none !important; }
+    /* scroll reveals: fade only (moving many cards at once is what left them half-drawn) */
+    .js-reveal [data-reveal], .js-reveal [data-reveal].in { transform: none !important; translate: none !important; }
+    .js-reveal [data-reveal] { transition: opacity .55s ease var(--rd, 0ms) !important; }
+    .js-reveal [data-reveal] .cover, .js-reveal [data-reveal].in .cover,
+    .js-reveal [data-reveal] .pc-body > *, .js-reveal [data-reveal].in .pc-body > *,
+    .js-reveal .sec-head[data-reveal] .sec-title, .js-reveal .sec-head[data-reveal] .sec-icon { transform: none !important; transition: none !important; opacity: 1 !important; }
+    .js-reveal [data-reveal] .pc-media::before { display: none !important; }
+    .pcard-card .pc-media::before { display: none !important; }
+    /* page arrival: fade only */
+    html:not(.warp-in) .site-header { animation-name: nxFadeOnly !important; }
+    html:not(.warp-in) main { animation: none !important; }   /* a page-tall animated layer is the biggest texture a phone can be asked for */
+    .site-footer { content-visibility: visible !important; }
+}
+@keyframes nxFadeOnly { from { opacity: 0; } }
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    /* Telegram card ripples grew to ~1500 px squares; on phones they are still rings */
+    .tg-cta-bg i { animation: none !important; opacity: .3; transform: translate(-50%, -50%) scale(1); }
+}

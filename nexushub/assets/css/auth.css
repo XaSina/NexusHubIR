@@ -944,3 +944,10 @@ button { cursor: pointer; border: 0; background: none; }
 .au-hz { height: 30vh; min-height: 170px; max-height: 340px; }
 @media (hover: none), (max-width: 900px) { .au-hz { height: 24vh; min-height: 150px; } }
 @media (max-height: 700px) { .au-hz { height: 22vh; min-height: 120px; } }
+
+/* phone-safe: no permanent layers, the button rim stands still (it is a rotating square 3x the button) */
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .au-body *, .au-body *::before, .au-body *::after { will-change: auto !important; }
+    .cta-ring::before { animation: none !important; }
+    .au-mini-holo { animation: none !important; }
+}

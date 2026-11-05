@@ -178,3 +178,13 @@
 
 /* no halos on promo boxes */
 .nxp, .nxp-btn, .nxp:hover .nxp-btn, .nxp-ribbon, .nxp-theme-glitch, .nxp-theme-fire, .nxp-theme-neon { box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important; }
+
+/* Gradient Flow: the spinning colour wheel was a 300vmax (up to 3000 px) square — far more GPU memory than many
+   phones have, which painted random stripes across the page. It now only needs to cover its own box. */
+.nxp-theme-flow { overflow: hidden; isolation: isolate; }
+.nxp-theme-flow::before { width: 220%; height: auto; aspect-ratio: 1; max-width: none; max-height: none; }
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .nxp-theme-flow::before { animation: none !important; }
+    .nxp-aurora i, .nxp-theme-flow .nxp-title { animation: none !important; }
+    .nxp *, .nxp *::before, .nxp *::after { will-change: auto !important; }
+}

@@ -1045,3 +1045,19 @@ html.adm-motion .tbl tbody tr { animation: rowIn .45s var(--ease-silk) both; ani
 .sc-list li.ok::before { background: #3ddc84; }
 .sc-list li.ok { color: var(--a-text); opacity: .8; }
 @media (max-width: 900px) { .sc-list { grid-template-columns: minmax(0, 1fr); } .seo-check { flex-direction: column; align-items: center; text-align: right; } .sc-body { width: 100%; } }
+
+/* Phone-safe rendering for the panel (same reasons as the site: no masks, blends, filters or big animated layers) */
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .adm-body *, .adm-body *::before, .adm-body *::after { will-change: auto !important; mix-blend-mode: normal !important; }
+    .adm-bg { display: none !important; }
+    body.cards-gradient .card::before, body.cards-holo .card::before, body.cards-gradient .adm-side::before, body.cards-gradient .adm-top::before { display: none !important; }
+    body.cards-gradient .card, body.cards-holo .card, body.cards-gradient .adm-side, body.cards-gradient .adm-top { border-color: rgba(var(--primary-rgb), .4) !important; }
+    .chart-wrap svg path, .chart-wrap svg * { filter: none !important; }
+    .adm-nav a.active .ic, .type-opt span, .sw-decor { filter: none !important; }
+    .swatch::before, .swatch em, .swatch i::after { animation: none !important; }
+    html.adm-motion .ai, html.adm-motion .tbl tbody tr, [data-pane]:not([hidden]), .adm-side.open .adm-nav a { animation-name: aFade !important; }
+    .stat:hover, .card:hover { transform: none !important; }
+    .card, .stat, .nxp-card, .opt, .theme-opt { contain: none !important; }
+}
+@keyframes aFade { from { opacity: 0; } }
+@media (hover: none), (pointer: coarse), (max-width: 900px) { html.adm-leave .adm-content { transform: none !important; } }
