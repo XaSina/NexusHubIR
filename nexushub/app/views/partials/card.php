@@ -10,9 +10,9 @@ $excerpt = trim(strip_shortcodes((string) $p['excerpt'])) ?: str_excerpt((string
 <article class="pcard pcard-big" data-reveal style="--d:<?= $i ?>">
     <a class="pc-media" href="<?= e($href) ?>" tabindex="-1"><?= cover_html($p, '', $i === 0) ?></a>
     <div class="pc-overlay">
-        <?= $catChip ?>
+        <div class="pc-chips"><?= $catChip ?>
         <?php if (!empty($p['is_featured'])): ?><span class="chip chip-feat">⭐ ویژه</span><?php endif; ?>
-        <?php if (!empty($p['is_breaking'])): ?><span class="chip chip-hot"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?>
+        <?php if (!empty($p['is_breaking'])): ?><span class="chip chip-hot"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?></div>
         <h3 class="pc-title"><a href="<?= e($href) ?>"><?= e($p['title']) ?></a></h3>
         <p class="pc-excerpt"><?= e($excerpt) ?></p>
         <div class="pc-meta"><span><?= icon('clock', 14) ?> <?= jago($p['published_at']) ?></span><span><?= icon('eye', 14) ?> <?= fa_short_num((int) $p['views']) ?></span></div>

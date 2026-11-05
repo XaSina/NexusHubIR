@@ -1338,3 +1338,17 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
     .np-time { font-size: .74rem; margin: 0 4px; }
     .np-info b { max-width: 48vw; }
 }
+
+/* big picture cards: the text block is part of the card's flow, so a long title or several badges make the card
+   taller instead of being pushed out of its top edge; badges sit side by side in one wrapping row */
+.pcard-big { display: flex; flex-direction: column; justify-content: flex-end; }
+.pcard-big .pc-overlay { position: relative; inset: auto; margin-top: auto; z-index: 1; padding-top: 56px; max-width: 100%; min-width: 0; }
+.pcard-big .pc-overlay > * { max-width: 100%; }
+.pc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pc-chips .chip + .chip { margin-top: 0; }
+.pc-chips:empty { display: none; }
+.pcard-big .pc-title { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+    .pcard-big .pc-overlay { padding-top: 44px; }
+    .pc-chips .chip { font-size: .74rem; padding: 4px 10px; }
+}
