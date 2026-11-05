@@ -139,7 +139,8 @@
     /* ---------- Background canvas: particles · matrix · stars · waves · bokeh · fireflies · embers · rain ----------
        Glows are pre-rendered once into small sprites (drawImage is cheap); phones run at 30fps, low-res, paused while scrolling. */
     var cv = $('#bgCanvas');
-    if (cv && !reduce) {
+    // phones: no animated full-screen background at all (the page paints a still gradient instead — see style.css)
+    if (cv && !reduce && !(window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches)) {
         var ctx = cv.getContext('2d');
         var lite = window.matchMedia('(hover: none), (max-width: 900px)').matches;
         var W, H, dpr = 1, parts = [], cols = [], running = true, scrolling = false, scrollT, tick = 0;

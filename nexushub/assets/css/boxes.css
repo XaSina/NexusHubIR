@@ -188,3 +188,6 @@
     .nxp-aurora i, .nxp-theme-flow .nxp-title { animation: none !important; }
     .nxp *, .nxp *::before, .nxp *::after { will-change: auto !important; }
 }
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .nxp-theme-neon, .nxp-theme-glass { background: rgb(var(--surface-rgb)) !important; }
+}

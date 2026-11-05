@@ -1446,3 +1446,24 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
     /* Telegram card ripples grew to ~1500 px squares; on phones they are still rings */
     .tg-cta-bg i { animation: none !important; opacity: .3; transform: translate(-50%, -50%) scale(1); }
 }
+
+/* ======================================================================
+   Phone-safe rendering, part 2: one flat, opaque page
+   A fixed background layer under a scrolling page forces the phone to composite the whole page as a separate,
+   see-through texture on every frame; on weaker GPUs its tiles fail and show stripes / half-drawn cards.
+   Phones draw the background once on the page itself and use opaque cards. Light fades stay.
+   ====================================================================== */
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    .bg-layer, .cursor-glow { display: none !important; }
+    html { background: rgb(var(--bg-rgb)); }
+    body { background:
+        radial-gradient(120% 520px at 85% 0, rgba(var(--primary-rgb), .16), transparent 70%),
+        radial-gradient(100% 480px at 0 380px, rgba(var(--secondary-rgb), .07), transparent 70%),
+        rgb(var(--bg-rgb)) no-repeat; }
+    /* opaque surfaces: no see-through blending anywhere on the page */
+    .glass, .pcard-card, .pcard-shop, .trend-item, .widget, .post-body, .post-head, .comments, .site-header .header-inner, .drawer-panel { background: rgb(var(--surface-rgb)) !important; }
+    .theme-light .glass, .theme-light .pcard-card, .theme-light .widget { background: #fff !important; }
+    .site-header .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
+    /* reveal: a short, light fade; nothing moves */
+    .js-reveal [data-reveal] { transition: opacity .4s ease var(--rd, 0ms) !important; }
+}

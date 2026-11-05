@@ -1061,3 +1061,9 @@ html.adm-motion .tbl tbody tr { animation: rowIn .45s var(--ease-silk) both; ani
 }
 @keyframes aFade { from { opacity: 0; } }
 @media (hover: none), (pointer: coarse), (max-width: 900px) { html.adm-leave .adm-content { transform: none !important; } }
+/* panel on phones: opaque surfaces only (no see-through blending over the page) */
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    html.theme-dark { --a-surface: rgb(var(--surface-rgb, 22,22,30)); }
+    html.theme-light { --a-surface: #fff; }
+    .adm-body { background-attachment: scroll !important; }
+}
