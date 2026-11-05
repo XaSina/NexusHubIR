@@ -24,7 +24,7 @@ function page_out(string $tpl, array $data = [], array $meta = []): void
 function not_found(): never
 {
     http_response_code(404);
-    page_out('404', [], ['title' => 'صفحه پیدا نشد']);
+    page_out('404', [], ['title' => 'صفحه پیدا نشد', 'noindex' => true]);
     exit;
 }
 
@@ -32,6 +32,13 @@ $path = route_path();
 $seg = $path === '' ? [] : explode('/', $path);
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $per = max(3, min(60, (int) setting('archive_per_page', 9)));   // all list pages: all news, categories, tags, authors, search
+
+// IndexNow key file (proves to Bing / Yandex that the pings come from this site)
+if (count($seg) === 1 && preg_match('~^[a-f0-9]{32}\.txt$~', $seg[0]) && $seg[0] === setting('indexnow_key') . '.txt') {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo setting('indexnow_key');
+    exit;
+}
 
 // domain-verification files (Enamad, Samandehi, Google, ...) listed in the panel: an empty text file at the
 // site root, even in maintenance mode
@@ -57,7 +64,7 @@ switch ($seg[0] ?? '') {
 
     case '':
         track_visit();
-        page_out('home', ['bodyClass' => 'page-home'], ['title' => setting('site_title') . ' — ' . setting('site_tagline')]);
+        page_out('home', ['bodyClass' => 'page-home'], ['title' => setting('site_title') . ' — ' . setting('site_tagline'), 'url' => site_url('')]);
         break;
 
     case 'post':
@@ -75,6 +82,8 @@ switch ($seg[0] ?? '') {
             'url' => site_url('post/' . rawurlencode($post['slug'])),
             'type' => 'article',
             'published' => $post['published_at'],
+            'post' => $post, 'tags' => post_tags((int) $post['id']),
+            'crumbs' => array_values(array_filter([['خانه', site_url('')], $post['cat_slug'] ? [$post['cat_name'], site_url('category/' . rawurlencode($post['cat_slug']))] : null, [$post['title'], site_url('post/' . rawurlencode($post['slug']))]])),
         ]);
         break;
 
@@ -86,8 +95,9 @@ switch ($seg[0] ?? '') {
         $pg = paginate($total, $per, $page);
         $posts = get_posts(['category_id' => $cat['id'], 'limit' => $per, 'offset' => $pg['offset']]);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => $cat['name'], 'icon' => $cat['icon'], 'color' => $cat['color'], 'sub' => $cat['description'], 'base' => cat_url($cat), 'bodyClass' => 'page-list'], [
-            'title' => $cat['name'] . ' | ' . setting('site_title'), 'description' => $cat['description'] ?: setting('site_description'),
-        ]);
+            'title' => $cat['name'] . ($pg['page'] > 1 ? ' — صفحه ' . fa_num((string) $pg['page']) : '') . ' | ' . setting('site_title'), 'description' => $cat['description'] ?: setting('site_description'),
+            'crumbs' => [['خانه', site_url('')], [$cat['name'], site_url('category/' . rawurlencode($cat['slug']))]],
+        ] + seo_list_meta('category/' . rawurlencode($cat['slug']), $pg));
         break;
 
     case 'tag':
@@ -98,8 +108,10 @@ switch ($seg[0] ?? '') {
         $pg = paginate($total, $per, $page);
         $posts = get_posts(['tag_id' => $tag['id'], 'limit' => $per, 'offset' => $pg['offset']]);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => '#' . $tag['name'], 'icon' => '🏷️', 'sub' => 'اخبار مرتبط با برچسب «' . $tag['name'] . '»', 'base' => tag_url($tag), 'bodyClass' => 'page-list'], [
-            'title' => '#' . $tag['name'] . ' | ' . setting('site_title'),
-        ]);
+            'title' => '#' . $tag['name'] . ($pg['page'] > 1 ? ' — صفحه ' . fa_num((string) $pg['page']) : '') . ' | ' . setting('site_title'),
+            'description' => 'جدیدترین اخبار و مطالب درباره‌ی ' . $tag['name'] . ' در ' . setting('site_title'),
+            'crumbs' => [['خانه', site_url('')], ['#' . $tag['name'], site_url('tag/' . rawurlencode($tag['slug']))]],
+        ] + seo_list_meta('tag/' . rawurlencode($tag['slug']), $pg));
         break;
 
     case 'archive':
@@ -107,8 +119,9 @@ switch ($seg[0] ?? '') {
         [$posts, $total] = get_posts(['limit' => $per, 'offset' => ($page - 1) * $per, 'count' => true]);
         $pg = paginate($total, $per, $page);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => 'همه اخبار', 'icon' => '📰', 'sub' => 'جدیدترین مطالب ' . setting('site_title'), 'base' => url('archive'), 'bodyClass' => 'page-list'], [
-            'title' => 'همه اخبار | ' . setting('site_title'),
-        ]);
+            'title' => 'همه اخبار' . ($pg['page'] > 1 ? ' — صفحه ' . fa_num((string) $pg['page']) : '') . ' | ' . setting('site_title'),
+            'crumbs' => [['خانه', site_url('')], ['همه اخبار', site_url('archive')]],
+        ] + seo_list_meta('archive', $pg));
         break;
 
     case 'author':
@@ -118,7 +131,8 @@ switch ($seg[0] ?? '') {
         $pg = paginate($total, $per, $page);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => $author['display_name'] ?: $author['username'], 'icon' => '✍️', 'sub' => $author['bio'] ?: 'مطالب این نویسنده', 'base' => url('author/' . rawurlencode($author['username'])), 'bodyClass' => 'page-list'], [
             'title' => ($author['display_name'] ?: $author['username']) . ' | ' . setting('site_title'),
-        ]);
+            'description' => $author['bio'] ?: ('مطالب ' . ($author['display_name'] ?: $author['username']) . ' در ' . setting('site_title')),
+        ] + seo_list_meta('author/' . rawurlencode($author['username']), $pg));
         break;
 
     case 'search':
@@ -139,7 +153,8 @@ switch ($seg[0] ?? '') {
         $pageRow = row("SELECT * FROM pages WHERE slug = ? AND status = 'published'", [$seg[1] ?? '']);
         if (!$pageRow) not_found();
         track_visit();
-        page_out('page', ['pageRow' => $pageRow], ['title' => $pageRow['title'] . ' | ' . setting('site_title'), 'description' => str_excerpt((string) $pageRow['content'])]);
+        page_out('page', ['pageRow' => $pageRow], ['title' => $pageRow['title'] . ' | ' . setting('site_title'), 'description' => str_excerpt((string) $pageRow['content']),
+            'url' => site_url('page/' . rawurlencode($pageRow['slug'])), 'crumbs' => [['خانه', site_url('')], [$pageRow['title'], site_url('page/' . rawurlencode($pageRow['slug']))]]]);
         break;
 
     case 'contact':
@@ -224,6 +239,8 @@ switch ($seg[0] ?? '') {
             $products = shop_products(['category_id' => $curCat['id'] ?? 0, 'search' => $qstr]);
             page_out('shop', ['products' => $products, 'scats' => $scats, 'curCat' => $curCat, 'q' => $qstr, 'bodyClass' => 'page-shop'], [
                 'title' => setting('shop_title') . ' | ' . setting('site_title'), 'description' => setting('shop_tagline'),
+                'url' => site_url('shop') . ($curCat ? '?cat=' . rawurlencode($curCat['slug']) : ''), 'noindex' => $qstr !== '',
+                'crumbs' => [['خانه', site_url('')], [setting('shop_title'), site_url('shop')]],
             ]);
             break;
         }
@@ -244,6 +261,8 @@ switch ($seg[0] ?? '') {
         page_out('product', ['product' => $product, 'formErr' => $formErr, 'formMsg' => $formMsg, 'old' => $_POST, 'bodyClass' => 'page-shop page-product'], [
             'title' => $product['title'] . ' | ' . setting('shop_title'), 'description' => $product['subtitle'] ?: str_excerpt((string) $product['description']),
             'image' => $product['image'] && !str_ends_with(strtolower((string) $product['image']), '.svg') ? site_url($product['image']) : '',
+            'url' => site_url('shop/' . rawurlencode($product['slug'])), 'product' => $product,
+            'crumbs' => [['خانه', site_url('')], [setting('shop_title'), site_url('shop')], [$product['title'], site_url('shop/' . rawurlencode($product['slug']))]],
         ]);
         break;
 
@@ -409,9 +428,15 @@ switch ($seg[0] ?? '') {
         echo view('sitemap');
         break;
 
+    case 'news-sitemap.xml':
+        if (!setting_on('news_sitemap_on')) not_found();
+        header('Content-Type: application/xml; charset=utf-8');
+        echo view('news-sitemap');
+        break;
+
     case 'robots.txt':
         header('Content-Type: text/plain; charset=utf-8');
-        echo "User-agent: *\nDisallow: /admin/\nDisallow: /install/\nDisallow: /search\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order/\nDisallow: /orders\nDisallow: /support\nSitemap: " . site_url('sitemap.xml') . "\n";
+        echo "User-agent: *\nDisallow: /admin/\nDisallow: /install/\nDisallow: /search\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order/\nDisallow: /orders\nDisallow: /support\nSitemap: " . site_url('sitemap.xml') . "\n" . (setting_on('news_sitemap_on') ? 'Sitemap: ' . site_url('news-sitemap.xml') . "\n" : '');
         $rx = trim(str_replace("\r", '', (string) setting('robots_extra')));
         if ($rx !== '') echo "\n" . $rx . "\n";
         break;

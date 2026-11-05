@@ -60,6 +60,7 @@ if (is_post()) {
         flash($msg);
 
         // ارسال به تلگرام
+        if ($p['status'] === 'published' && strtotime((string) $p['published_at']) <= time()) indexnow_ping([site_url('post/' . rawurlencode($p['slug']))]);
         if (!empty($_POST['send_telegram']) && $p['status'] === 'published') {
             if (strtotime($p['published_at']) > time()) {
                 flash('ارسال به تلگرام فقط برای اخبار منتشرشده (نه زمان‌بندی‌شده) انجام می‌شود.', 'warn');
@@ -101,6 +102,10 @@ adm_head($p['id'] ? 'ویرایش خبر' : 'افزودن خبر جدید', $p['
                     <div class="sp-url"><?= e(site_url('post/')) ?><span id="spSlug"><?= e($p['slug']) ?></span></div>
                     <div class="sp-title" id="spTitle"><?= e($p['meta_title'] ?: $p['title'] ?: 'عنوان خبر') ?></div>
                     <div class="sp-desc" id="spDesc"><?= e($p['meta_desc'] ?: $p['excerpt'] ?: 'توضیحات خبر در نتایج جستجو اینجا نمایش داده می‌شود.') ?></div>
+                </div>
+                <div class="seo-check" id="seoCheck">
+                    <div class="sc-score"><svg viewBox="0 0 44 44"><circle class="sc-track" cx="22" cy="22" r="19"/><circle class="sc-bar" id="scBar" cx="22" cy="22" r="19"/></svg><b id="scNum">0</b></div>
+                    <div class="sc-body"><b class="sc-head" id="scHead">امتیاز سئوی این خبر</b><ul class="sc-list" id="scList"></ul></div>
                 </div>
                 <div class="grid g2">
                     <?= f_text('meta_title', 'عنوان سئو (اختیاری)', (string) $p['meta_title'], ['maxlength' => 250, 'id' => 'fMetaTitle']) ?>
@@ -164,6 +169,46 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('spSlug').textContent = sl.value;
     }
     [t, mt, md, ex, sl].forEach(function (el) { el.addEventListener('input', upd); });
+
+    /* live SEO checklist: what Google cares about, checked while the post is written */
+    var host = <?= json_encode((string) parse_url(site_url(''), PHP_URL_HOST)) ?>, form = document.getElementById('postForm');
+    var faN = function (n) { return String(n).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
+    function bodyHtml() { var ed = form.querySelector('[contenteditable="true"]'); return ed ? ed.innerHTML : (form.querySelector('[name=content]').value || ''); }
+    function check() {
+        var title = (mt.value || t.value).trim(), desc = (md.value || ex.value).trim(), slug = sl.value.trim();
+        var html = bodyHtml(), box = document.createElement('div'); box.innerHTML = html;
+        var text = (box.textContent || '').replace(/\s+/g, ' ').trim(), words = text ? text.split(' ').length : 0;
+        var links = [].slice.call(box.querySelectorAll('a[href]')).map(function (a) { return a.getAttribute('href'); });
+        var internal = links.filter(function (h) { return h.charAt(0) === '/' || (host && h.indexOf(host) > -1); }).length;
+        var imgs = box.querySelectorAll('img').length, cover = (form.querySelector('[name=cover]') || {}).value;
+        var cat = +((form.querySelector('[name=category_id]') || {}).value || 0);
+        var tags = ((form.querySelector('[name=tags]') || {}).value || '').split(',').filter(function (x) { return x.trim(); }).length;
+        var firstWord = (t.value.trim().split(/\s+/).filter(function (w) { return w.length > 2; })[0] || '');
+        var lead = text.slice(0, 300);
+        var L = function (s) { return [...s].length; };
+        var items = [
+            [L(title) >= 30 && L(title) <= 65, L(title) < 30 ? 'عنوان کوتاهه (' + faN(L(title)) + ' حرف) — ۳۰ تا ۶۵ حرف بهترینه' : L(title) > 65 ? 'عنوان بلنده (' + faN(L(title)) + ' حرف)؛ گوگل آخرش رو می‌بره — ۶۵ حرف یا کمتر' : 'طول عنوان عالیه (' + faN(L(title)) + ' حرف)'],
+            [L(desc) >= 100 && L(desc) <= 165, !desc ? 'توضیحات سئو یا خلاصه خالیه — ۱ تا ۲ جمله‌ی جذاب بنویس' : L(desc) < 100 ? 'توضیحات کوتاهه (' + faN(L(desc)) + ' حرف) — ۱۰۰ تا ۱۶۵ حرف' : L(desc) > 165 ? 'توضیحات بلنده (' + faN(L(desc)) + ' حرف) — تا ۱۶۵ حرف' : 'طول توضیحات عالیه'],
+            [words >= 300, words >= 300 ? 'متن کامله (' + faN(words) + ' کلمه)' : 'متن کوتاهه (' + faN(words) + ' کلمه) — ۳۰۰ کلمه به بالا شانس بیشتری داره'],
+            [!!cover, cover ? 'عکس کاور داره' : 'عکس کاور نداره — برای گوگل دیسکاور و اشتراک‌گذاری لازمه'],
+            [cat > 0, cat > 0 ? 'دسته‌بندی انتخاب شده' : 'دسته‌بندی انتخاب نشده'],
+            [tags >= 2, tags >= 2 ? 'برچسب‌ها کافیه (' + faN(tags) + ')' : 'حداقل ۲ برچسب بذار (اسم بازی، شرکت، موضوع)'],
+            [internal >= 1, internal >= 1 ? 'به خبرهای دیگه‌ی سایت لینک داده (' + faN(internal) + ')' : 'توی متن به یه خبر دیگه‌ی سایتت لینک بده'],
+            [!slug || (/^[a-z0-9-]+$/.test(slug) && slug.length <= 60), !slug ? 'نامک خودکار از عنوان ساخته می‌شه' : /^[a-z0-9-]+$/.test(slug) ? (slug.length <= 60 ? 'نامک کوتاه و انگلیسیه' : 'نامک بلنده — کوتاه‌ترش کن') : 'نامک فارسی هم کار می‌کنه، ولی انگلیسی کوتاه (مثل gta-6-trailer) بهتره'],
+            [!firstWord || lead.indexOf(firstWord) > -1, !firstWord || lead.indexOf(firstWord) > -1 ? 'موضوع عنوان توی پاراگراف اول هست' : 'کلمه‌ی اصلی عنوان («' + firstWord + '») رو توی پاراگراف اول هم بیار'],
+            [imgs > 0, imgs > 0 ? 'داخل متن عکس داره' : 'یه عکس داخل متن خبر هم بذار']
+        ];
+        var ok = items.filter(function (i) { return i[0]; }).length, score = Math.round(ok / items.length * 100);
+        document.getElementById('scList').innerHTML = items.map(function (i) { return '<li class="' + (i[0] ? 'ok' : 'no') + '">' + i[1].replace(/</g, '&lt;') + '</li>'; }).join('');
+        document.getElementById('scNum').textContent = faN(score);
+        var bar = document.getElementById('scBar'); bar.style.strokeDashoffset = String(119.4 * (1 - score / 100));
+        var box2 = document.getElementById('seoCheck'); box2.dataset.level = score >= 80 ? 'good' : score >= 50 ? 'mid' : 'low';
+        document.getElementById('scHead').textContent = score >= 80 ? 'سئوی این خبر عالیه ✅' : score >= 50 ? 'سئوی خوبیه؛ چند مورد مونده' : 'برای سئوی بهتر این‌ها رو درست کن';
+    }
+    var qT = 0, q = function () { clearTimeout(qT); qT = setTimeout(check, 250); };
+    form.addEventListener('input', q); form.addEventListener('change', q);
+    setInterval(check, 2500);   // the editor, cover picker and tag box change values without input events
+    setTimeout(check, 400);
     document.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); document.querySelector('button[name=do][value=<?= $isPub ? 'publish' : 'draft' ?>]').click(); } });
 });
 </script>

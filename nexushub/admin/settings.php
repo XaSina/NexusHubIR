@@ -5,7 +5,7 @@ require_cap('*');
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
-    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_https'];
+    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_https', 'indexnow_on', 'news_sitemap_on'];
 
 if (is_post()) {
     csrf_check();
@@ -72,7 +72,14 @@ adm_head('تنظیمات', 'settings');
             <?= f_switch('seo_https', 'آدرس‌ها همیشه با https به گوگل داده بشن', setting_on('seo_https'), 'نقشه‌ی سایت، آدرس اصلی خبرها و لینک اشتراک با https ساخته می‌شن. فقط وقتی خاموشش کن که سایتت SSL نداره.') ?>
             <?= f_text('google_verify', 'کد تأیید گوگل (Search Console)', $s['google_verify'] ?? '', ['ltr' => true, 'placeholder' => 'متاتگ یا فقط کد content', 'hint' => 'کل متاتگی که گوگل داده رو بچسبون؛ خودش کد رو برمی‌داره.']) ?>
             <?= f_textarea('robots_extra', 'خطوط اضافه برای robots.txt', $s['robots_extra'] ?? '', ['rows' => 3, 'code' => true, 'placeholder' => 'Disallow: /private']) ?>
-            <a class="abtn abtn-sm" href="<?= e(url('robots.txt')) ?>" target="_blank" rel="noopener" dir="ltr">robots.txt ↗</a>
+            <?= f_switch('news_sitemap_on', 'نقشه‌ی گوگل نیوز', setting_on('news_sitemap_on'), 'خبرهای ۲ روز اخیر برای بخش «اخبار» گوگل — در Search Console هم news-sitemap.xml رو ثبت کن') ?>
+            <?= f_switch('indexnow_on', 'اطلاع فوری به Bing و Yandex (IndexNow)', setting_on('indexnow_on'), 'هر خبری که منتشر کنی همون لحظه به این موتورها اعلام می‌شه' . (setting('indexnow_last') ? ' · آخرین ارسال: ' . setting('indexnow_last') : '')) ?>
+            <div class="row-flex">
+                <a class="abtn abtn-sm" href="<?= e(url('robots.txt')) ?>" target="_blank" rel="noopener" dir="ltr">robots.txt ↗</a>
+                <a class="abtn abtn-sm" href="<?= e(url('sitemap.xml')) ?>" target="_blank" rel="noopener" dir="ltr">sitemap.xml ↗</a>
+                <a class="abtn abtn-sm" href="<?= e(url('news-sitemap.xml')) ?>" target="_blank" rel="noopener" dir="ltr">news-sitemap.xml ↗</a>
+                <a class="abtn abtn-sm" href="https://search.google.com/test/rich-results?url=<?= e(rawurlencode(site_url(''))) ?>" target="_blank" rel="noopener">تست داده‌های ساختاریافته‌ی گوگل ↗</a>
+            </div>
             <div class="alert alert-info small">نقشه سایت: <a class="ltr" href="<?= e(url('sitemap.xml')) ?>" target="_blank"><?= e(site_url('sitemap.xml')) ?></a></div>
         </div>
     </div>

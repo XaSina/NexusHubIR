@@ -75,7 +75,7 @@ $jsCfg['cart'] = $cartN;
 <title><?= e($title) ?></title>
 <meta name="description" content="<?= e(str_excerpt((string) $desc, 300)) ?>">
 <?php if (setting('meta_keywords')): ?><meta name="keywords" content="<?= e(setting('meta_keywords')) ?>"><?php endif; ?>
-<?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,follow"><?php endif; ?>
+<?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,follow"><?php else: ?><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"><?php endif; ?>
 <meta name="theme-color" content="<?= e($colors['bg']) ?>">
 <?php if (setting('google_verify') !== ''): ?><meta name="google-site-verification" content="<?= e(setting('google_verify')) ?>"><?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -85,6 +85,7 @@ $jsCfg['cart'] = $cartN;
 <meta property="og:image" content="<?= e($image) ?>">
 <?php if (!empty($meta['url'])): ?><meta property="og:url" content="<?= e($meta['url']) ?>"><link rel="canonical" href="<?= e($meta['url']) ?>"><?php endif; ?>
 <meta name="twitter:card" content="summary_large_image">
+<?= seo_meta_tags($meta, $title, (string) $desc, $image) ?>
 <link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
 <link rel="apple-touch-icon" href="<?= e(url('assets/img/icon-192.png')) ?>">
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
@@ -95,13 +96,7 @@ $jsCfg['cart'] = $cartN;
 <?php $decorHtml = decor_html('site'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 <?php if (setting('custom_css')): ?><style><?= str_ireplace('</style', '', (string) setting('custom_css')) ?></style><?php endif; ?>
-<?php if (!empty($meta['type']) && $meta['type'] === 'article'): ?>
-<script type="application/ld+json"><?= json_encode([
-    '@context' => 'https://schema.org', '@type' => 'NewsArticle', 'headline' => $title,
-    'image' => [$image], 'datePublished' => date('c', strtotime($meta['published'] ?? 'now')),
-    'publisher' => ['@type' => 'Organization', 'name' => $siteTitle, 'logo' => ['@type' => 'ImageObject', 'url' => site_url($ogLogo)]],
-], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
-<?php endif; ?>
+<?php if (empty($meta['noindex'])) echo seo_jsonld($meta, $title, (string) $desc, $image, site_url($ogLogo)); ?>
 <?= setting('head_code') ?>
 </head>
 <body class="<?= e($bodyClass) ?> cards-<?= e($cardStyle) ?> hero-<?= e(setting('hero_style', 'magazine')) ?><?= setting_on('anim_noise') ? ' has-noise' : '' ?><?= setting_on('anim_glitch') ? ' has-glitch' : '' ?>">

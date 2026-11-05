@@ -42,6 +42,7 @@ require NX_APP . '/telegram.php';
 require NX_APP . '/members.php';
 require NX_APP . '/shop.php';
 require NX_APP . '/market.php';
+require NX_APP . '/seo.php';
 
 nx_session_start();
 

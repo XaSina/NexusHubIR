@@ -39,6 +39,8 @@ function default_settings(): array
         'og_image' => '',
         'google_verify' => '',
         'seo_https' => '1',
+        'indexnow_on' => '1',
+        'news_sitemap_on' => '1',
         'robots_extra' => '',
         'verify_files' => "35243901.txt\n35691018.txt",
         'trust_title' => 'نمادهای اعتماد',
