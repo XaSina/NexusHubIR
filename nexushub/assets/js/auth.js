@@ -494,13 +494,17 @@
             raf = 0;
             var f = document.activeElement, cardEl = $('#auCard');
             if (!cardEl || stage.hidden) return;
-            var hidden = window.innerHeight - vv.height - vv.offsetTop;            // how much the keyboard covers
+            var kbOpen = window.innerHeight - vv.height > 80;                   // the keyboard is up
             var target = 0;
-            if (hidden > 80 && f && cardEl.contains(f)) {
+            if (kbOpen && f && cardEl.contains(f)) {
+                // positions without our own shift (read the live value: it may be mid-transition)
+                var cur = parseFloat((getComputedStyle(cardEl).translate || '0 0').split(' ')[1]) || 0;
                 var r = f.getBoundingClientRect(), cr = cardEl.getBoundingClientRect();
-                var bottomLimit = vv.offsetTop + vv.height - 20;
-                var over = (r.bottom - kb) - bottomLimit;                        // the focused field only
-                target = over > 0 ? -Math.min(over, (cr.top - kb) - 12, hidden * .45) : 0;
+                var top0 = cr.top - cur, bottom0 = cr.bottom - cur, field0 = r.bottom - cur;
+                var visTop = vv.offsetTop + 10, visBottom = vv.offsetTop + vv.height - 14;   // what is really on screen (the browser may pan)
+                target = Math.min(0, visBottom - bottom0);                       // just enough: the card's bottom sits right above the keyboard
+                target = Math.max(target, visTop - top0);                        // ...but its top never goes off screen
+                target = Math.min(target, visBottom - field0);                   // the focused field always stays visible
             }
             if (Math.abs(target - kb) > 2) { kb = Math.round(target); cardEl.style.setProperty('--kb', kb + 'px'); }
         }

@@ -1281,8 +1281,8 @@ html.is-scrolling .pcard, html.is-scrolling .pcard-shop, html.is-scrolling .tren
 .post-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .prose, .post-head, .post-title, .pc-title, .comments, .comment-body, .widget { overflow-wrap: anywhere; word-break: normal; }
-.prose img, .prose video, .prose iframe, .prose embed, .prose object, .prose figure, .nx-player, .nx-player video { max-width: 100%; }
-.prose iframe, .prose video { height: auto; }
+.prose img, .prose video, .prose iframe, .prose embed, .prose object, .prose figure, .nx-player { max-width: 100%; }
+.prose iframe, .prose > video, .prose p > video { height: auto; }
 .prose iframe { aspect-ratio: 16 / 9; width: 100%; }
 .prose pre, .prose table { max-width: 100%; }
 .prose pre { white-space: pre; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1326,4 +1326,15 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
     .mcard { animation-delay: .3s; box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset; }
     .mcard-holo { will-change: auto; }
     .mcard-shine { display: none; }
+}
+/* video player on phones: smaller centre button that clears the controls, slimmer control bar */
+@media (max-width: 640px) {
+    .np-big { width: 56px; height: 56px; margin: -28px 0 0 -28px; top: calc(50% - 16px); box-shadow: 0 0 0 6px rgba(var(--primary-rgb), .22), 0 10px 26px rgba(0,0,0,.45); }
+    .np-big svg { width: 24px; height: 24px; margin-left: 3px; }
+    .np-spin { top: calc(50% - 16px); }
+    .np-bar { padding: 18px 8px 4px; }
+    .np-row { margin-top: 2px; gap: 2px; }
+    .np-btn { height: 32px; min-width: 32px; padding: 0 6px; }
+    .np-time { font-size: .74rem; margin: 0 4px; }
+    .np-info b { max-width: 48vw; }
 }
