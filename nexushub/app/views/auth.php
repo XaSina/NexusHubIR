@@ -26,7 +26,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 </head>
 <body class="au-body">
 <?= $decorHtml ?>
-<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e($logo) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
+<?php if (setting_on('warp_on')): ?><div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e($logo) ?>" alt=""></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div><?php endif; ?>
 
 <!-- ============ Scene ============ -->
 <?php
@@ -82,7 +82,7 @@ $auWaves = [
 </div>
 
 
-<a class="au-back" href="<?= e(url('')) ?>" data-warp><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> بازگشت به سایت</a>
+<a class="au-back" href="<?= e(url('')) ?>" data-warp><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg> <?= e(setting('auth_back_label')) ?></a>
 
 <!-- ============ Intro ============ -->
 <main class="au-intro" id="auIntro">
@@ -106,11 +106,11 @@ $auWaves = [
         <?php endif; ?>
     </div>
     <h1 class="au-title" id="auTitle" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></h1>
-    <p class="au-tagline"><span id="auType"></span><i class="au-caret"></i></p>
+    <p class="au-tagline"><span id="auType" data-text="<?= e(setting('auth_tagline')) ?>"></span><i class="au-caret"></i></p>
     <button class="au-start cta" id="auStart" type="button">
         <span class="cta-ring" aria-hidden="true"></span>
         <span class="cta-face" aria-hidden="true"><i class="cta-shine"></i></span>
-        <span class="au-start-label cta-label">ورود و ثبت‌نام</span>
+        <span class="au-start-label cta-label"><?= e(setting('auth_btn_label')) ?></span>
         <span class="cta-ic" aria-hidden="true"><span class="cta-arrows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></span>
     </button>
 </main>
@@ -128,8 +128,8 @@ $auWaves = [
         <div class="au-steps" id="auSteps">
             <!-- 1: identify -->
             <form class="au-step" data-step="identify" novalidate>
-                <h2>خوش اومدی 👋</h2>
-                <p class="au-sub">شماره موبایل، ایمیل یا نام کاربری‌ات رو وارد کن. اگه حساب داشته باشی وارد می‌شی، نداشته باشی حسابت رو می‌سازیم.</p>
+                <h2><?= e(setting('auth_welcome_title')) ?></h2>
+                <p class="au-sub"><?= e(setting('auth_welcome_text')) ?></p>
                 <label class="au-field au-id-field">
                     <span class="au-id-icon" id="auIdIcon"></span>
                     <input type="text" name="identifier" id="auIdentifier" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="موبایل، ایمیل یا نام کاربری" required>

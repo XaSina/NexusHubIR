@@ -6,7 +6,8 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'auth_logo_style', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
-    'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin'];
+    'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin',
+    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_made', 'to_top_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
 
 if (is_post()) {
     csrf_check();
@@ -47,6 +48,12 @@ if (is_post()) {
         $save['trust_badges'] = json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     if (isset($save['trust_title'])) $save['trust_title'] = mb_substr($save['trust_title'], 0, 60);
+    foreach (['brand_sub', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_title', 'footer_made', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title'] as $tk)
+        if (isset($save[$tk])) $save[$tk] = mb_substr(str_replace(["\r", "\n"], ' ', $save[$tk]), 0, 120);
+    foreach (['footer_cta_text', 'auth_welcome_text'] as $tk) if (isset($save[$tk])) $save[$tk] = mb_substr($save[$tk], 0, 400);
+    // a label left empty falls back to its default
+    foreach (['hdr_tg_label', 'hdr_login_label', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title'] as $tk)
+        if (isset($save[$tk]) && trim($save[$tk]) === '') $save[$tk] = default_settings()[$tk];
     foreach (['home_sections', 'menu'] as $jk) {
         if (isset($save[$jk])) {
             $j = json_decode($save[$jk], true);
@@ -77,6 +84,7 @@ adm_head('ظاهر سایت', 'appearance');
     <button type="button" data-tab="header">🏷️ لوگو و هدر</button>
     <button type="button" data-tab="menu">☰ منو</button>
     <button type="button" data-tab="footer">🔗 فوتر و شبکه‌ها</button>
+    <button type="button" data-tab="texts">✍️ متن‌ها و بخش‌ها</button>
     <button type="button" data-tab="css">💻 CSS سفارشی</button>
 </div>
 
@@ -279,6 +287,43 @@ adm_head('ظاهر سایت', 'appearance');
             <input type="hidden" name="trust_badges" id="tbData" value="<?= e((string) ($s['trust_badges'] ?? '[]')) ?>">
             <div class="tb-list" id="tbList"></div>
             <button type="button" class="abtn tb-add" id="tbAdd"><?= icon('plus', 16) ?> افزودن نماد</button>
+        </div>
+    </div>
+</div>
+
+<div data-pane="texts">
+    <div class="grid g2">
+        <div class="card">
+            <div class="card-head"><h3>🏷️ هدر سایت</h3></div>
+            <?= f_text('brand_sub', 'زیرنویس کنار لوگو', $s['brand_sub'], ['ltr' => true, 'placeholder' => 'Gaming · Tech · News']) ?>
+            <?= f_switch('hdr_tg_on', 'دکمه‌ی تلگرام در هدر', setting_on('hdr_tg_on'), 'دکمه‌ی رنگی «عضویت در کانال» بالای سایت') ?>
+            <?= f_text('hdr_tg_label', 'متن دکمه‌ی تلگرام', $s['hdr_tg_label']) ?>
+            <?= f_text('hdr_login_label', 'متن دکمه‌ی ورود (برای مهمان‌ها)', $s['hdr_login_label']) ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>🔗 فوتر</h3></div>
+            <div class="grid g2">
+                <?= f_text('footer_cats_title', 'عنوان ستون دسته‌ها', $s['footer_cats_title']) ?>
+                <?= f_text('footer_links_title', 'عنوان ستون لینک‌ها', $s['footer_links_title']) ?>
+            </div>
+            <?= f_switch('footer_cta_on', 'کارت تلگرام در فوتر', setting_on('footer_cta_on')) ?>
+            <?= f_text('footer_cta_title', 'عنوان کارت تلگرام', $s['footer_cta_title']) ?>
+            <?= f_textarea('footer_cta_text', 'متن کارت تلگرام', $s['footer_cta_text'], ['rows' => 2]) ?>
+            <?= f_text('footer_made', 'متن پایین‌ترین خط (خالی = نمایش داده نشه)', $s['footer_made'], ['ltr' => true, 'hint' => 'علامت ❤ خودکار رنگی و تپنده می‌شه']) ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>🔐 صفحه‌ی ورود و ثبت‌نام</h3></div>
+            <?= f_text('auth_tagline', 'جمله‌ی تایپی زیر لوگو', $s['auth_tagline']) ?>
+            <?= f_text('auth_btn_label', 'متن دکمه‌ی اصلی', $s['auth_btn_label']) ?>
+            <?= f_text('auth_back_label', 'متن دکمه‌ی بازگشت', $s['auth_back_label']) ?>
+            <?= f_text('auth_welcome_title', 'عنوان کادر ورود', $s['auth_welcome_title']) ?>
+            <?= f_textarea('auth_welcome_text', 'توضیح کادر ورود', $s['auth_welcome_text'], ['rows' => 3]) ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>🧭 بخش‌های کلی سایت</h3></div>
+            <?= f_switch('warp_on', 'انیمیشن جابه‌جایی بین صفحه‌ها', setting_on('warp_on'), 'پرده و لوگوی وسط صفحه موقع رفتن به صفحه‌ی دیگه') ?>
+            <?= f_switch('to_top_on', 'دکمه‌ی «بازگشت به بالا»', setting_on('to_top_on'), 'دایره‌ی پایین صفحه با نوار پیشرفت اسکرول') ?>
+            <div class="alert alert-info small">متن «درباره»، کپی‌رایت، نمادهای اعتماد و شبکه‌های اجتماعی در تب «🔗 فوتر و شبکه‌ها» هستن.</div>
         </div>
     </div>
 </div>

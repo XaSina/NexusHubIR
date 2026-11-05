@@ -4,6 +4,7 @@ $siteTitle = (string) setting('site_title');
 $title = $meta['title'] ?? $siteTitle;
 $desc = $meta['description'] ?? setting('site_description');
 $image = $meta['image'] ?? '';
+if ($image === '' && setting('og_image') !== '') $image = site_url((string) setting('og_image'));
 $ogLogo = in_array((string) setting('logo'), ['', 'assets/img/logo-256.png'], true) ? 'assets/img/logo.jpg' : (string) setting('logo');
 if ($image === '') $image = site_url($ogLogo);
 $colors = theme_colors();
@@ -76,6 +77,7 @@ $jsCfg['cart'] = $cartN;
 <?php if (setting('meta_keywords')): ?><meta name="keywords" content="<?= e(setting('meta_keywords')) ?>"><?php endif; ?>
 <?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,follow"><?php endif; ?>
 <meta name="theme-color" content="<?= e($colors['bg']) ?>">
+<?php if (setting('google_verify') !== ''): ?><meta name="google-site-verification" content="<?= e(setting('google_verify')) ?>"><?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
 <meta property="og:title" content="<?= e($title) ?>">
 <meta property="og:description" content="<?= e(str_excerpt((string) $desc, 300)) ?>">
@@ -108,7 +110,7 @@ $jsCfg['cart'] = $cartN;
 <?php endif; ?>
 <link rel="preload" href="<?= e(logo_url()) ?>" as="image">
 <script>try{var w=+sessionStorage.getItem('nx_warp');if(w){var d=document.documentElement,el=Date.now()-w;d.classList.add('warp-in');if(w>1&&el>=0&&el<20000)d.style.setProperty('--wt',-el+'ms')}}catch(e){}</script>
-<div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e(logo_url()) ?>" alt="" onload="this.classList.add('ok')"></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div>
+<?php if (setting_on('warp_on')): ?><div class="nx-warp" id="nxWarp" aria-hidden="true"><div class="nx-warp-disc"></div><div class="nx-warp-fx"><i class="wf-aura"></i><i class="wf-grid"></i><i class="wf-sonar"></i><i class="wf-sonar s2"></i><i class="wf-sonar s3"></i><i class="wf-sweep"></i><i class="wf-scan"></i><i class="wf-corner c1"></i><i class="wf-corner c2"></i><i class="wf-corner c3"></i><i class="wf-corner c4"></i><span class="wf-code">NEXUS://ACCESS · SECURE LINK</span></div><div class="nx-warp-core"><span class="wc-orb"><span class="wc-glow"></span><span class="wc-ring r3"></span><span class="wc-ring r1"><i class="wc-dot"></i></span><span class="wc-ring r2"></span><img src="<?= e(logo_url()) ?>" alt="" onload="this.classList.add('ok')"></span><span class="wc-name">NEXUS<b>|</b>HUB</span><span class="wc-bar"><i></i></span></div></div><?php endif; ?>
 
 <?php if (setting_on('anim_preloader')): ?>
 <div class="preloader" id="preloader" aria-hidden="true">
@@ -166,7 +168,7 @@ $jsCfg['cart'] = $cartN;
                 <span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="<?= e($siteTitle) ?>" width="46" height="46"></span>
                 <span class="brand-text">
                     <b class="glitch" data-text="<?= e($siteTitle) ?>"><?= e($siteTitle) ?></b>
-                    <small>Gaming · Tech · News</small>
+                    <small><?= e(setting('brand_sub')) ?></small>
                 </span>
             </a>
             <nav class="main-nav" aria-label="منوی اصلی">
@@ -189,13 +191,13 @@ $jsCfg['cart'] = $cartN;
                     </div>
                 </div>
                 <?php endif; ?>
-                <?php if ($tgLink): ?><a class="btn-tg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?><span>عضویت در کانال</span></a><?php endif; ?>
+                <?php if ($tgLink && setting_on('hdr_tg_on')): ?><a class="btn-tg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?><span><?= e(setting('hdr_tg_label')) ?></span></a><?php endif; ?>
                 <?php if ($me): ?>
                     <a class="btn-account is-in" href="<?= e(url('account')) ?>" data-warp title="حساب کاربری">
                         <span class="ba-avatar"><?= e(mb_substr($me['first_name'], 0, 1)) ?></span><span class="ba-text"><small>حساب کاربری</small><b><?= e($me['first_name']) ?></b></span>
                     </a>
                 <?php else: ?>
-                    <a class="btn-account" href="<?= e(url('auth')) ?>" data-warp title="ورود / ثبت‌نام"><?= icon('user', 18) ?><span>ورود | ثبت‌نام</span></a>
+                    <a class="btn-account" href="<?= e(url('auth')) ?>" data-warp title="ورود / ثبت‌نام"><?= icon('user', 18) ?><span><?= e(setting('hdr_login_label')) ?></span></a>
                 <?php endif; ?>
                 <button class="icon-btn burger" id="menuOpen" aria-label="منو"><?= icon('menu') ?></button>
             </div>
@@ -230,7 +232,7 @@ $jsCfg['cart'] = $cartN;
         <div class="f-about">
             <a class="brand" href="<?= e(url('')) ?>">
                 <span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="" width="46" height="46"></span>
-                <span class="brand-text"><b><?= e($siteTitle) ?></b><small>Gaming · Tech · News</small></span>
+                <span class="brand-text"><b><?= e($siteTitle) ?></b><small><?= e(setting('brand_sub')) ?></small></span>
             </a>
             <p><?= e(setting('footer_text')) ?></p>
             <div class="f-social">
@@ -240,13 +242,13 @@ $jsCfg['cart'] = $cartN;
             </div>
         </div>
         <div>
-            <h4>دسته‌بندی‌ها</h4>
+            <h4><?= e(setting('footer_cats_title')) ?></h4>
             <ul class="f-links">
                 <?php foreach ($cats as $c): if (empty($c['show_in_footer'])) continue; ?><li><a href="<?= e(cat_url($c)) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a></li><?php endforeach; ?>
             </ul>
         </div>
         <div>
-            <h4>دسترسی سریع</h4>
+            <h4><?= e(setting('footer_links_title')) ?></h4>
             <ul class="f-links">
                 <li><a href="<?= e(url('archive')) ?>">همه اخبار</a></li>
                 <?php if ($shopOn && setting_on('shop_in_footer')): ?><li><a href="<?= e(url('shop')) ?>">🛍️ <?= e(setting('shop_menu_label', 'فروشگاه')) ?></a></li><?php if (setting_on('shop_support_on')): ?><li><a href="<?= e(url('support')) ?>">پشتیبانی فروشگاه</a></li><?php endif; ?><?php endif; ?>
@@ -254,12 +256,14 @@ $jsCfg['cart'] = $cartN;
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
             </ul>
         </div>
+        <?php if (setting_on('footer_cta_on')): ?>
         <div class="f-cta glass">
             <span class="f-cta-icon"><?= icon('telegram', 30) ?></span>
-            <h4>همیشه یک قدم جلوتر باش</h4>
-            <p>جدیدترین اخبار گیم و تکنولوژی رو زودتر از همه توی تلگرام بخون.</p>
+            <h4><?= e(setting('footer_cta_title')) ?></h4>
+            <p><?= e(setting('footer_cta_text')) ?></p>
             <?php if ($tgLink): ?><a class="btn btn-primary" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(telegram_handle() ?: 'کانال تلگرام') ?></a><?php endif; ?>
         </div>
+        <?php endif; ?>
     </div>
     <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('*'); ?>
     <?php if ($tBadges || $tAdmin): ?>
@@ -274,7 +278,7 @@ $jsCfg['cart'] = $cartN;
     <?php endif; ?>
     <div class="container f-bottom">
         <span>© <?= jdate('Y') ?> — <?= e(setting('copyright')) ?></span>
-        <span class="f-made">Designed with <span class="heart">❤</span> for NEXUS</span>
+        <?php $made = (string) setting('footer_made'); if ($made !== ''): ?><span class="f-made"><?= str_replace('❤', '<span class="heart">❤</span>', e($made)) ?></span><?php endif; ?>
     </div>
 </footer>
 
@@ -310,15 +314,15 @@ $jsCfg['cart'] = $cartN;
             <?php endif; ?>
         </nav>
         <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
-        <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> ورود | ثبت‌نام</a><?php endif; ?>
-        <?php if ($tgLink): ?><a class="btn btn-primary btn-block" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> عضویت در کانال تلگرام</a><?php endif; ?>
+        <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> <?= e(setting('hdr_login_label')) ?></a><?php endif; ?>
+        <?php if ($tgLink): ?><a class="btn btn-primary btn-block" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(setting('hdr_tg_label')) ?></a><?php endif; ?>
     </aside>
 </div>
 
-<button class="to-top" id="toTop" aria-label="بازگشت به بالا">
+<?php if (setting_on('to_top_on')): ?><button class="to-top" id="toTop" aria-label="بازگشت به بالا">
     <svg viewBox="0 0 48 48" class="to-top-ring"><circle class="tt-track" cx="24" cy="24" r="21"/><circle class="tt-prog" cx="24" cy="24" r="21"/></svg>
     <?= icon('arrow-up', 20) ?>
-</button>
+</button><?php endif; ?>
 <div class="toast-wrap" id="toasts"></div>
 
 <?= ad_slot('popup') ?>

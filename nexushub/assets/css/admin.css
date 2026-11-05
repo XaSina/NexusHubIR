@@ -969,3 +969,62 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .tb-preview img { max-width: 100%; max-height: 110px; object-fit: contain; }
 .tb-add { width: 100%; justify-content: center; border-style: dashed !important; }
 @media (max-width: 680px) { .tb-row-body { grid-template-columns: minmax(0, 1fr); } .tb-preview { min-height: 90px; } }
+
+
+/* ======================================================================
+   Panel motion v2 — desktop: cinematic but quick; phones: short fades only
+   ====================================================================== */
+:root { --ease-silk: cubic-bezier(.16,1,.3,1); --ease-spring: cubic-bezier(.34,1.56,.64,1); }
+/* content arrival */
+html.adm-motion .ai { animation: aIn .5s var(--ease-silk) both; animation-delay: calc(var(--ai, 0) * 45ms); }
+@keyframes aIn { from { opacity: 0; transform: translate3d(0, 12px, 0); } }
+/* switching tabs: the pane fades up */
+[data-pane]:not([hidden]) { animation: paneIn .38s var(--ease-silk) both; }
+@keyframes paneIn { from { opacity: 0; transform: translate3d(0, 8px, 0); } }
+.tabs a, .tabs button { position: relative; overflow: hidden; }
+.tabs a.active, .tabs button.active { animation: tabPop .45s var(--ease-spring); }
+@keyframes tabPop { 40% { transform: scale(1.05); } }
+/* buttons answer the press */
+.abtn:active, .tabs button:active, .adm-ib:active { transform: scale(.96); transition-duration: .1s; }
+.a-ripple { position: absolute; z-index: 0; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: currentColor; opacity: .25; pointer-events: none; animation: aRip .6s var(--ease-silk) forwards; }
+@keyframes aRip { from { transform: scale(0); opacity: .3; } to { transform: scale(16); opacity: 0; } }
+/* top bar gains depth when the page scrolls */
+.adm-top { transition: box-shadow .35s ease, border-color .35s ease, background .35s ease; }
+.adm-top.scrolled { box-shadow: 0 14px 34px -16px rgba(0,0,0,.55); border-color: rgba(var(--primary-rgb), .22); }
+/* leaving a page */
+html.adm-leave .adm-content { opacity: 0; transform: translate3d(0, 6px, 0); transition: opacity .17s ease, transform .17s ease; }
+/* side menu: items slide in when the phone drawer opens */
+.adm-side.open .adm-nav a { animation: navIn .42s var(--ease-silk) both; animation-delay: calc(var(--ni, 0) * 22ms + 60ms); }
+@keyframes navIn { from { opacity: 0; transform: translate3d(18px, 0, 0); } }
+/* table rows arrive one after another */
+html.adm-motion .tbl tbody tr { animation: rowIn .45s var(--ease-silk) both; animation-delay: calc(var(--ri, 14) * 28ms + 80ms); }
+@keyframes rowIn { from { opacity: 0; transform: translate3d(0, 8px, 0); } }
+
+/* desktop: richer depth and hover life */
+@media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+    html.adm-motion .ai { animation-name: aInD; animation-duration: .8s; animation-delay: calc(var(--ai, 0) * 60ms); }
+    @keyframes aInD { from { opacity: 0; transform: perspective(1000px) translate3d(0, 26px, 0) rotateX(7deg) scale(.985); } }
+    .card { transition: border-color .35s ease, box-shadow .45s var(--ease-silk); }
+    .card:hover { border-color: rgba(var(--primary-rgb), .26); box-shadow: 0 18px 40px -26px rgba(var(--primary-rgb), .55); }
+    .adm-nav a .ic { transition: transform .4s var(--ease-spring); }
+    .adm-nav a:hover .ic { transform: translateX(-3px) scale(1.1); }
+    .adm-nav a::after { content: ""; position: absolute; right: 0; top: 50%; width: 3px; height: 0; border-radius: 3px; background: var(--primary); transform: translateY(-50%); transition: height .35s var(--ease-silk); }
+    .adm-nav a:hover::after { height: 46%; }
+    .adm-nav a.active::after { height: 70%; }
+    .abtn-primary { transition: transform .3s var(--ease-spring), box-shadow .35s ease, filter .3s; }
+    .abtn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -12px rgba(var(--primary-rgb), .9); }
+    .stat { transition: transform .5s var(--ease-spring), border-color .35s; }
+    .stat:hover { transform: translateY(-5px); border-color: rgba(var(--primary-rgb), .35); }
+    .stat-ic { transition: transform .5s var(--ease-spring); }
+    .stat:hover .stat-ic { transform: rotate(-8deg) scale(1.08); }
+    .tbl tbody tr td { transition: background .25s ease; }
+}
+/* phones: keep it light */
+@media (hover: none), (max-width: 900px) {
+    html.adm-motion .tbl tbody tr { animation: none; }
+    [data-pane]:not([hidden]) { animation-duration: .28s; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html.adm-motion .ai, [data-pane]:not([hidden]), .adm-side.open .adm-nav a, html.adm-motion .tbl tbody tr, .tabs .active { animation: none !important; }
+    html.adm-leave .adm-content { opacity: 1; transform: none; }
+}

@@ -418,7 +418,7 @@
         title.classList.add('split');
         setTimeout(function () { body.classList.add('s4'); setHud('READY'); }, reduce ? 0 : 1100);  // the button doesn't wait for the typing
         await wait(650);
-        await typeText($('#auType'), 'دروازه‌ی ورود به کامیونیتی NEXUS 🔥', 34);
+        await typeText($('#auType'), $('#auType').getAttribute('data-text') || '', 34);
     })();
 
     function glassTilt(gl) {

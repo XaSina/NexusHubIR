@@ -5,7 +5,7 @@ require_cap('*');
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
-    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files'];
+    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra'];
 
 if (is_post()) {
     csrf_check();
@@ -28,6 +28,8 @@ if (is_post()) {
         unset($save['tg_bot_token']);
         flash('توکن ربات تلگرام معتبر نبود و تغییر نکرد (شکل درست: 123456789:ABC...).', 'warn');
     }
+    if (isset($save['google_verify'])) $save['google_verify'] = preg_replace('~[^A-Za-z0-9_-]~', '', preg_match('~content=["\']([^"\']+)~', $save['google_verify'], $gm) ? $gm[1] : $save['google_verify']);
+    if (isset($save['robots_extra'])) $save['robots_extra'] = mb_substr(preg_replace('~[^\x20-\x7E\n]~', '', str_replace("\r", '', $save['robots_extra'])), 0, 2000);
     if (isset($save['verify_files'])) {   // file names only: letters, digits, - and _, ending in .txt / .html
         $vf = array_filter(array_map('trim', preg_split('~[\r\n,]+~', $save['verify_files'])), fn($f) => (bool) preg_match('~^[A-Za-z0-9_-]{3,80}\.(txt|html?)$~', $f));
         $save['verify_files'] = implode("\n", array_slice(array_unique($vf), 0, 20));
@@ -66,6 +68,10 @@ adm_head('تنظیمات', 'settings');
             <div class="card-head"><h3>🔎 سئو</h3></div>
             <?= f_textarea('site_description', 'توضیحات متا (Meta Description)', $s['site_description'], ['rows' => 4, 'maxlength' => 320]) ?>
             <?= f_text('meta_keywords', 'کلمات کلیدی (با ویرگول)', $s['meta_keywords']) ?>
+            <?= f_image('og_image', 'عکس پیش‌فرض اشتراک‌گذاری (وقتی لینک سایت رو جایی می‌فرستن)', $s['og_image'] ?? '', 'پیشنهاد: ۱۲۰۰×۶۳۰ پیکسل. خبرها عکس کاور خودشون رو دارن.') ?>
+            <?= f_text('google_verify', 'کد تأیید گوگل (Search Console)', $s['google_verify'] ?? '', ['ltr' => true, 'placeholder' => 'متاتگ یا فقط کد content', 'hint' => 'کل متاتگی که گوگل داده رو بچسبون؛ خودش کد رو برمی‌داره.']) ?>
+            <?= f_textarea('robots_extra', 'خطوط اضافه برای robots.txt', $s['robots_extra'] ?? '', ['rows' => 3, 'code' => true, 'placeholder' => 'Disallow: /private']) ?>
+            <a class="abtn abtn-sm" href="<?= e(url('robots.txt')) ?>" target="_blank" rel="noopener" dir="ltr">robots.txt ↗</a>
             <div class="alert alert-info small">نقشه سایت: <a class="ltr" href="<?= e(url('sitemap.xml')) ?>" target="_blank"><?= e(site_url('sitemap.xml')) ?></a></div>
         </div>
     </div>

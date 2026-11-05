@@ -671,5 +671,54 @@
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gatePreviews); else gatePreviews();
 
+    /* ---------- Motion: content glides in, numbers count up, buttons answer the press, pages leave softly.
+       Phones get shorter, lighter versions; nothing runs with "reduce motion". ---------- */
+    (function () {
+        var mq = function (q) { return window.matchMedia && window.matchMedia(q).matches; };
+        var reduce = mq('(prefers-reduced-motion: reduce)'), lite = mq('(hover: none), (max-width: 900px)');
+        var root = document.documentElement;
+        var faD = function (t) { return String(t).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
+        var enD = function (t) { return String(t).replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }); };
+        if (!reduce) {
+            root.classList.add('adm-motion');
+            var max = lite ? 8 : 16, n = 0;
+            $$('.adm-content .card, .adm-content .tabs, .adm-content > .alert, .adm-content .tbl-wrap, .adm-content .page-head').forEach(function (el) {
+                if (n >= max || el.parentElement.closest('.card') || el.closest('[hidden]')) return;
+                var r = el.getBoundingClientRect(); if (r.top > window.innerHeight + 40) return;   // below the fold: no waiting
+                el.style.setProperty('--ai', n++); el.classList.add('ai');
+            });
+            $$('.adm-nav a').forEach(function (a, i) { a.style.setProperty('--ni', Math.min(i, 18)); });
+            $$('.adm-content .tbl tbody tr').forEach(function (tr, i) { if (i < 14) tr.style.setProperty('--ri', i); });
+        }
+        // numbers on the dashboard count up
+        $$('.stat b').forEach(function (b) {
+            var raw = (b.getAttribute('data-count') || enD(b.textContent)).replace(/[,\s٬]/g, '');
+            if (!/^\d{1,12}$/.test(raw)) return;
+            var target = +raw; if (!target || reduce) return;
+            var t0 = 0, dur = lite ? 700 : 1100;
+            var paint = function (v) { b.textContent = faD(Math.round(v).toLocaleString('en-US')); };
+            paint(0);
+            (function step(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / dur); paint(target * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); })(performance.now());
+        });
+        // top bar gets depth once the page scrolls
+        var top = $('.adm-top');
+        if (top) { var onS = function () { top.classList.toggle('scrolled', window.scrollY > 8); }; window.addEventListener('scroll', onS, { passive: true }); onS(); }
+        // press ripple from the touch / click point
+        document.addEventListener('pointerdown', function (e) {
+            var b = e.target.closest && e.target.closest('.abtn, .tabs button, .tabs a'); if (!b || reduce) return;
+            var r = b.getBoundingClientRect(), sp = document.createElement('i'); sp.className = 'a-ripple';
+            sp.style.left = (e.clientX - r.left) + 'px'; sp.style.top = (e.clientY - r.top) + 'px'; b.appendChild(sp);
+            setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 650);
+        }, { passive: true });
+        // leaving through the side menu: the content fades out first (feels instant, never abrupt)
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('.adm-nav a, .adm-brand'); if (!a || reduce) return;
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.button || a.target || a.href === location.href) return;
+            e.preventDefault(); root.classList.add('adm-leave');
+            setTimeout(function () { location.href = a.href; }, 170);
+        });
+        window.addEventListener('pageshow', function (e) { if (e.persisted) root.classList.remove('adm-leave'); });
+    })();
+
     window.NXA = A;
 })();

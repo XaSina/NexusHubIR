@@ -410,6 +410,8 @@ switch ($seg[0] ?? '') {
     case 'robots.txt':
         header('Content-Type: text/plain; charset=utf-8');
         echo "User-agent: *\nDisallow: /admin/\nDisallow: /install/\nDisallow: /search\nDisallow: /cart\nDisallow: /checkout\nDisallow: /order/\nDisallow: /orders\nDisallow: /support\nSitemap: " . site_url('sitemap.xml') . "\n";
+        $rx = trim(str_replace("\r", '', (string) setting('robots_extra')));
+        if ($rx !== '') echo "\n" . $rx . "\n";
         break;
 
     default:
