@@ -40,6 +40,8 @@ if (count($seg) === 1 && preg_match('~^[A-Za-z0-9_-]{3,80}\.(txt|html?)$~', $seg
     if (in_array($seg[0], $vf, true)) {
         header('Content-Type: ' . (str_ends_with($seg[0], '.txt') ? 'text/plain' : 'text/html') . '; charset=utf-8');
         header('Cache-Control: no-cache');
+        // Google's verification file must contain this exact line; other issuers (Enamad, ...) want it empty
+        if (preg_match('~^google[0-9a-f]+\.html$~i', $seg[0])) echo 'google-site-verification: ' . $seg[0];
         exit;
     }
 }
