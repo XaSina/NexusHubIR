@@ -328,17 +328,26 @@
     /* ---------- Scroll: header, progress, to-top, parallax ---------- */
     var header = $('#siteHeader'), prog = $('#readProgress'), toTop = $('#toTop'), postBody = $('.post-body'), par = $('.parallax .cover');
     var ring = toTop ? ($('.tt-prog', toTop) || $('circle', toTop)) : null;
+    // phones: nothing on the page may move or change size while it scrolls (weaker GPUs then mix up layers:
+    // ghosted text, the header drawn inside cards). Parallax off, progress bar drawn with a transform only.
+    var calm = window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches;
+    if (calm) par = null;
+    var lastScrolled = null, lastShow = null, lastOff = -1;
     function onScroll() {
         var y = window.scrollY, h = document.documentElement.scrollHeight - window.innerHeight;
-        if (header) header.classList.toggle('scrolled', y > 30);
+        var sc = y > 30;
+        if (header && sc !== lastScrolled) { header.classList.toggle('scrolled', sc); lastScrolled = sc; }
         var ratio = h > 0 ? y / h : 0;
         if (postBody && prog) {
             var r = postBody.getBoundingClientRect();
             var total = r.height - window.innerHeight * .5;
             ratio = Math.max(0, Math.min(1, (-r.top + window.innerHeight * .3) / (total > 0 ? total : 1)));
         }
-        if (prog) prog.style.width = (ratio * 100) + '%';
-        if (toTop) { toTop.classList.toggle('show', y > 500); if (ring) ring.style.setProperty('--off', 132 - 132 * (h > 0 ? y / h : 0)); }
+        if (prog) prog.style.transform = 'scaleX(' + ratio.toFixed(3) + ')';
+        if (toTop) {
+            var show = y > 500; if (show !== lastShow) { toTop.classList.toggle('show', show); lastShow = show; }
+            var off = Math.round(132 - 132 * (h > 0 ? y / h : 0)); if (ring && off !== lastOff) { ring.style.setProperty('--off', off); lastOff = off; }
+        }
         if (par && !reduce && y < 900) par.style.transform = 'translateY(' + (y * .18) + 'px) scale(1.05)';
     }
     // at most one scroll update per frame (was queuing a callback on every scroll event)

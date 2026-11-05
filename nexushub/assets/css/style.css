@@ -1467,3 +1467,30 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
     /* reveal: a short, light fade; nothing moves */
     .js-reveal [data-reveal] { transition: opacity .4s ease var(--rd, 0ms) !important; }
 }
+
+
+/* ======================================================================
+   Phone-safe rendering, part 3: nothing moves or resizes while the page scrolls
+   ====================================================================== */
+.read-progress { width: 100% !important; transform: scaleX(0); transform-origin: right center; transition: transform .1s linear; }
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    /* the header kept changing its height on scroll, shifting the whole page by a few pixels each time */
+    .site-header, .site-header.scrolled { padding-top: 8px; transition: none !important; }
+    .site-header.scrolled .header-inner { box-shadow: 0 6px 18px -10px rgba(0,0,0,.5); }
+    html:not(.warp-in) .site-header { animation: none !important; }
+    /* nothing animates inside the sticky header */
+    .site-header *, .site-header *::before, .site-header *::after { animation: none !important; transition-property: color, background-color, border-color, opacity !important; }
+    .read-progress { transition: none; box-shadow: none; }
+    /* cards are simply there: a fading card is its own layer, and these GPUs mix such layers up while scrolling */
+    .js-reveal [data-reveal], .js-reveal [data-reveal].in { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+    .js-reveal [data-reveal] *, .js-reveal [data-reveal].in * { transition-delay: 0s !important; }
+    .post-cover .cover, .parallax .cover { transform: none !important; inset: 0 !important; height: 100% !important; }
+    /* light motion that never runs during a scroll: taps, menus, buttons */
+    .btn:active, .icon-btn:active { transform: scale(.97); transition: transform .12s ease; }
+}
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+    /* the last two large looping effects (they kept running while the page scrolled) */
+    .pulse-ring, .pulse-ring.d2, .nxp-shine, .nxp-shine * { animation: none !important; }
+    .pulse-ring { opacity: .35; }
+    .nxp-shine { display: none !important; }
+}
