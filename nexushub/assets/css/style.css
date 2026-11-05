@@ -1396,3 +1396,10 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
     .f-bottom { flex-direction: column; align-items: center; gap: 6px; margin-top: 24px; padding-block: 18px calc(18px + env(safe-area-inset-bottom, 0px)); font-size: .76rem; }
 }
 @media (max-width: 360px) { .footer-grid { gap: 26px 12px; } .f-links a { font-size: .82rem; } }
+
+/* a badge whose image the issuer does not serve (yet) */
+.f-trust:not([data-admin]) .f-trust-item.tb-off { display: none; }
+.f-trust[data-admin] .f-trust-item.tb-off { background: transparent; border: 1.5px dashed rgba(var(--primary-rgb), .45); box-shadow: none; padding: 8px; }
+.f-trust-item.tb-off img { display: none; }
+.tb-wait { color: var(--muted); font-size: .66rem; line-height: 1.6; text-align: center; }
+.f-trust[hidden] { display: none !important; }

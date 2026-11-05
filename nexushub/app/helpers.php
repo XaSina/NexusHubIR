@@ -413,6 +413,7 @@ function trust_badge_html(array $b): string
             if ($tag === 'img') {
                 if (strpos($attrs, ' src=') === false) continue;
                 if (strpos($attrs, ' alt=') === false) $attrs .= ' alt="' . e($title) . '"';
+                if (strpos($attrs, ' referrerpolicy=') === false) $attrs .= ' referrerpolicy="origin"';
                 $html = '<img' . $attrs . '>';
                 $out .= $popup !== '' && trust_url_ok($popup) ? '<a href="' . e($popup) . '" target="_blank" rel="noopener" referrerpolicy="origin">' . $html . '</a>' : $html;
             } else {

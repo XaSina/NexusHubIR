@@ -263,10 +263,10 @@ $jsCfg['cart'] = $cartN;
     </div>
     <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('*'); ?>
     <?php if ($tBadges || $tAdmin): ?>
-    <div class="container f-trust">
+    <div class="container f-trust"<?= $tAdmin ? ' data-admin' : '' ?>>
         <div class="f-trust-head"><span class="f-trust-ic"><?= icon('shield', 18) ?></span><b><?= e(setting('trust_title', 'نمادهای اعتماد')) ?></b></div>
         <div class="f-trust-list">
-            <?php foreach ($tBadges as $h): ?><div class="f-trust-item"><?= $h ?></div><?php endforeach; ?>
+            <?php foreach (trust_badges() as $tb): $h = trust_badge_html($tb); if ($h === '') continue; ?><div class="f-trust-item" data-name="<?= e($tb['title'] ?? '') ?>"><?= $h ?></div><?php endforeach; ?>
             <?php if (!$tBadges && $tAdmin): ?><a class="f-trust-item f-trust-empty" href="<?= e(url('admin/appearance.php')) ?>"><?= icon('plus', 20) ?><small>افزودن نماد اعتماد</small></a><a class="f-trust-item f-trust-empty" href="<?= e(url('admin/appearance.php')) ?>"><?= icon('plus', 20) ?><small>افزودن نماد</small></a><?php endif; ?>
         </div>
         <?php if (!$tBadges && $tAdmin): ?><small class="f-trust-note">این جای خالی فقط برای شما (مدیر) نمایش داده می‌شه.</small><?php endif; ?>

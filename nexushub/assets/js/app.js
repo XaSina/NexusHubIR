@@ -389,6 +389,25 @@
         window.addEventListener('popstate', function () { loadPage(location.href, false); });
     }
 
+    /* ---------- Trust badges: an issuer (e.g. Enamad) serves a blank image until the seal is approved for this
+       exact domain. Visitors never see an empty white box: a badge that does not load is hidden (and the whole strip
+       when none load); the admin sees a short note instead. ---------- */
+    var trust = $('.f-trust');
+    if (trust) {
+        var isAdm = trust.hasAttribute('data-admin');
+        var check = function (img) {
+            var item = img.closest('.f-trust-item'); if (!item || !img.complete) return;
+            if (img.naturalWidth > 24 && img.naturalHeight > 24) { item.classList.toggle('tb-off', false); return; }
+            item.classList.add('tb-off');
+            if (isAdm && !item.querySelector('.tb-wait')) { var n = document.createElement('small'); n.className = 'tb-wait'; n.textContent = (item.dataset.name || 'نماد') + ': عکس هنوز از طرف صادرکننده نمیاد'; item.appendChild(n); }
+            if (!isAdm && !$$('.f-trust-item:not(.tb-off)', trust).length) trust.hidden = true;
+        };
+        $$('.f-trust-item img', trust).forEach(function (img) {
+            img.addEventListener('load', function () { check(img); }); img.addEventListener('error', function () { check(img); });
+            check(img);
+        });
+    }
+
     /* ---------- Live clock ---------- */
     var clock = $('#liveClock');
     if (clock) setInterval(function () {
