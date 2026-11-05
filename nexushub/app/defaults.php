@@ -39,6 +39,7 @@ function default_settings(): array
         'og_image' => '',
         'google_verify' => '',
         'seo_https' => '1',
+        'seo_alt_names' => 'NexusHub, Nexus Hub, نکسوس هاب, نکسوس, NexusHubIR',
         'indexnow_on' => '1',
         'news_sitemap_on' => '1',
         'robots_extra' => '',
