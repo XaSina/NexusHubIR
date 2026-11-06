@@ -1612,10 +1612,11 @@ html.perf-off .nx-invalid { animation: none; }
 .co-agree input[type=checkbox]:focus-visible, .nx-check:focus-visible { outline: 0; box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .22); }
 .co-agree:hover input[type=checkbox]:not(:checked) { border-color: rgba(var(--primary-rgb), .6); }
 
-/* phones: side-scrolling news rows stay cheap to draw, so Chrome never shows dark unpainted patches while you scroll */
+/* phones, every mode except «کامل» (Full keeps every animation): side-scrolling news rows stay cheap to draw,
+   so Chrome doesn't show dark unpainted patches while you scroll */
+.h-scroll { contain: layout paint; }
 @media (hover: none), (max-width: 900px) {
-    .h-scroll { contain: layout paint; background: transparent; }
-    .h-scroll .cover, .h-scroll .pcard-card .cover { transform: none !important; transition: opacity .5s ease !important; will-change: auto !important; }
-    .h-scroll [data-reveal], .h-scroll [data-reveal] * { will-change: auto !important; }
-    .h-scroll .pc-top, .h-scroll .pc-title, .h-scroll .pc-excerpt, .h-scroll .pc-meta { transform: none !important; }
+    html:not(.perf-ultra) .h-scroll .cover, html:not(.perf-ultra) .h-scroll .pcard-card .cover { transform: none !important; transition: opacity .5s ease !important; will-change: auto !important; }
+    html:not(.perf-ultra) .h-scroll [data-reveal], html:not(.perf-ultra) .h-scroll [data-reveal] * { will-change: auto !important; }
+    html:not(.perf-ultra) .h-scroll .pc-top, html:not(.perf-ultra) .h-scroll .pc-title, html:not(.perf-ultra) .h-scroll .pc-excerpt, html:not(.perf-ultra) .h-scroll .pc-meta { transform: none !important; }
 }
