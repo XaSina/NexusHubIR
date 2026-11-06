@@ -5,7 +5,7 @@ require_cap('*');
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
-    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_https', 'indexnow_on', 'news_sitemap_on', 'seo_alt_names'];
+    'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_home_title', 'seo_index_authors', 'seo_https', 'indexnow_on', 'news_sitemap_on', 'seo_alt_names'];
 
 if (is_post()) {
     csrf_check();
@@ -71,6 +71,8 @@ adm_head('تنظیمات', 'settings');
             <?= f_textarea('site_description', 'توضیحات متا (Meta Description)', $s['site_description'], ['rows' => 4, 'maxlength' => 320]) ?>
             <?= f_text('meta_keywords', 'کلمات کلیدی (با ویرگول)', $s['meta_keywords']) ?>
             <?= f_image('og_image', 'عکس پیش‌فرض اشتراک‌گذاری (وقتی لینک سایت رو جایی می‌فرستن)', $s['og_image'] ?? '', 'پیشنهاد: ۱۲۰۰×۶۳۰ پیکسل. خبرها عکس کاور خودشون رو دارن.') ?>
+            <?= f_text('seo_home_title', 'عنوان صفحه‌ی اصلی در گوگل', (string) ($s['seo_home_title'] ?? ''), ['placeholder' => 'NexusHub | نکسوس هاب — اخبار گیم، تکنولوژی و فروشگاه', 'hint' => 'همون خط آبی بزرگی که توی نتیجه‌ی گوگل دیده می‌شه. خالی = «اسم سایت — شعار». اسم برند رو اول بنویس.']) ?>
+            <?= f_switch('seo_index_authors', 'صفحه‌ی نویسنده‌ها هم توی گوگل بیاد', setting_on('seo_index_authors'), 'خاموش (پیشنهادی): صفحه‌ی نویسنده توی جستجوی اسم سایت جای صفحه‌ی اصلی رو نمی‌گیره') ?>
             <?= f_text('seo_alt_names', 'اسم‌های دیگه‌ی برند (با ویرگول)', (string) ($s['seo_alt_names'] ?? ''), ['placeholder' => 'NexusHub, Nexus Hub, نکسوس هاب', 'hint' => 'هر اسمی که ممکنه مردم برای پیدا کردن سایتت سرچ کنن. آدرس دامنه خودکار اضافه می‌شه.']) ?>
             <?= f_switch('seo_https', 'آدرس‌ها همیشه با https به گوگل داده بشن', setting_on('seo_https'), 'نقشه‌ی سایت، آدرس اصلی خبرها و لینک اشتراک با https ساخته می‌شن. فقط وقتی خاموشش کن که سایتت SSL نداره.') ?>
             <?= f_text('google_verify', 'کد تأیید گوگل (Search Console)', $s['google_verify'] ?? '', ['ltr' => true, 'placeholder' => 'متاتگ یا فقط کد content', 'hint' => 'کل متاتگی که گوگل داده رو بچسبون؛ خودش کد رو برمی‌داره.']) ?>

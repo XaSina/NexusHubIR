@@ -40,13 +40,13 @@ function seo_jsonld(array $meta, string $title, string $desc, string $image, str
     if (!empty($meta['post'])) {
         $p = $meta['post'];
         $url = site_url('post/' . rawurlencode($p['slug']));
-        $authorName = trim((string) ($p['author_name'] ?? '')) ?: (string) ($p['author_username'] ?? setting('site_title'));
+        $authorName = trim((string) ($p['author_name'] ?? '')) ?: (string) setting('site_title');
         $graph[] = array_filter([
             '@type' => 'NewsArticle', '@id' => $url . '#article', 'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $url],
             'headline' => mb_substr($title, 0, 110), 'description' => $desc, 'image' => [$image],
             'datePublished' => date('c', strtotime((string) ($p['published_at'] ?? 'now'))),
             'dateModified' => date('c', strtotime((string) ($p['updated_at'] ?? $p['published_at'] ?? 'now'))),
-            'author' => array_filter(['@type' => 'Person', 'name' => $authorName, 'url' => !empty($p['author_username']) ? site_url('author/' . rawurlencode($p['author_username'])) : null]),
+            'author' => array_filter(['@type' => 'Person', 'name' => $authorName, 'url' => !empty($p['author_id']) ? site_url('author/' . (int) $p['author_id']) : null]),
             'publisher' => ['@id' => site_url('#org')],
             'articleSection' => $p['cat_name'] ?? null,
             'keywords' => !empty($meta['tags']) ? implode('، ', array_column($meta['tags'], 'name')) : null,

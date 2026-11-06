@@ -64,7 +64,7 @@ switch ($seg[0] ?? '') {
 
     case '':
         track_visit();
-        page_out('home', ['bodyClass' => 'page-home'], ['title' => setting('site_title') . ' — ' . setting('site_tagline'), 'url' => site_url('')]);
+        page_out('home', ['bodyClass' => 'page-home'], ['title' => trim((string) setting('seo_home_title')) ?: setting('site_title') . ' — ' . setting('site_tagline'), 'url' => site_url('')]);
         break;
 
     case 'post':
@@ -125,14 +125,22 @@ switch ($seg[0] ?? '') {
         break;
 
     case 'author':
-        $author = row('SELECT * FROM users WHERE username = ? AND is_active = 1', [$seg[1] ?? '']);
+        $aKey = (string) ($seg[1] ?? '');
+        if (!ctype_digit($aKey)) {                                    // old links (/author/<username>) move to the number, so the login name isn't public
+            $old = row('SELECT id FROM users WHERE username = ? AND is_active = 1', [$aKey]);
+            if (!$old) not_found();
+            header('Location: ' . site_url('author/' . (int) $old['id']), true, 301); exit;
+        }
+        $author = row('SELECT * FROM users WHERE id = ? AND is_active = 1', [(int) $aKey]);
         if (!$author) not_found();
         [$posts, $total] = get_posts(['author_id' => $author['id'], 'limit' => $per, 'offset' => ($page - 1) * $per, 'count' => true]);
         $pg = paginate($total, $per, $page);
-        page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => $author['display_name'] ?: $author['username'], 'icon' => '✍️', 'sub' => $author['bio'] ?: 'مطالب این نویسنده', 'base' => url('author/' . rawurlencode($author['username'])), 'bodyClass' => 'page-list'], [
-            'title' => ($author['display_name'] ?: $author['username']) . ' | ' . setting('site_title'),
-            'description' => $author['bio'] ?: ('مطالب ' . ($author['display_name'] ?: $author['username']) . ' در ' . setting('site_title')),
-        ] + seo_list_meta('author/' . rawurlencode($author['username']), $pg));
+        $aName = trim((string) $author['display_name']) ?: (string) setting('site_title');
+        page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => $aName, 'icon' => '✍️', 'sub' => $author['bio'] ?: 'مطالب این نویسنده', 'base' => url('author/' . (int) $author['id']), 'bodyClass' => 'page-list'], [
+            'title' => 'مطالب ' . $aName . ' | ' . setting('site_title'),
+            'description' => $author['bio'] ?: ('مطالب ' . $aName . ' در ' . setting('site_title')),
+            'noindex' => !setting_on('seo_index_authors'),            // writer pages stay out of Google, so the home page wins brand searches
+        ] + seo_list_meta('author/' . (int) $author['id'], $pg));
         break;
 
     case 'search':

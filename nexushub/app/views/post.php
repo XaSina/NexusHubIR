@@ -32,9 +32,9 @@ $commentsOn = setting_on('comments_enabled') && $post['allow_comments'];
             <h1 class="post-title"><?= e($post['title']) ?></h1>
             <?php $lead = trim(strip_shortcodes((string) $post['excerpt'])); if ($lead !== ''): ?><p class="post-lead"><?= e($lead) ?></p><?php endif; ?>
             <div class="post-meta">
-                <a class="pm-author" href="<?= e(url('author/' . rawurlencode((string) $post['author_username']))) ?>">
-                    <?= user_avatar(['avatar' => $post['author_avatar'], 'display_name' => $post['author_name'], 'username' => $post['author_username']], 34) ?>
-                    <span><?= e($post['author_name'] ?: $post['author_username'] ?: 'NEXUS') ?></span>
+                <a class="pm-author" href="<?= e(url('author/' . (int) $post['author_id'])) ?>">
+                    <?= user_avatar(['avatar' => $post['author_avatar'], 'display_name' => $post['author_name'], 'username' => ''], 34) ?>
+                    <span><?= e($post['author_name'] ?: setting('site_title')) ?></span>
                 </a>
                 <span><?= icon('calendar', 15) ?> <?= jdate('l j F Y', $post['published_at']) ?></span>
                 <span><?= icon('clock', 15) ?> <?= jdate('H:i', $post['published_at']) ?></span>
