@@ -107,10 +107,19 @@ adm_head('کدهای تخفیف', 'promos');
         <?= f_switch('box_on', '📣 به شکل کادر تبلیغ روی سایت هم نشون داده بشه (با دکمه‌ی کپی)', (bool) $P['box_on']) ?>
         <div class="rf-boxrow">
             <label class="af"><span class="af-label">کجای سایت؟</span><select name="box_places[]" multiple data-multi data-placeholder="هیچ جایی انتخاب نشده"><?php foreach (shop_banner_places() as $k => $nm): ?><option value="<?= $k ?>" <?= in_array($k, $places, true) ? 'selected' : '' ?>><?= e($nm) ?></option><?php endforeach; ?></select></label>
-            <?= f_select('box_theme', 'تم کادر', array_map(fn($t) => $t['name'], ad_themes()), (string) $P['box_theme']) ?>
             <?= f_color('box_accent', 'رنگ کادر', (string) ($P['box_accent'] ?: setting('color_primary', '#ff1f3d'))) ?>
         </div>
-        <?php if ($P['id']): ?><div class="pmx-prev"><?= promo_box_html($P, true) ?></div><?php endif; ?>
+        <div class="af-label pmx-glabel">🎨 تم کادر — روی هر کدوم بزنی همون انتخاب می‌شه</div>
+        <div class="theme-gallery rf-gallery" id="pmGallery">
+            <?php $sample = ['code' => $P['code'] ?: 'NEXUS20', 'title' => $P['title'] ?: 'کد تخفیف ویژه'] + $P;
+            foreach (ad_themes() as $k => $t): ?>
+                <label class="theme-opt">
+                    <input type="radio" name="box_theme" value="<?= e($k) ?>" <?= (string) $P['box_theme'] === $k ? 'checked' : '' ?>>
+                    <?= promo_box_html(['box_theme' => $k] + $sample, true) ?>
+                    <div class="t-name"><b><?= e($t['name']) ?></b><small><?= e($t['desc']) ?></small></div>
+                </label>
+            <?php endforeach; ?>
+        </div>
     </div>
     <input type="hidden" name="box_places[]" value="">
     <button class="rf-save pc-save" type="submit"><span class="rf-save-check"><?= icon('check', 18) ?></span><span><?= $P['id'] ? 'ذخیره‌ی کد' : 'ساخت کد' ?></span></button>
@@ -155,6 +164,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var sy = function () { [].forEach.call(qq.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.dataset.v === String(parseInt(inp.value, 10))); }); };
         qq.addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b) { inp.value = b.dataset.v; sy(); } }); inp.addEventListener('input', sy); sy();
     });
+    // live previews in the theme gallery (title, code, percent and colour follow the form)
+    var gal = q('#pmGallery'), form = q('#pmForm');
+    function live() {
+        if (!gal) return;
+        var t = (q('[name=title]').value || 'کد تخفیف ویژه').trim(), c = (q('#pmCode').value || 'NEXUS20').trim().toUpperCase();
+        [].forEach.call(gal.querySelectorAll('.rfx-title'), function (x) { x.textContent = t; if (x.hasAttribute('data-text')) x.setAttribute('data-text', t); });
+        [].forEach.call(gal.querySelectorAll('.pmx-code code'), function (x) { x.textContent = c; });
+        var pct = q('.pmx-dsc [data-f=pct]'); if (pct && pct.value) [].forEach.call(gal.querySelectorAll('.rfx-prize'), function (x) { x.textContent = x.textContent.replace(/[\d۰-۹.]+\s*٪|[\d۰-۹.]+\s*%/, (window.NXA && NXA.fa ? NXA.fa(pct.value) : pct.value) + '٪'); });
+        var ac = q('[name=box_accent]');
+        if (ac && /^#[0-9a-f]{6}$/i.test(ac.value)) { var v = ac.value, rgb = [1, 3, 5].map(function (i) { return parseInt(v.substr(i, 2), 16); }).join(','); [].forEach.call(gal.querySelectorAll('.rfx'), function (x) { x.style.setProperty('--nxp', v); x.style.setProperty('--nxp-rgb', rgb); }); }
+    }
+    if (form) { form.addEventListener('input', live); form.addEventListener('change', live); }
     var all = q('#pmAll'); if (all) all.addEventListener('change', function () { [].forEach.call(document.querySelectorAll('[name="members[]"]'), function (c) { c.checked = all.checked; }); });
     document.addEventListener('click', function (e) { var c = e.target.closest('[data-copy]'); if (!c) return; navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy); if (window.NXA && NXA.toast) NXA.toast('کپی شد ✅', 'success'); });
 });

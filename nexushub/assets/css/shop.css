@@ -678,8 +678,6 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
     .op-head .op-sum { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: baseline; text-align: right; margin: 0; }
     .op-code b { font-size: 1.35rem; }
 }
-/* order steps: no wide box behind them, and air under the ticker */
-.shop-page .flow-steps { margin-top: 10px; background: none; border: 0; box-shadow: none; }
 
 /* cart: discount code field */
 .co-promo { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; padding: 12px; border-radius: 14px; background: rgba(var(--text-rgb), .035); border: 1px dashed rgba(var(--text-rgb), .18); }
@@ -694,3 +692,18 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
 .op-head .op-status { padding: 3px 10px; font-size: .7rem; gap: 5px; border-radius: 14px; white-space: nowrap; }
 .op-head .ops-dot { width: 6px; height: 6px; }
 @media (max-width: 600px) { .op-head .op-status { grid-row: 1; align-self: end; margin: 0 0 8px; } }
+/* one step tracker everywhere (cart · checkout · order): its own card, air under the ticker,
+   and no wide box behind the page — every card on these pages is boxed on its own */
+section.container.shop-page, .site-main, .site-main > section.container, .shop-page > form.cart-grid, .shop-page .cart-grid {
+    background: none !important; border: 0 !important; box-shadow: none !important; outline: 0 !important; border-radius: 0 !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+section.container.shop-page::before, section.container.shop-page::after, .site-main::before, .site-main::after { content: none !important; display: none !important; }
+.shop-page { padding-top: 22px; }
+.shop-page > .order-steps:first-child, .shop-page > .op-head:first-child { margin-top: 6px; }
+.flow-tracker { margin: 6px 0 20px; }
+.order-steps { background: linear-gradient(160deg, rgba(var(--surface-rgb), .82), rgba(var(--surface-rgb), .66)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
+@media (max-width: 600px) {
+    .shop-page { padding-top: 18px; }
+    .flow-tracker { margin-bottom: 16px; }
+    .order-steps li small { display: none; }
+}
