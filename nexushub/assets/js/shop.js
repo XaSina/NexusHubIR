@@ -282,12 +282,13 @@
     var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; };
     var tones = { success: '61,220,132', info: '61,187,255', warn: '255,176,61', error: '255,90,110', muted: '150,150,165' };
     function setCount(n) { if (!nbCount) return; nbCount.hidden = !n; nbCount.textContent = fa(n); }
-    function renderList(items) {
-        if (!items.length) { nbList.innerHTML = '<div class="nb-empty"><span>🔕</span>اعلان جدیدی نداری</div>'; return; }
+    function renderList(items, j) {
+        var more = j && j.more ? '<a class="nb-all" href="' + esc(j.all) + '">🔔 همه‌ی اعلان‌ها' + (j.total ? ' (' + fa(j.total) + ')' : '') + ' ←</a>' : '';
+        if (!items.length) { nbList.innerHTML = '<div class="nb-empty"><span>🔕</span>توی ۲۴ ساعت گذشته اعلان جدیدی نداری</div>' + more; return; }
         nbList.innerHTML = items.map(function (n) {
             return '<a class="nb-item' + (n.read ? '' : ' unread') + '" href="' + esc(n.link || '#') + '" style="--t:' + (tones[n.tone] || tones.info) + '">'
                 + '<span class="nb-ic">' + esc(n.icon) + '</span><span class="nb-tx"><b>' + esc(n.title) + '</b>' + (n.body ? '<span>' + esc(n.body) + '</span>' : '') + '<small>' + esc(n.ago) + '</small></span></a>';
-        }).join('');
+        }).join('') + more;
     }
     if (nbBtn && nbPanel) {
         var open = false;
@@ -295,7 +296,7 @@
         nbBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             open = !open; nbPanel.hidden = !open; nbBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (open) api('api/notifs', { read: 1 }).then(function (j) { if (j.ok) { renderList(j.items); setCount(0); } }).catch(function () {});
+            if (open) api('api/notifs', { read: 1 }).then(function (j) { if (j.ok) { renderList(j.items, j); setCount(0); } }).catch(function () {});
         });
         document.addEventListener('click', function (e) { if (open && !nbPanel.contains(e.target)) close(); });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && open) close(); });

@@ -151,7 +151,7 @@ function prizes_for_member(int $mid): array
 {
     prizes_expire_due();
     $list = rows('SELECT p.*, c.code coupon_code, c.pct, c.max_off, c.min_total, c.scope, c.scope_ids, c.expires_at coupon_expires, c.order_id coupon_order
-        FROM prizes p LEFT JOIN coupons c ON c.id = p.coupon_id WHERE p.member_id = ? ORDER BY p.id DESC LIMIT 100', [$mid]);
+        FROM prizes p LEFT JOIN coupons c ON c.id = p.coupon_id WHERE p.member_id = ? ORDER BY p.id DESC LIMIT 500', [$mid]);
     $msgs = $list ? rows('SELECT * FROM prize_messages WHERE prize_id IN (' . implode(',', array_map(fn($p) => (int) $p['id'], $list)) . ') ORDER BY id', []) : [];
     foreach ($list as &$p) $p['messages'] = array_values(array_filter($msgs, fn($m) => (int) $m['prize_id'] === (int) $p['id']));
     unset($p);

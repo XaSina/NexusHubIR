@@ -107,3 +107,13 @@ html.perf-safe .nxw-winner b { background: none; color: #fff; }
 .nxw-l > span.two { white-space: normal; overflow-wrap: anywhere; }
 .nxw-l > span.cut { overflow: hidden; text-overflow: ellipsis; }
 .nxw-l.win > span { text-shadow: 0 0 10px rgba(255,255,255,.7), 0 1px 2px rgba(0,0,0,.8); }
+
+/* steady winner card: bulbs fade with opacity only (no box-shadow repaint), card effects play once */
+.nxw-bulbs i { box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 0 8px 2px rgba(var(--primary-rgb), .6) !important; animation-name: nxwChase2 !important; }
+@keyframes nxwChase2 { 0%, 100% { opacity: 1; } 40%, 80% { opacity: .3; } }
+html.perf-safe .nxw-bulbs i { animation: none !important; opacity: .9; box-shadow: 0 0 0 1px rgba(0,0,0,.55) !important; }
+.nxw-winner { will-change: transform, opacity; backface-visibility: hidden; contain: layout paint; }
+.nxw-winner .w-medal { animation: nxwBob 1.6s ease-in-out 1; }
+.nxw-winner b { animation: none; background: none; color: #fff; }
+.nxw-has-win .nxw-aura::after, .nxw-has-win .nxw-orb i { animation-play-state: paused; }
+.nxw-party { contain: strict; }

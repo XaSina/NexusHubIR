@@ -472,7 +472,7 @@ switch ($seg[0] ?? '') {
             page_out('prizes', ['member' => $member, 'list' => prizes_for_member((int) $member['id']), 'bodyClass' => 'page-prizes'], ['title' => 'جایزه‌های من | ' . setting('site_title'), 'noindex' => true]);
         } else {
             $aud = 'm:' . $member['id']; notifs_cleanup();
-            $per = 15; $total = (int) val('SELECT COUNT(*) FROM notifications WHERE audience = ?', [$aud]); $pages = max(1, (int) ceil($total / $per));
+            $per = 10; $total = (int) val('SELECT COUNT(*) FROM notifications WHERE audience = ?', [$aud]); $pages = max(1, (int) ceil($total / $per));
             $page = max(1, min($pages, (int) ($_GET['p'] ?? 1)));
             $list = rows('SELECT * FROM notifications WHERE audience = ? ORDER BY updated_at DESC, id DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per), [$aud]);
             q('UPDATE notifications SET is_read = 1 WHERE audience = ? AND is_read = 0', [$aud]);
@@ -494,7 +494,8 @@ switch ($seg[0] ?? '') {
             break;
         }
         $wheel = row('SELECT * FROM wheels WHERE slug = ?', [$slug]);
-        if (!$wheel || $wheel['audience'] !== 'public' || ($wheel['status'] !== 'active' && !current_user())) not_found();
+        if (!$wheel || $wheel['audience'] !== 'public') not_found();
+        if (!wheel_open($wheel) && !current_user()) { http_response_code(410); page_out('section_closed', ['what' => $wheel['title'], 'icon' => '🎡'], ['title' => $wheel['title'] . ' | ' . setting('site_title'), 'noindex' => true]); break; }
         if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['wheel_ref'][(int) $wheel['id']] = (string) $_GET['ref'];
         wheel_track_ref($wheel, current_member());
         page_out('wheel', ['wheel' => $wheel, 'bodyClass' => 'page-wheel'], [

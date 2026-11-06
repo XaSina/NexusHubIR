@@ -128,7 +128,11 @@ switch ($seg[1] ?? '') {
         if (!$cm) json_out(['ok' => false], 403);
         $aud = 'm:' . $cm['id'];
         if (!empty($_POST['read'])) q('UPDATE notifications SET is_read = 1 WHERE audience = ?', [$aud]);
-        json_out(['ok' => true, 'items' => array_map('notif_json', notifs_for($aud)), 'unread' => notifs_unread($aud)]);
+        notifs_cleanup();
+        $since = date('Y-m-d H:i:s', time() - 86400);
+        $recent = rows('SELECT * FROM notifications WHERE audience = ? AND updated_at >= ? ORDER BY updated_at DESC, id DESC LIMIT 11', [$aud, $since]);
+        $all = (int) val('SELECT COUNT(*) FROM notifications WHERE audience = ?', [$aud]);
+        json_out(['ok' => true, 'items' => array_map('notif_json', array_slice($recent, 0, 10)), 'more' => $all > min(10, count($recent)), 'total' => $all, 'all' => url('notifications'), 'unread' => notifs_unread($aud)]);
 
     case 'story-view':
         $sid = (int) ($_POST['story_id'] ?? 0);

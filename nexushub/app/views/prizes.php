@@ -5,6 +5,8 @@ $count = fn($f) => count(array_filter($list, $f));
 $tabs = ['all' => ['🎁 همه', $count(fn() => true)], 'raffle' => ['🎰 قرعه‌کشی', $count(fn($p) => $p['source'] === 'raffle')], 'wheel' => ['🎡 گردونه شانس', $count(fn($p) => $p['source'] === 'wheel')],
     'discount' => ['🏷️ کدهای تخفیف', $count(fn($p) => $p['prize_type'] === 'discount')]];
 $shown = array_values(array_filter($list, fn($p) => $tab === 'all' || ($tab === 'discount' ? $p['prize_type'] === 'discount' : $p['source'] === $tab)));
+$per = 10; $pages = max(1, (int) ceil(count($shown) / $per)); $page = max(1, min($pages, (int) ($_GET['p'] ?? 1)));
+$shown = array_slice($shown, ($page - 1) * $per, $per);
 ?>
 <link rel="stylesheet" href="<?= e(asset('css/raffle.css')) ?>">
 <section class="container pz-page">
@@ -20,5 +22,6 @@ $shown = array_values(array_filter($list, fn($p) => $tab === 'all' || ($tab === 
         <div class="shop-empty glass" data-reveal><span>🎁</span><b>هنوز جایزه‌ای اینجا نیست</b><p class="muted">توی قرعه‌کشی‌ها شرکت کن یا گردونه شانس رو بچرخون.</p></div>
     <?php else: ?>
         <div class="pz-grid"><?php foreach ($shown as $i => $p): ?><div data-reveal style="--d:<?= $i % 8 ?>"><?= prize_card_html($p) ?></div><?php endforeach; ?></div>
+        <?php if ($pages > 1): ?><div class="pz-pager"><?php for ($i = 1; $i <= $pages; $i++): ?><a class="<?= $i === $page ? 'on' : '' ?>" href="<?= e(url('prizes') . '?' . http_build_query(array_filter(['t' => $tab === 'all' ? '' : $tab, 'p' => $i]))) ?>"><?= fa_num((string) $i) ?></a><?php endfor; ?></div><?php endif; ?>
     <?php endif; ?>
 </section>

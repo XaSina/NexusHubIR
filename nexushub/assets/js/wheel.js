@@ -163,7 +163,7 @@
         var dpr = Math.min(2, window.devicePixelRatio || 1), W = window.innerWidth, H = window.innerHeight;
         cv.width = W * dpr; cv.height = H * dpr; var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
         var cs = getComputedStyle(d), col = [cs.getPropertyValue('--primary').trim() || '#ff1f3d', cs.getPropertyValue('--secondary').trim() || '#7c4dff', '#ffd23f', '#ffffff', '#ff4fa3', '#3ddc84', '#4fc3ff'];
-        var NUM = CALM ? 110 : SAFE ? 170 : 300, ps = [];
+        var NUM = CALM ? 70 : SAFE ? 110 : 220, ps = [];
         function add(x, y, ang, spd, delay) {
             var shape = Math.random(); ps.push({ x: x, y: y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, g: .16 + Math.random() * .1, drag: .985 - Math.random() * .01,
                 w: 6 + Math.random() * 7, h: 3 + Math.random() * 5, rot: Math.random() * 6.3, vr: (Math.random() - .5) * .35, flip: Math.random() * 6.3, vf: .08 + Math.random() * .12,

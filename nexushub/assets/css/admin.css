@@ -1466,3 +1466,15 @@ html.perf-calm .rfl-card { animation: none; }
 .pzx-filter { display: grid; grid-template-columns: minmax(0, 1fr) 220px auto; align-items: center; }
 .pzx-filter .nsel { width: 100%; }
 @media (max-width: 640px) { .pzx-filter { grid-template-columns: minmax(0, 1fr) auto; } .pzx-filter .nsel, .pzx-filter select { grid-column: 1 / -1; } }
+
+/* quick-pick chips sit below their field with real space (they used to be pulled up onto it) */
+.rf-form .rf-quick, .lw-form .rf-quick, .pc-card .rf-quick, .rf-quick { margin: 12px 0 10px !important; }
+.lw-rulebox .af, .rf-form .af { margin-bottom: 0; }
+.lw-rulebox > * + * { margin-top: 10px; }
+.lw-pair { margin-bottom: 4px; }
+
+.rfl-onoff { width: 58px; }
+.rfl-onoff .rfl-sw { pointer-events: none; }
+.rfl-onoff .rfl-sw i::after { transition: transform .3s var(--ease); }
+.rfl-onoff.is-on .rfl-sw i { background: var(--grad); }
+.rfl-onoff.is-on .rfl-sw i::after { transform: translateX(-18px); }
