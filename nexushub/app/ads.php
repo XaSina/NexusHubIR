@@ -21,7 +21,7 @@ function active_ads(string $position): array
 /** خروجی HTML جایگاه تبلیغ */
 function ad_slot(string $position): string
 {
-    $shop = shop_banner_slot($position) . raffle_slot($position) . wheel_slot($position);   // the shop banner and running raffles can sit in any of these places too
+    $shop = shop_banner_slot($position) . raffle_slot($position) . wheel_slot($position) . promo_slot($position);   // the shop banner and running raffles can sit in any of these places too
     $ads = active_ads($position);
     if (!$ads) return $shop;
     $mobile = is_mobile_ua();

@@ -62,7 +62,8 @@ function prize_create(int $memberId, string $source, int $sourceId, string $titl
         $cid = (int) insert('coupons', ['code' => coupon_new_code(), 'member_id' => $memberId, 'prize_id' => $pid, 'pct' => $disc['pct'], 'max_off' => $disc['max'], 'min_total' => $disc['min'],
             'scope' => $disc['scope'], 'scope_ids' => implode(',', $disc['ids']), 'status' => 'active', 'expires_at' => $exp, 'created_at' => $now]);
         q('UPDATE prizes SET coupon_id = ?, deadline = ? WHERE id = ?', [$cid, $exp, $pid]);
-        notify('m:' . $memberId, 'prize', $pid, '🏷️', 'کد تخفیف برات فعال شد: ' . $title, discount_text($disc) . $where . '. موقع خرید از فروشگاه خودکار اعمال می‌شه' . ($exp ? ' (تا ' . jdate('j F Y', strtotime($exp)) . ')' : '') . '.', 'prizes', 'success');
+        $code = (string) val('SELECT code FROM coupons WHERE id = ?', [$cid]);
+        notify('m:' . $memberId, 'prize', $pid, '🏷️', 'کد تخفیف برات فعال شد: ' . $title, 'کد: ' . $code . ' — ' . discount_text($disc) . $where . '. موقع خرید از فروشگاه خودکار پیشنهاد می‌شه' . ($exp ? ' (تا ' . jdate('j F Y', strtotime($exp)) . ')' : '') . '.', 'prizes', 'success');
     } else {
         notify('m:' . $memberId, 'prize', $pid, '🏆', 'جایزه بردی: ' . $title, ltrim($where, ' —') . ($where ? '. ' : '') . prize_claim_text($now), 'prizes', 'success');
     }
@@ -161,6 +162,7 @@ function prizes_for_member(int $mid): array
 /** where a prize came from, for lists */
 function prize_source_label(array $p): string
 {
+    if ($p['source'] === 'gift') return '🎁 هدیه از طرف ' . setting('site_title');
     if ($p['source'] === 'raffle') { $t = val('SELECT title FROM raffles WHERE id = ?', [$p['source_id']]); return '🎰 قرعه‌کشی' . ($t ? ' «' . $t . '»' : ''); }
     $t = val('SELECT title FROM wheels WHERE id = ?', [$p['source_id']]); return '🎡 گردونه شانس' . ($t ? ' «' . $t . '»' : '');
 }

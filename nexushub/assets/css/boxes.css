@@ -271,3 +271,11 @@ html.perf-safe .rfx-emoji, html.perf-safe .rfx-dot { animation: none; }
 @keyframes lwMini { to { transform: rotate(360deg); } }
 .rfx-how { font-size: .74rem; color: var(--muted); }
 html.perf-safe .rfx-art-wheel .rfx-mini { animation: none; }
+
+/* promo box: the code + copy */
+.pmx-code { display: inline-flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px; cursor: pointer; font: inherit; color: var(--text);
+    background: rgba(var(--nxp-rgb), .1); border: 1.5px dashed rgba(var(--nxp-rgb), .6); transition: transform .25s, background .25s; }
+.pmx-code code { font-weight: 900; letter-spacing: 1px; font-size: .95rem; }
+.pmx-code span { padding: 5px 10px; border-radius: 9px; font-size: .74rem; font-weight: 800; color: #fff; background: var(--nxp); }
+.pmx-code:hover { transform: translateY(-2px); background: rgba(var(--nxp-rgb), .18); }
+.rfx-promo .rfx-side { gap: 8px; }

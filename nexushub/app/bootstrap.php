@@ -46,6 +46,7 @@ require NX_APP . '/seo.php';
 require NX_APP . '/raffle.php';
 require NX_APP . '/wheel.php';
 require NX_APP . '/prizes.php';
+require NX_APP . '/promos.php';
 
 nx_session_start();
 

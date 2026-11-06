@@ -167,12 +167,12 @@ case 'telegram': if (!$tgLink) break; ?>
         <div class="tg-cta-bg" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="tg-cta-logo"><img src="<?= e(logo_url()) ?>" alt="" width="120" height="120"><span class="pulse-ring"></span><span class="pulse-ring d2"></span></div>
         <div class="tg-cta-text">
-            <span class="eyebrow"><?= icon('telegram', 16) ?> کانال رسمی تلگرام</span>
-            <h2>به کامیونیتی <span class="grad-text">NEXUS</span> بپیوند 💬</h2>
-            <p>محتوای روزانه، کاربردی و متفاوت 🔥 — گیم 🎮 | تکنولوژی 💻 | ادیت 🎬 | موزیک 🎵 | سرگرمی 🎉 | اخبار روز 📰</p>
+            <?php if (setting('tgblock_eyebrow') !== ''): ?><span class="eyebrow"><?= icon('telegram', 16) ?> <?= e(setting('tgblock_eyebrow')) ?></span><?php endif; ?>
+            <h2><?= str_replace('NEXUS', '<span class="grad-text">NEXUS</span>', e(setting('tgblock_title'))) ?></h2>
+            <?php if (setting('tgblock_text') !== ''): ?><p><?= e(setting('tgblock_text')) ?></p><?php endif; ?>
             <div class="tg-cta-actions">
-                <a class="btn btn-primary btn-lg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 20) ?> عضویت در <?= e(telegram_handle()) ?></a>
-                <?php if ($g = safe_link((string) setting('social_group'))): ?><a class="btn btn-ghost btn-lg" href="<?= e($g) ?>" target="_blank" rel="noopener"><?= icon('comment', 20) ?> گروه گفتگو</a><?php endif; ?>
+                <a class="btn btn-primary btn-lg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 20) ?> <?= e(setting('tgblock_btn', 'عضویت در کانال')) ?></a>
+                <?php if ($g = safe_link((string) setting('social_group'))): ?><a class="btn btn-ghost btn-lg" href="<?= e($g) ?>" target="_blank" rel="noopener"><?= icon('comment', 20) ?> <?= e(setting('tgblock_group_btn', 'گروه گفتگو')) ?></a><?php endif; ?>
             </div>
         </div>
     </div>

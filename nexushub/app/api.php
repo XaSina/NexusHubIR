@@ -205,6 +205,25 @@ switch ($seg[1] ?? '') {
         $r = row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
         json_out(['ok' => true] + raffle_state($r, $me));
 
+    /* ---------- discount code typed in the cart ---------- */
+    case 'promo-apply':
+        $code = strtoupper(trim(en_num((string) ($_POST['code'] ?? ''))));
+        if ($code === '') { unset($_SESSION['promo_code']); json_out(['ok' => true, 'cleared' => true]); }
+        if (time() - (int) ($_SESSION['promo_try_t'] ?? 0) < 60) { $_SESSION['promo_try_n'] = (int) ($_SESSION['promo_try_n'] ?? 0) + 1; } else { $_SESSION['promo_try_t'] = time(); $_SESSION['promo_try_n'] = 1; }
+        if ((int) $_SESSION['promo_try_n'] > 8) json_out(['ok' => false, 'error' => 'چند لحظه صبر کن و دوباره امتحان کن.'], 429);
+        $me = current_member();
+        if ($p = promo_find($code)) {
+            if (($why = promo_problem($p, $me)) !== '') json_out(['ok' => false, 'error' => $why], 422);
+            $_SESSION['promo_code'] = $p['code'];
+            $pc = promo_for_cart($p, cart_lines());
+            json_out(['ok' => true, 'code' => $p['code'], 'text' => discount_text(promo_disc($p)), 'off' => $pc['off'], 'why' => $pc['why'], 'msg' => $pc['why'] ? '⚠️ ' . $pc['why'] : '✅ کد اعمال شد: ' . money($pc['off']) . ' تومان تخفیف']);
+        }
+        if ($me && ($c = row("SELECT * FROM coupons WHERE code = ? AND member_id = ?", [$code, $me['id']]))) {
+            if ($c['status'] !== 'active') json_out(['ok' => false, 'error' => $c['status'] === 'used' ? 'این کد قبلاً استفاده شده.' : 'مهلت این کد تموم شده.'], 422);
+            json_out(['ok' => true, 'code' => $c['code'], 'personal' => true, 'msg' => '✅ این کد مال خودته؛ توی مرحله‌ی بعد خودکار پیشنهاد می‌شه.']);
+        }
+        json_out(['ok' => false, 'error' => 'این کد تخفیف پیدا نشد.'], 404);
+
     /* ---------- lucky wheel ---------- */
     case 'wheel-state':
     case 'wheel-spin':

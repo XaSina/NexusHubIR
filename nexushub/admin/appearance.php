@@ -7,7 +7,7 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
     'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin',
-    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_made', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
+    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_cta_btn', 'footer_made', 'tgblock_eyebrow', 'tgblock_title', 'tgblock_text', 'tgblock_btn', 'tgblock_group_btn', 'contact_style', 'contact_icons_title', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
 
 if (is_post()) {
     csrf_check();
@@ -48,9 +48,10 @@ if (is_post()) {
         $save['trust_badges'] = json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     if (isset($save['trust_title'])) $save['trust_title'] = mb_substr($save['trust_title'], 0, 60);
-    foreach (['brand_sub', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_title', 'footer_made', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title'] as $tk)
+    foreach (['brand_sub', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_title', 'footer_cta_btn', 'tgblock_eyebrow', 'tgblock_title', 'tgblock_btn', 'tgblock_group_btn', 'contact_icons_title', 'footer_made', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title'] as $tk)
         if (isset($save[$tk])) $save[$tk] = mb_substr(str_replace(["\r", "\n"], ' ', $save[$tk]), 0, 120);
-    foreach (['footer_cta_text', 'auth_welcome_text'] as $tk) if (isset($save[$tk])) $save[$tk] = mb_substr($save[$tk], 0, 400);
+    if (isset($save['contact_style'])) $save['contact_style'] = $save['contact_style'] === 'cards' ? 'cards' : 'icons';
+    foreach (['footer_cta_text', 'auth_welcome_text', 'tgblock_text'] as $tk) if (isset($save[$tk])) $save[$tk] = mb_substr($save[$tk], 0, 400);
     // a label left empty falls back to its default
     foreach (['hdr_tg_label', 'hdr_login_label', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title'] as $tk)
         if (isset($save[$tk]) && trim($save[$tk]) === '') $save[$tk] = default_settings()[$tk];
@@ -309,6 +310,20 @@ adm_head('ظاهر سایت', 'appearance');
             <?= f_switch('footer_cta_on', 'کارت تلگرام در فوتر', setting_on('footer_cta_on')) ?>
             <?= f_text('footer_cta_title', 'عنوان کارت تلگرام', $s['footer_cta_title']) ?>
             <?= f_textarea('footer_cta_text', 'متن کارت تلگرام', $s['footer_cta_text'], ['rows' => 2]) ?>
+            <?= f_text('footer_cta_btn', 'متن دکمه‌ی کارت تلگرام', (string) setting('footer_cta_btn'), ['placeholder' => 'کانال تلگرام']) ?>
+            <div class="ap-sub"><b>💬 بلوک «کامیونیتی تلگرام» صفحه‌ی اصلی</b></div>
+            <div class="grid g2">
+                <?= f_text('tgblock_eyebrow', 'برچسب بالا (خالی = نمایش داده نشه)', (string) setting('tgblock_eyebrow')) ?>
+                <?= f_text('tgblock_title', 'عنوان', (string) setting('tgblock_title')) ?>
+                <?= f_text('tgblock_btn', 'متن دکمه‌ی کانال', (string) setting('tgblock_btn')) ?>
+                <?= f_text('tgblock_group_btn', 'متن دکمه‌ی گروه', (string) setting('tgblock_group_btn')) ?>
+            </div>
+            <?= f_textarea('tgblock_text', 'متن بلوک', (string) setting('tgblock_text'), ['rows' => 2]) ?>
+            <div class="ap-sub"><b>📮 صفحه‌ی تماس با ما</b></div>
+            <div class="grid g2">
+                <?= f_select('contact_style', 'نمایش راه‌های ارتباطی', ['icons' => 'فقط لوگوهای متحرک کنار هم', 'cards' => 'کارت با اسم و آدرس'], (string) setting('contact_style', 'icons')) ?>
+                <?= f_text('contact_icons_title', 'متن بالای لوگوها', (string) setting('contact_icons_title', 'از این راه‌ها هم در دسترسیم')) ?>
+            </div>
             <?= f_text('footer_made', 'متن پایین‌ترین خط (خالی = نمایش داده نشه)', $s['footer_made'], ['ltr' => true, 'hint' => 'علامت ❤ خودکار رنگی و تپنده می‌شه']) ?>
         </div>
         <div class="card">

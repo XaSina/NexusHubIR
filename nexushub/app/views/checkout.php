@@ -4,6 +4,8 @@ $total = array_sum(array_map(fn($l) => (int) $l['total'], $lines));
 $coupons = $coupons ?? [];
 $best = 0; $bestOff = 0;
 foreach ($coupons as $cc) if ($cc['off'] > $bestOff) { $bestOff = $cc['off']; $best = (int) $cc['c']['id']; }
+$promo = promo_session(); $pc = null; $pWhy = '';
+if ($promo) { $pWhy = promo_problem($promo, $member); $pc = promo_for_cart($promo, $lines); if ($pWhy === '' && $pc['why'] === '' && $pc['off'] >= $bestOff) { $bestOff = $pc['off']; $best = 'p'; } }
 $bad = (bool) array_filter($lines, fn($l) => $l['error']);
 ?>
 <section class="container shop-page">
@@ -42,12 +44,16 @@ $bad = (bool) array_filter($lines, fn($l) => $l['error']);
         <aside class="cart-sum glass" data-reveal>
             <h3>پرداخت</h3>
             <div class="pay-method on"><span class="pm-ic"><?= icon('card', 22) ?></span><span><b>کارت‌به‌کارت</b><small>واریز به کارت و ارسال تصویر فیش</small></span><i class="pm-check">✓</i></div>
-            <?php if ($coupons): ?>
+            <?php if ($coupons || $promo): ?>
             <div class="co-coupons">
                 <small class="co-cp-title">🏷️ کدهای تخفیف جایزه‌ی تو</small>
                 <label class="co-cp"><input type="radio" name="coupon" value="0" data-off="0" <?= $best ? '' : 'checked' ?>><span><b>بدون تخفیف</b></span></label>
+                <?php if ($promo): $pBad = $pWhy !== '' ? $pWhy : $pc['why']; ?>
+                <label class="co-cp<?= $pBad ? ' is-off' : '' ?>"><input type="radio" name="coupon" value="p:<?= (int) $promo['id'] ?>" data-off="<?= $pBad ? 0 : (int) $pc['off'] ?>" <?= $pBad ? 'disabled' : '' ?> <?= $best === 'p' ? 'checked' : '' ?>>
+                    <span><b><?= e(discount_text(promo_disc($promo))) ?></b><small><?= $pBad ? '⚠️ ' . e($pBad) : '− ' . money((int) $pc['off']) . ' تومان' ?></small></span><code dir="ltr"><?= e($promo['code']) ?></code></label>
+                <?php endif; ?>
                 <?php foreach ($coupons as $cc): $c = $cc['c']; ?>
-                <label class="co-cp<?= $cc['why'] ? ' is-off' : '' ?>"><input type="radio" name="coupon" value="<?= (int) $c['id'] ?>" data-off="<?= (int) $cc['off'] ?>" <?= $cc['why'] ? 'disabled' : '' ?> <?= (int) $c['id'] === $best ? 'checked' : '' ?>>
+                <label class="co-cp<?= $cc['why'] ? ' is-off' : '' ?>"><input type="radio" name="coupon" value="<?= (int) $c['id'] ?>" data-off="<?= (int) $cc['off'] ?>" <?= $cc['why'] ? 'disabled' : '' ?> <?= $best !== 'p' && (int) $c['id'] === (int) $best ? 'checked' : '' ?>>
                     <span><b><?= e($cc['text']) ?></b><small><?= $cc['why'] ? '⚠️ ' . e($cc['why']) : '− ' . money($cc['off']) . ' تومان' ?><?= $c['expires_at'] ? ' · تا ' . e(jdate('j F', strtotime($c['expires_at']))) : '' ?></small></span><code dir="ltr"><?= e($c['code']) ?></code></label>
                 <?php endforeach; ?>
             </div>

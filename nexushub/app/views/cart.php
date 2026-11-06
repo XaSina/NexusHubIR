@@ -45,6 +45,11 @@ foreach ($lines as $l) { if ($l['error'] || $l['total'] === null) $bad = true; e
 
         <aside class="cart-sum glass" data-reveal>
             <h3>خلاصه سفارش</h3>
+            <form class="co-promo" id="coPromo" autocomplete="off">
+                <label for="coPromoIn">🏷️ کد تخفیف داری؟</label>
+                <div class="co-promo-row"><input id="coPromoIn" name="code" dir="ltr" placeholder="مثلاً NEXUS20" value="<?= e((string) ($_SESSION['promo_code'] ?? '')) ?>" maxlength="30"><button type="submit" class="btn btn-ghost btn-sm">اعمال</button></div>
+                <small class="co-promo-msg" id="coPromoMsg"><?php if ($pp = promo_session()): $pcx = promo_for_cart($pp, $lines); ?><?= $pcx['why'] ? '⚠️ ' . e($pcx['why']) : '✅ ' . e(discount_text(promo_disc($pp))) . ' — توی مرحله‌ی بعد کم می‌شه' ?><?php endif; ?></small>
+            </form>
             <div class="cs-row"><span>تعداد اقلام</span><b><?= fa_num((string) cart_count()) ?></b></div>
             <div class="cs-row cs-total"><span>مبلغ کل</span><b><?= money($total) ?> <small>تومان</small></b></div>
             <?php if ($bad): ?><div class="alert alert-error small">برخی اقلام مشکل دارند؛ آن‌ها را حذف یا اصلاح کنید.</div><?php endif; ?>
@@ -55,3 +60,17 @@ foreach ($lines as $l) { if ($l['error'] || $l['total'] === null) $bad = true; e
     </div>
     <?php endif; ?>
 </section>
+
+<script>
+(function () {
+    var f = document.getElementById('coPromo'); if (!f) return;
+    f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var msg = document.getElementById('coPromoMsg'), fd = new FormData(f); fd.append('_csrf', (window.NX || {}).csrf || '');
+        msg.className = 'co-promo-msg'; msg.textContent = '…';
+        fetch(((window.NX || {}).base || '') + '/api/promo-apply', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) {
+            msg.textContent = j.ok ? (j.cleared ? 'کد برداشته شد.' : j.msg) : '⚠️ ' + (j.error || 'خطا'); msg.className = 'co-promo-msg ' + (j.ok ? 'ok' : 'bad');
+        }).catch(function () { msg.textContent = '⚠️ اتصال برقرار نشد'; });
+    });
+})();
+</script>

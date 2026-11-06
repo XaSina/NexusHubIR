@@ -570,4 +570,36 @@ return [
   UNIQUE KEY `u_coupon_code` (`code`),
   KEY `k_cp_member` (`member_id`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+"CREATE TABLE IF NOT EXISTS `promo_codes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(30) NOT NULL,
+  `title` VARCHAR(120) NULL,
+  `pct` DECIMAL(5,2) NOT NULL,
+  `max_off` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `min_total` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `scope` VARCHAR(10) NOT NULL DEFAULT 'all',
+  `scope_ids` VARCHAR(500) NULL,
+  `max_uses` INT UNSIGNED NOT NULL DEFAULT 0,
+  `uses` INT UNSIGNED NOT NULL DEFAULT 0,
+  `starts_at` DATETIME NULL,
+  `expires_at` DATETIME NULL,
+  `active` TINYINT(1) NOT NULL DEFAULT 1,
+  `box_on` TINYINT(1) NOT NULL DEFAULT 0,
+  `box_places` VARCHAR(255) NULL,
+  `box_theme` VARCHAR(20) NULL,
+  `box_accent` VARCHAR(20) NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `u_promo_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+"CREATE TABLE IF NOT EXISTS `promo_uses` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `promo_id` INT UNSIGNED NOT NULL,
+  `member_id` INT UNSIGNED NOT NULL,
+  `order_id` INT UNSIGNED NULL,
+  `discount` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `u_pu` (`promo_id`, `member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 ];

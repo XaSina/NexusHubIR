@@ -394,15 +394,23 @@ function new_code(string $table, string $prefix): string
 }
 
 /** Create an order from the cart. Returns [order|null, error]. */
-function order_create(array $member, string $note = '', int $couponId = 0): array
+function order_create(array $member, string $note = '', $pick = 0): array
 {
     $lines = cart_lines();
     if (!$lines) return [null, 'سبد خرید شما خالی است.'];
     foreach ($lines as $l) if ($l['error']) return [null, $l['title'] . ': ' . $l['error']];
     $total = array_sum(array_column($lines, 'total'));
     if ($total <= 0) return [null, 'مبلغ سفارش معتبر نیست.'];
-    $discount = 0; $coupon = null;
-    if ($couponId) {   // a prize coupon: checked again here, used once
+    $discount = 0; $coupon = null; $promo = null;
+    $pick = (string) $pick;
+    if (str_starts_with($pick, 'p:')) {   // the public code typed in the cart: checked again here
+        $promo = row('SELECT * FROM promo_codes WHERE id = ?', [(int) substr($pick, 2)]);
+        if (!$promo || ($why = promo_problem($promo, $member)) !== '') return [null, $why ?? 'کد تخفیف معتبر نیست.'];
+        $pc = promo_for_cart($promo, $lines);
+        if ($pc['why'] !== '' || $pc['off'] <= 0) return [null, 'کد تخفیف روی این سبد اعمال نمی‌شه: ' . $pc['why']];
+        $discount = min($pc['off'], $total - 1);
+    } elseif ((int) ltrim($pick, 'c:')) {   // a member coupon (prize / gift): used once
+        $couponId = (int) ltrim($pick, 'c:');
         foreach (coupons_for_cart($member, $lines) as $cc) if ((int) $cc['c']['id'] === $couponId) $coupon = $cc;
         if (!$coupon || $coupon['why'] !== '' || $coupon['off'] <= 0) return [null, 'کد تخفیف انتخاب‌شده روی این سبد اعمال نمی‌شه.'];
         $discount = min($coupon['off'], $total - 1);
@@ -412,7 +420,7 @@ function order_create(array $member, string $note = '', int $couponId = 0): arra
     try {
         $code = new_code('orders', 'NX');
         $oid = insert('orders', [
-            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total - $discount, 'discount' => $discount, 'coupon_id' => $coupon ? (int) $coupon['c']['id'] : null,
+            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total - $discount, 'discount' => $discount, 'coupon_id' => $coupon ? (int) $coupon['c']['id'] : null, 'promo_id' => $promo ? (int) $promo['id'] : null,
             'items_count' => array_sum(array_column($lines, 'qty')), 'customer_note' => mb_substr(trim($note), 0, 1000) ?: null,
             'rates' => json_encode(['usd' => $r['usd'], 'ton' => $r['ton'], 'margin' => (float) setting('shop_margin', '0')]),
             'ip' => client_ip(), 'expires_at' => date('Y-m-d H:i:s', time() + 60 * max(10, (int) setting('shop_pay_minutes', '60'))),
@@ -427,6 +435,11 @@ function order_create(array $member, string $note = '', int $couponId = 0): arra
             ]);
             if ($l['variant'] && $l['variant']['stock'] !== null) q('UPDATE product_variants SET stock = GREATEST(stock - ?, 0) WHERE id = ?', [$l['qty'], $l['variant']['id']]);
         }
+        if ($promo) {   // the limit is checked again inside the transaction (two people at the last place)
+            $ok = q('UPDATE promo_codes SET uses = uses + 1 WHERE id = ? AND active = 1 AND (max_uses = 0 OR uses < max_uses)', [$promo['id']])->rowCount();
+            if (!$ok) throw new RuntimeException('promo-full');
+            q('INSERT INTO promo_uses (promo_id, member_id, order_id, discount, created_at) VALUES (?, ?, ?, ?, ?)', [$promo['id'], $member['id'], $oid, $discount, now()]);
+        }
         if ($coupon) {
             $ok = q("UPDATE coupons SET status = 'used', order_id = ?, used_at = ? WHERE id = ? AND status = 'active'", [$oid, now(), $coupon['c']['id']])->rowCount();
             if (!$ok) throw new RuntimeException('coupon-taken');
@@ -436,9 +449,11 @@ function order_create(array $member, string $note = '', int $couponId = 0): arra
     } catch (Throwable $e) {
         db()->rollBack();
         if ($e->getMessage() === 'coupon-taken') return [null, 'این کد تخفیف قبلاً استفاده شده.'];
+        if ($e->getMessage() === 'promo-full') return [null, 'ظرفیت این کد تخفیف همین الان پر شد.'];
+        if ($e instanceof PDOException && str_contains($e->getMessage(), 'u_pu')) return [null, 'قبلاً از این کد استفاده کردی.'];
         throw $e;
     }
-    $_SESSION['cart'] = [];
+    $_SESSION['cart'] = []; unset($_SESSION['promo_code']);
     $o = row('SELECT * FROM orders WHERE id = ?', [$oid]);
     order_notify($o);
     return [$o, ''];
@@ -489,7 +504,7 @@ function order_set_status(array $o, string $status, array $extra = []): array
     if ($status === 'approved') $d['approved_at'] = now();
     if ($status === 'completed') { $d['completed_at'] = now(); if (!$o['approved_at']) $d['approved_at'] = now(); }
     update('orders', $d, (int) $o['id']);
-    if (in_array($status, ['canceled', 'expired'], true) && !in_array($prev, ['canceled', 'expired', 'completed'], true)) { order_restock($o); coupon_release($o); }
+    if (in_array($status, ['canceled', 'expired'], true) && !in_array($prev, ['canceled', 'expired', 'completed'], true)) { order_restock($o); coupon_release($o); promo_release($o); }
     if ($status === 'completed' && $prev !== 'completed') {
         foreach (order_items((int) $o['id']) as $it) if ($it['product_id']) q('UPDATE products SET sales = sales + ? WHERE id = ?', [$it['qty'], $it['product_id']]);
     }

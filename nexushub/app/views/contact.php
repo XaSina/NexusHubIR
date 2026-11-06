@@ -19,22 +19,25 @@
         <label class="field"><span>پیام *</span><textarea name="body" rows="6" required><?= e($old['body']) ?></textarea></label>
         <button class="btn btn-primary btn-lg" type="submit"><?= icon('send', 18) ?> ارسال پیام</button>
     </form>
-    <div class="contact-side">
-        <?php foreach (social_links() as $i => $s): ?>
-            <a class="contact-card glass tilt" href="<?= e($s['url']) ?>" target="_blank" rel="noopener" data-reveal style="--d:<?= $i ?>">
-                <span class="cc-icon"><?= icon($s['icon'], 24) ?></span>
-                <span><b><?= e($s['label']) ?></b><small dir="ltr"><?= e(preg_replace('~^https?://~', '', $s['url'])) ?></small></span>
+    <?php $cItems = [];
+    foreach (social_links() as $sl) $cItems[] = ['url' => $sl['url'], 'icon' => icon($sl['icon'], 26), 'label' => $sl['label'], 'sub' => preg_replace('~^https?://~', '', $sl['url']), 'blank' => true, 'k' => $sl['icon']];
+    if ($adm = safe_link((string) setting('social_admin'))) $cItems[] = ['url' => $adm, 'icon' => '👑', 'label' => 'ارتباط با مدیر', 'sub' => preg_replace('~^https?://~', '', $adm), 'blank' => true, 'k' => 'admin'];
+    if ($em = (string) setting('contact_email')) $cItems[] = ['url' => 'mailto:' . $em, 'icon' => icon('mail', 26), 'label' => 'ایمیل', 'sub' => $em, 'blank' => false, 'k' => 'mail'];
+    $iconsOnly = setting('contact_style', 'icons') !== 'cards'; ?>
+    <div class="contact-side<?= $iconsOnly ? ' cs-icons' : '' ?>">
+        <?php if ($iconsOnly): ?>
+            <div class="cs-icon-row glass" data-reveal>
+                <small><?= e(setting('contact_icons_title', 'از این راه‌ها هم در دسترسیم')) ?></small>
+                <div class="cs-icon-list">
+                <?php foreach ($cItems as $i => $c): ?>
+                    <a class="cs-ic cs-<?= e($c['k']) ?>" href="<?= e($c['url']) ?>"<?= $c['blank'] ? ' target="_blank" rel="noopener"' : '' ?> title="<?= e($c['label']) ?>" aria-label="<?= e($c['label']) ?>" style="--i:<?= $i ?>"><?= $c['icon'] ?></a>
+                <?php endforeach; ?>
+                </div>
+            </div>
+        <?php else: foreach ($cItems as $i => $c): ?>
+            <a class="contact-card glass tilt" href="<?= e($c['url']) ?>"<?= $c['blank'] ? ' target="_blank" rel="noopener"' : '' ?> data-reveal style="--d:<?= $i ?>">
+                <span class="cc-icon"><?= $c['icon'] ?></span><span><b><?= e($c['label']) ?></b><small dir="ltr"><?= e($c['sub']) ?></small></span>
             </a>
-        <?php endforeach; ?>
-        <?php if ($adm = safe_link((string) setting('social_admin'))): ?>
-            <a class="contact-card glass tilt" href="<?= e($adm) ?>" target="_blank" rel="noopener" data-reveal>
-                <span class="cc-icon">👑</span><span><b>ارتباط با مدیر</b><small dir="ltr"><?= e(preg_replace('~^https?://~', '', $adm)) ?></small></span>
-            </a>
-        <?php endif; ?>
-        <?php if (setting('contact_email')): ?>
-            <a class="contact-card glass tilt" href="mailto:<?= e(setting('contact_email')) ?>" data-reveal>
-                <span class="cc-icon"><?= icon('mail', 24) ?></span><span><b>ایمیل</b><small dir="ltr"><?= e(setting('contact_email')) ?></small></span>
-            </a>
-        <?php endif; ?>
+        <?php endforeach; endif; ?>
     </div>
 </section>

@@ -327,6 +327,10 @@
     });
 
     /* ---------- Scroll: header, progress, to-top, parallax ---------- */
+    (function liftToTop() {   // the back-to-top button moves up while the footer's last line is visible, so it never covers it
+        var tt = $('#toTop'), fb = $('.f-bottom'); if (!tt || !fb || !window.IntersectionObserver) return;
+        new IntersectionObserver(function (es) { es.forEach(function (en) { tt.style.setProperty('--lift', Math.round(en.intersectionRect.height + 6) + 'px'); tt.classList.toggle('at-end', en.isIntersecting); }); }, { threshold: [0, .25, .5, .75, 1] }).observe(fb);
+    })();
     var header = $('#siteHeader'), prog = $('#readProgress'), toTop = $('#toTop'), postBody = $('.post-body'), par = $('.parallax .cover');
     var ring = toTop ? ($('.tt-prog', toTop) || $('circle', toTop)) : null;
     // phones: nothing on the page may move or change size while it scrolls (weaker GPUs then mix up layers:

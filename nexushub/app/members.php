@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 11;   // v10: lucky wheel tables (created by schema.php)
+const NX_DB_VERSION = 12;   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -59,6 +59,10 @@ function nx_migrate(): void
         if ($oc && !in_array('discount', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `discount` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `total`");
         if ($oc && !in_array('coupon_id', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `coupon_id` INT UNSIGNED NULL AFTER `discount`");
         try { prizes_backfill(); } catch (Throwable $e) {}
+    }
+    if ($v < 12) {
+        $oc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders'"), 'COLUMN_NAME');
+        if ($oc && !in_array('promo_id', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `promo_id` INT UNSIGNED NULL AFTER `coupon_id`");
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

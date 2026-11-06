@@ -261,7 +261,7 @@ $jsCfg['cart'] = $cartN;
             <span class="f-cta-icon"><?= icon('telegram', 30) ?></span>
             <h4><?= e(setting('footer_cta_title')) ?></h4>
             <p><?= e(setting('footer_cta_text')) ?></p>
-            <?php if ($tgLink): ?><a class="btn btn-primary" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(telegram_handle() ?: 'کانال تلگرام') ?></a><?php endif; ?>
+            <?php if ($tgLink): ?><a class="btn btn-primary" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(setting('footer_cta_btn', 'کانال تلگرام')) ?></a><?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

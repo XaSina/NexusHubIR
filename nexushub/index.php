@@ -295,7 +295,7 @@ switch ($seg[0] ?? '') {
             if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
             elseif (empty($_POST['agree'])) $err = 'برای ثبت سفارش، قوانین فروشگاه را بپذیرید.';
             else {
-                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''), (int) ($_POST['coupon'] ?? 0));
+                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''), (string) ($_POST['coupon'] ?? '0'));
                 if ($order) redirect('order/' . $order['code'] . '?new=1');
             }
         }
