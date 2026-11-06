@@ -344,6 +344,7 @@ function icon(string $name, int $size = 20): string
         'arrow-left' => '<path d="M19 12H5M11 6l-6 6 6 6"/>',
         'arrow-right' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
         'arrow-up' => '<path d="M12 19V5M6 11l6-6 6 6"/>',
+        'chevron-down' => '<path d="m6 9 6 6 6-6"/>',
         'chevron-left' => '<path d="m15 6-6 6 6 6"/>',
         'chevron-right' => '<path d="m9 6 6 6-6 6"/>',
         'x' => '<path d="M4 4l16 16M20 4 4 20"/>',

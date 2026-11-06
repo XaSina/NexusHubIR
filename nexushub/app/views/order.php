@@ -29,7 +29,7 @@ $steps = [
     </div>
 
     <?php if (!$dead): ?>
-    <ol class="order-steps stage-<?= $stage ?>" style="--p:<?= ($stage - 1) / 4 ?>" data-reveal>
+    <ol class="order-steps glass stage-<?= $stage ?>" style="--p:<?= ($stage - 1) / 4 ?>" data-reveal>
         <?php foreach ($steps as $i => [$ic, $name, $sub]): $n = $i + 1;
             $cls = $n < $stage || ($n === 5 && $st === 'completed') ? 'done' : ($n === $stage ? 'now' : ''); ?>
             <li class="<?= $cls ?>" style="--i:<?= $i ?>">

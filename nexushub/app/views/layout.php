@@ -268,7 +268,7 @@ $jsCfg['cart'] = $cartN;
     </div>
     <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('*'); ?>
     <?php if ($tBadges || $tAdmin): ?>
-    <div class="container f-trust"<?= $tAdmin ? ' data-admin' : '' ?>>
+    <div class="container f-trust glass"<?= $tAdmin ? ' data-admin' : '' ?>>
         <div class="f-trust-head"><span class="f-trust-ic"><?= icon('shield', 18) ?></span><b><?= e(setting('trust_title', 'نمادهای اعتماد')) ?></b></div>
         <div class="f-trust-list">
             <?php foreach (trust_badges() as $tb): $h = trust_badge_html($tb); if ($h === '') continue; ?><div class="f-trust-item" data-name="<?= e($tb['title'] ?? '') ?>"><?= $h ?></div><?php endforeach; ?>
@@ -316,9 +316,11 @@ $jsCfg['cart'] = $cartN;
                 <?php if (setting_on('shop_support_on')): ?><a href="<?= e(url('support')) ?>" style="--i:<?= count($drawerItems) + 1 ?>"><span><i class="dn-ic"><?= icon('support', 16) ?></i>پشتیبانی</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
             <?php endif; ?>
         </nav>
-        <?php if ($me): ?><a class="btn btn-ghost btn-block" href="<?= e(url('account')) ?>" data-warp><?= icon('user', 18) ?> حساب کاربری (<?= e($me['first_name']) ?>)</a>
-        <?php else: ?><a class="btn btn-ghost btn-block" href="<?= e(url('auth')) ?>" data-warp><?= icon('user', 18) ?> <?= e(setting('hdr_login_label')) ?></a><?php endif; ?>
-        <?php if ($tgLink): ?><a class="btn btn-primary btn-block" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> <?= e(setting('hdr_tg_label')) ?></a><?php endif; ?>
+        <div class="dr-foot">
+            <?php if ($me): ?><a class="dr-act dr-acc" href="<?= e(url('account')) ?>" data-warp><span class="dr-ic"><?= icon('user', 19) ?></span><span class="dr-t"><b>حساب کاربری</b><small><?= e(trim($me['first_name'] . ' ' . $me['last_name'])) ?></small></span><?= icon('chevron-left', 16) ?></a>
+            <?php else: ?><a class="dr-act dr-acc" href="<?= e(url('auth')) ?>" data-warp><span class="dr-ic"><?= icon('user', 19) ?></span><span class="dr-t"><b><?= e(setting('hdr_login_label')) ?></b><small>با شماره موبایل، چند ثانیه‌ای</small></span><?= icon('chevron-left', 16) ?></a><?php endif; ?>
+            <?php if ($tgLink): ?><a class="dr-act dr-tg" href="<?= e($tgLink) ?>" target="_blank" rel="noopener"><span class="dr-ic"><?= icon('telegram', 19) ?></span><span class="dr-t"><b><?= e(setting('hdr_tg_label')) ?></b><small>جدیدترین‌ها، زودتر از همه</small></span><?= icon('chevron-left', 16) ?></a><?php endif; ?>
+        </div>
     </aside>
 </div>
 

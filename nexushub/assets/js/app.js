@@ -947,3 +947,14 @@
     });
     rotate();
 })();
+
+/* «بیشتر» for clamped text: the button shows only when the text is really cut */
+(function () {
+    'use strict';
+    document.querySelectorAll('[data-clamp]').forEach(function (c) {
+        var p = c.querySelector('p'), b = c.querySelector('.nx-more'); if (!p || !b) return;
+        var check = function () { if (!c.classList.contains('open')) b.hidden = p.scrollHeight <= p.clientHeight + 2; };
+        check(); window.addEventListener('resize', check); if (document.fonts && document.fonts.ready) document.fonts.ready.then(check);
+        b.addEventListener('click', function () { var o = c.classList.toggle('open'); b.querySelector('span').textContent = o ? 'کمتر' : 'بیشتر'; });
+    });
+})();

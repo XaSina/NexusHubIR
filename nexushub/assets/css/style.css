@@ -1629,3 +1629,36 @@ html.perf-off .nx-invalid { animation: none; }
 .ai-code { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(var(--primary-rgb), .45); background: rgba(var(--surface-rgb), .8); color: var(--text); cursor: pointer; font: inherit; }
 .ai-code code { font-family: inherit; font-weight: 900; letter-spacing: 2px; font-size: .95rem; }
 @media (max-width: 600px) { .acc-invite .ai-act { width: 100%; } .acc-invite .ai-act > * { flex: 1; justify-content: center; } }
+
+/* drawer: account + Telegram as two solid action cards (never squeezed by a long menu) */
+.drawer-panel .dr-foot { margin-top: auto; flex-shrink: 0; display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.dr-act { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border-radius: 16px; color: var(--text); text-decoration: none; border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(var(--text-rgb), .06), rgba(var(--text-rgb), .025)); transition: transform .25s var(--ease), border-color .25s, box-shadow .25s, background .25s; }
+.dr-act:hover, .dr-act:active { transform: translateY(-1px); border-color: rgba(var(--primary-rgb), .5); box-shadow: 0 10px 24px -14px rgba(var(--primary-rgb), .8); }
+.dr-act > svg { flex-shrink: 0; opacity: .7; transition: transform .25s; }
+.dr-act:hover > svg { transform: translateX(-3px); opacity: 1; }
+.dr-ic { flex-shrink: 0; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--primary); background: rgba(var(--primary-rgb), .14); border: 1px solid rgba(var(--primary-rgb), .35); }
+.dr-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: right; }
+.dr-t b { font-size: .95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dr-t small { font-size: .72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dr-tg { background: var(--grad); border-color: transparent; color: var(--on-grad, #fff); box-shadow: 0 14px 30px -16px rgba(var(--primary-rgb), .95); }
+.dr-tg .dr-ic { color: inherit; background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .32); }
+.dr-tg .dr-t small { color: inherit; opacity: .78; }
+.dr-tg:hover { border-color: transparent; filter: brightness(1.06); }
+.drawer-panel .drawer-nav { flex-shrink: 0; }
+
+/* the footer «about» block becomes a card on phones: it follows the chosen card style too */
+@media (max-width: 900px) {
+    body.cards-cyber .f-about { border-radius: 4px; border-color: rgba(var(--primary-rgb), .42); clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); }
+    body.cards-outline .f-about { background: transparent; border-color: rgba(var(--primary-rgb), .25); }
+    body.cards-neon .f-about { box-shadow: 0 0 0 1px rgba(var(--primary-rgb), .35), 0 0 30px rgba(var(--primary-rgb), .18); }
+}
+.f-trust.glass { padding: 18px 20px; }
+
+/* long text shown in full on demand: 3 lines, then «بیشتر / کمتر» */
+.nx-clamp { width: 100%; }
+.nx-clamp p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.nx-clamp.open p { -webkit-line-clamp: unset; display: block; }
+.nx-more { margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 10px; border: 1px solid rgba(var(--primary-rgb), .35); background: rgba(var(--primary-rgb), .1); color: var(--primary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+.nx-more svg { transition: transform .3s; }
+.nx-clamp.open .nx-more svg { transform: rotate(180deg); }

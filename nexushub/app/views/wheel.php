@@ -13,7 +13,7 @@ $S = wheel_state($w, $me);
         <div class="lw-head-t">
             <span class="rf-chip rf-st-active">گردونه شانس</span>
             <h1><?= e($w['title']) ?></h1>
-            <?php if (trim((string) $w['description']) !== ''): ?><p><?= e(str_excerpt((string) $w['description'], 180)) ?></p><?php endif; ?>
+            <?php if (trim((string) $w['description']) !== ''): ?><div class="nx-clamp" data-clamp><p><?= nl2br(e(trim((string) $w['description']))) ?></p><button type="button" class="nx-more" hidden><span>بیشتر</span> <?= icon('chevron-down', 14) ?></button></div><?php endif; ?>
         </div>
         <?php if (!empty($w['end_at'])): ?><span class="lw-head-end"><?= icon('calendar', 15) ?> تا <?= e(jdate('j F — H:i', strtotime($w['end_at']))) ?></span><?php endif; ?>
     </div>

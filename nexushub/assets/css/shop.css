@@ -721,3 +721,8 @@ section.container.shop-page::before, section.container.shop-page::after, .site-m
 .nb-dim { position: fixed; inset: 0; z-index: 48; background: rgba(var(--bg-rgb, 5, 6, 10), .55); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s ease, visibility 0s linear .25s; }
 .nb-dim.on { opacity: 1; visibility: visible; transition: opacity .25s ease; }
 html.perf-off .nb-dim { transition: none; }
+
+/* store search: solid field over the hero (no glow or grid showing through half of it) */
+.sh-search { background: linear-gradient(160deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-rgb), .9)); border-color: rgba(var(--text-rgb), .14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 10px 26px -18px rgba(0, 0, 0, .9); position: relative; z-index: 2; isolation: isolate; }
+.sh-search input { color: var(--text); }
+.sh-search .btn { flex-shrink: 0; }
