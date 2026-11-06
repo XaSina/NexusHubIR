@@ -142,6 +142,7 @@ $auWaves = [
                 </label>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ادامه</span><i class="au-spin"></i></button>
+                <?php if (setting_on('members_register')): ?><p class="au-alt">حساب نداری؟ <button type="button" class="au-link" id="auToReg">مستقیم ثبت‌نام کن</button></p><?php endif; ?>
             </form>
 
             <!-- 2: login -->
@@ -162,7 +163,8 @@ $auWaves = [
             <!-- 3: register -->
             <form class="au-step au-step-wide" data-step="register" novalidate hidden>
                 <h2>ساخت حساب جدید ✨</h2>
-                <p class="au-sub"><b dir="ltr" id="auRegId"></b> هنوز عضو نیست. چند ثانیه‌ای حسابت رو بساز.</p>
+                <p class="au-sub" id="auRegSub"><b dir="ltr" id="auRegId"></b> هنوز عضو نیست. چند ثانیه‌ای حسابت رو بساز.</p>
+                <p class="au-sub" id="auRegSub2" hidden>چند ثانیه‌ای حسابت رو بساز؛ بعدش مستقیم می‌ری سراغ کارت.</p>
                 <input type="text" name="website" class="au-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
                 <div class="au-grid2">
                     <label class="au-field"><input name="first_name" maxlength="60" autocomplete="given-name" placeholder=" " required><span class="au-flabel">نام</span><em class="au-ferr"></em></label>
@@ -176,6 +178,12 @@ $auWaves = [
                         <em class="au-ferr"></em>
                     </label>
                 </div>
+                <?php $inv = invite_pending(); $invBy = $inv !== '' ? invite_owner($inv) : null; ?>
+                <div class="au-invite">
+                    <label class="au-field"><input name="invite" dir="ltr" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder=" " value="<?= e($invBy ? member_invite_code($invBy) : '') ?>"><span class="au-flabel">کد دعوت (اختیاری)</span><em class="au-ferr"></em></label>
+                    <button type="button" class="au-inv-x" id="auInvX" aria-label="پاک کردن کد دعوت" title="پاک کردن"<?= $invBy ? '' : ' hidden' ?>>✕</button>
+                </div>
+                <?php if ($invBy): ?><p class="au-inv-note" id="auInvNote">🎁 با دعوت <b><?= e($invBy['first_name']) ?></b> اومدی — کد خودکار گذاشته شد؛ اگه نمی‌خوای پاکش کن.</p><?php endif; ?>
                 <div class="au-strength" id="auStrength"><i></i><i></i><i></i><i></i><span>حداقل ۸ کاراکتر، شامل حروف انگلیسی و عدد</span></div>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ثبت‌نام</span><i class="au-spin"></i></button>

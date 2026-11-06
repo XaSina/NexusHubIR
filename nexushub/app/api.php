@@ -252,13 +252,21 @@ switch ($seg[1] ?? '') {
         if (!empty($_POST['website'])) json_out(['ok' => false, 'error' => 'درخواست نامعتبر.'], 422); // honeypot
         if (time() - (int) ($_SESSION['last_register'] ?? 0) < 60) json_out(['ok' => false, 'error' => 'لطفاً یک دقیقه بعد دوباره تلاش کنید.'], 429);
         [$d, $err] = validate_member_input($_POST);
+        $invCode = strtoupper(trim(en_num((string) ($_POST['invite'] ?? ''))));
+        $inviter = $invCode !== '' ? invite_owner($invCode) : null;
+        if ($invCode !== '' && !$inviter) $err['invite'] = 'این کد دعوت پیدا نشد؛ درستش کن یا پاکش کن.';
         if ($err) json_out(['ok' => false, 'errors' => $err, 'error' => reset($err)], 422);
         $code = new_member_code();
         $mid = insert('members', [
             'member_code' => $code, 'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'phone' => $d['phone'],
             'email' => $d['email'], 'username' => $d['username'], 'password' => password_hash($d['password'], PASSWORD_DEFAULT),
             'status' => 'active', 'last_ip' => client_ip(), 'created_at' => now(), 'updated_at' => now(),
-        ]);
+        ] + ($inviter ? ['invited_by' => (int) $inviter['id']] : []));
+        if ($inviter) {
+            notify('m:' . $inviter['id'], 'invite', (int) $mid, '🤝', 'یه نفر با لینک دعوتت عضو شد', $d['first_name'] . ' با کد دعوت تو ثبت‌نام کرد.', 'account', 'success');
+            unset($_SESSION['invite']);
+            setcookie('nx_inv', '', ['expires' => time() - 3600, 'path' => (nx_base_path() ?: '') . '/']);
+        }
         $_SESSION['last_register'] = time();
         // دکمه «ورود» بعد از ثبت‌نام بدون وارد کردن دوباره رمز وارد می‌کند (تا ۱۰ دقیقه)
         $_SESSION['pending_mid'] = ['id' => $mid, 'until' => time() + 600];

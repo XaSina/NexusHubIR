@@ -58,7 +58,7 @@ function wheel_member(array $w, ?array $m): ?array
     return ['left' => $left, 'left_daily' => min($left, $leftDaily), 'earned' => $earned, 'used' => $usedAll, 'buys' => $buys, 'invites' => $invites, 'grants' => $grants,
         'buy_next' => $R['buy_every'] ? $R['buy_every'] - $buys % $R['buy_every'] : 0, 'invite_next' => $R['invite_every'] ? $R['invite_every'] - $invites % $R['invite_every'] : 0,
         'capped' => $R['max_user'] && $usedAll >= $R['max_user'],
-        'invite' => site_url('wheel/' . rawurlencode((string) $w['slug'])) . '?ref=' . rawurlencode((string) $m['member_code'])];
+        'invite' => invite_link($m, 'w' . (int) $w['id'])];
 }
 
 /** weighted pick with a CSPRNG; items with no stock left drop out and the rest share their chance */
@@ -117,10 +117,11 @@ function wheel_spin(array $w, ?array $m): array
 /** remember who invited a member (only members who signed up after the wheel was made count) */
 function wheel_track_ref(array $w, ?array $m): void
 {
-    $code = $_SESSION['wheel_ref'][(int) $w['id']] ?? '';
-    if (!$m || $code === '' || $code === $m['member_code']) return;
+    $code = (string) ($_SESSION['wheel_ref'][(int) $w['id']] ?? '');
+    if ($m && $code === '' && !empty($m['invited_by'])) $code = (string) val('SELECT COALESCE(invite_code, member_code) FROM members WHERE id = ?', [(int) $m['invited_by']]);
+    if (!$m || $code === '' || $code === $m['member_code'] || $code === ($m['invite_code'] ?? '')) return;
     if (strtotime((string) $m['created_at']) < strtotime((string) $w['created_at'])) return;
-    $ref = row('SELECT id FROM members WHERE member_code = ?', [$code]);
+    $ref = invite_owner($code);
     if (!$ref || (int) $ref['id'] === (int) $m['id']) return;
     try { q('INSERT IGNORE INTO wheel_refs (wheel_id, member_id, ref_by, created_at) VALUES (?, ?, ?, ?)', [$w['id'], $m['id'], $ref['id'], now()]); } catch (Throwable $e) {}
     unset($_SESSION['wheel_ref'][(int) $w['id']]);
@@ -185,6 +186,7 @@ function wheel_slot(string $position): string
     $out = '';
     foreach ($list as $w) {
         if (!in_array($position, array_filter(array_map('trim', explode(',', (string) $w['box_places']))), true)) continue;
+        if ($position === 'header_top') { $out .= top_strip('w' . $w['id'], '🎡', $w['title'] . ($w['description'] ? ' — ' . strip_tags((string) $w['description']) : ''), wheel_url($w), 'بچرخون', (string) ($w['box_accent'] ?? '')); continue; }
         $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . wheel_box_html($w) . '</div>';
     }
     return $out;

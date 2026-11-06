@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 12;   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
+const NX_DB_VERSION = 13;   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -64,6 +64,11 @@ function nx_migrate(): void
         $oc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders'"), 'COLUMN_NAME');
         if ($oc && !in_array('promo_id', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `promo_id` INT UNSIGNED NULL AFTER `coupon_id`");
     }
+    if ($v < 13) {
+        $mc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'members'"), 'COLUMN_NAME');
+        if ($mc && !in_array('invite_code', $mc, true)) db()->exec("ALTER TABLE `members` ADD COLUMN `invite_code` VARCHAR(12) NULL AFTER `member_code`, ADD UNIQUE KEY `u_m_invite` (`invite_code`)");
+        if ($mc && !in_array('invited_by', $mc, true)) db()->exec("ALTER TABLE `members` ADD COLUMN `invited_by` INT UNSIGNED NULL AFTER `invite_code`");
+    }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
 
@@ -106,6 +111,43 @@ function new_member_code(): string
         $code = 'NX-' . random_int(100000, 999999);
     } while ((int) val('SELECT COUNT(*) FROM members WHERE member_code = ?', [$code]) > 0);
     return $code;
+}
+
+/* ---------- personal invite codes (separate from the membership code) ---------- */
+
+/** the member's own invite code — made the first time it is needed */
+function member_invite_code(array $m): string
+{
+    if (!empty($m['invite_code'])) return (string) $m['invite_code'];
+    $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    for ($try = 0; $try < 20; $try++) {
+        $c = ''; for ($i = 0; $i < 6; $i++) $c .= $abc[random_int(0, strlen($abc) - 1)];
+        try { if (q('UPDATE members SET invite_code = ? WHERE id = ? AND invite_code IS NULL', [$c, (int) $m['id']])->rowCount()) return $c; } catch (Throwable $e) { continue; }
+        $have = (string) val('SELECT invite_code FROM members WHERE id = ?', [(int) $m['id']]);
+        if ($have !== '') return $have;
+    }
+    return (string) $m['member_code'];
+}
+
+/** who owns this invite code (old links with a membership code keep working) */
+function invite_owner(string $code): ?array
+{
+    $code = strtoupper(trim($code));
+    if ($code === '' || !preg_match('~^[A-Z0-9-]{3,20}$~', $code)) return null;
+    return row("SELECT * FROM members WHERE (invite_code = ? OR member_code = ?) AND status = 'active' LIMIT 1", [$code, $code]) ?: null;
+}
+
+/** the invite link: short, readable; the target is a wheel (w<id>) or a raffle (r<id>) or the site itself */
+function invite_link(array $m, string $target = ''): string
+{
+    return site_url('i/' . member_invite_code($m) . ($target !== '' ? '/' . $target : ''));
+}
+
+/** the invite code this visitor arrived with (session first, then the 30-day cookie) */
+function invite_pending(): string
+{
+    $c = (string) ($_SESSION['invite']['code'] ?? ($_COOKIE['nx_inv'] ?? ''));
+    return preg_match('~^[A-Za-z0-9-]{3,20}$~', $c) ? strtoupper($c) : '';
 }
 
 function member_full_name(array $m): string

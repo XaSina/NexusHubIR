@@ -9,7 +9,10 @@
     A.$ = $; A.$$ = $$; A.fa = fa;
 
     /* ---------- Toast ---------- */
+    var lastT = '', lastTAt = 0;
     A.toast = function (msg, type) {
+        var now = Date.now(); if (msg === lastT && now - lastTAt < 1200) return;   // the same message twice in a row shows once
+        lastT = msg; lastTAt = now;
         var t = document.createElement('div');
         t.className = 'toast ' + (type || 'success');
         t.textContent = msg;

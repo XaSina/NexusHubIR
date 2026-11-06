@@ -38,6 +38,14 @@ $suggest = get_posts(['limit' => 3]);
                 <?php if (shop_on() && setting_on('shop_support_on')): ?><a class="btn btn-ghost" href="<?= e(url('support')) ?>"><?= icon('support', 17) ?> پشتیبانی</a><?php endif; ?>
                 <form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="logout"><button class="btn btn-ghost" type="submit"><?= icon('arrow-right', 17) ?> خروج</button></form>
             </div>
+            <?php $myInv = member_invite_code($m); $invN = (int) val('SELECT COUNT(*) FROM members WHERE invited_by = ?', [(int) $m['id']]); ?>
+            <div class="acc-invite">
+                <div class="ai-txt"><b>🤝 کد دعوت اختصاصی تو</b><small>دوستات با این کد یا لینک ثبت‌نام کنن، به حساب تو ثبت می‌شه<?= $invN ? ' · تا الان ' . fa_num((string) $invN) . ' نفر' : '' ?>.</small></div>
+                <div class="ai-act">
+                    <button type="button" class="ai-code" data-copy="<?= e($myInv) ?>" data-copy-msg="کد دعوت کپی شد ✅"><code dir="ltr"><?= e($myInv) ?></code><?= icon('copy', 15) ?></button>
+                    <button type="button" class="btn btn-primary btn-sm" data-copy="<?= e(invite_link($m)) ?>" data-copy-msg="لینک دعوت کپی شد ✅"><?= icon('copy', 16) ?> کپی لینک دعوت</button>
+                </div>
+            </div>
         </div>
     </div>
 

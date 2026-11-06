@@ -179,6 +179,27 @@ switch ($seg[0] ?? '') {
         page_out('contact', ['sent' => $sent, 'errors' => $errors, 'old' => $old], ['title' => 'تماس با ما | ' . setting('site_title')]);
         break;
 
+    case 'i':      // invite link: remember who invited, then signup (guests) or straight to the page (members)
+        header('Cache-Control: no-store');
+        $owner = invite_owner((string) ($seg[1] ?? ''));
+        $t = (string) ($seg[2] ?? ''); $dest = '';
+        if (preg_match('~^w(\d+)$~', $t, $mm) && ($w = row('SELECT id, slug FROM wheels WHERE id = ?', [(int) $mm[1]]))) {
+            $dest = 'wheel/' . rawurlencode((string) $w['slug']);
+            if ($owner) $_SESSION['wheel_ref'][(int) $w['id']] = member_invite_code($owner);
+        } elseif (preg_match('~^r(\d+)$~', $t, $mm) && ($rf = row('SELECT id, slug FROM raffles WHERE id = ?', [(int) $mm[1]]))) {
+            $dest = 'raffle/' . rawurlencode((string) $rf['slug']);
+            if ($owner) $_SESSION['raffle_ref'][(int) $rf['id']] = member_invite_code($owner);
+        }
+        $me = current_member();
+        if ($owner && (!$me || (int) $me['id'] !== (int) $owner['id'])) {
+            $code = member_invite_code($owner);
+            $_SESSION['invite'] = ['code' => $code, 'by' => (int) $owner['id'], 'name' => (string) $owner['first_name']];
+            setcookie('nx_inv', $code, ['expires' => time() + 30 * 86400, 'path' => (nx_base_path() ?: '') . '/', 'samesite' => 'Lax', 'httponly' => true, 'secure' => !empty($_SERVER['HTTPS'])]);
+        }
+        if ($me) { header('Location: ' . url($dest)); exit; }
+        if ($dest !== '') $_SESSION['after_login'] = $dest;
+        header('Location: ' . url('auth') . '?join=1'); exit;
+
     case 'auth':
         if (current_member()) { header('Location: ' . after_login_url()); exit; }
         header('Cache-Control: no-store');
@@ -445,6 +466,7 @@ switch ($seg[0] ?? '') {
             serve_private((string) $req['receipt']);
         }
         if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['raffle_ref'][(int) $raffle['id']] = (string) $_GET['ref'];
+        if (!empty($_GET['ref']) && !current_member() && ($io = invite_owner((string) $_GET['ref']))) $_SESSION['invite'] = ['code' => member_invite_code($io), 'by' => (int) $io['id'], 'name' => (string) $io['first_name']];
         $raffle = raffle_maybe_draw($raffle);
         if (!raffle_page_allowed($raffle, current_member())) {
             http_response_code(403);
@@ -497,6 +519,7 @@ switch ($seg[0] ?? '') {
         if (!$wheel || $wheel['audience'] !== 'public') not_found();
         if (!wheel_open($wheel) && !current_user()) { http_response_code(410); page_out('section_closed', ['what' => $wheel['title'], 'icon' => '🎡'], ['title' => $wheel['title'] . ' | ' . setting('site_title'), 'noindex' => true]); break; }
         if (!empty($_GET['ref']) && preg_match('~^[A-Za-z0-9-]{3,20}$~', (string) $_GET['ref'])) $_SESSION['wheel_ref'][(int) $wheel['id']] = (string) $_GET['ref'];
+        if (!empty($_GET['ref']) && !current_member() && ($io = invite_owner((string) $_GET['ref']))) $_SESSION['invite'] = ['code' => member_invite_code($io), 'by' => (int) $io['id'], 'name' => (string) $io['first_name']];
         wheel_track_ref($wheel, current_member());
         page_out('wheel', ['wheel' => $wheel, 'bodyClass' => 'page-wheel'], [
             'title' => $wheel['title'] . ' | گردونه شانس ' . setting('site_title'),

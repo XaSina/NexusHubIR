@@ -199,6 +199,8 @@ return [
 "CREATE TABLE IF NOT EXISTS `members` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `member_code` VARCHAR(20) NOT NULL,
+  `invite_code` VARCHAR(12) NULL,
+  `invited_by` INT UNSIGNED NULL,
   `first_name` VARCHAR(60) NOT NULL,
   `last_name` VARCHAR(60) NOT NULL,
   `phone` VARCHAR(20) NOT NULL,
@@ -214,6 +216,7 @@ return [
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `u_m_code` (`member_code`),
+  UNIQUE KEY `u_m_invite` (`invite_code`),
   UNIQUE KEY `u_m_phone` (`phone`),
   UNIQUE KEY `u_m_email` (`email`),
   UNIQUE KEY `u_m_user` (`username`),

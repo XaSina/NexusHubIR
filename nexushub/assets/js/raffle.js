@@ -164,8 +164,6 @@
             });
             return;
         }
-        var c = e.target.closest('[data-copy]');
-        if (c) { var v = c.getAttribute('data-copy'); (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast('کپی شد ✅', 'success'); }, function () { prompt('کپی کن:', v); }); }
     });
     var buy = $('#rfBuy');
     if (buy) {

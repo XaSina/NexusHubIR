@@ -147,8 +147,6 @@
     }
     document.addEventListener('click', function (e) {
         if (e.target.closest('.lw-login')) { call('wheel-spin').then(function (r) { location.href = r.url || ((NX.base || '') + '/auth'); }); return; }
-        var c = e.target.closest('[data-copy]');
-        if (c && c.closest('#lwRules')) { var v = c.getAttribute('data-copy'); (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast('لینک کپی شد ✅', 'success'); }, function () { prompt('کپی کن:', v); }); }
     });
 
     build(); renderAll();

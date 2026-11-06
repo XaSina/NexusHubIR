@@ -84,6 +84,7 @@ function promo_slot(string $position): string
     $out = '';
     foreach ($list as $p) {
         if (!in_array($position, array_filter(array_map('trim', explode(',', (string) $p['box_places']))), true)) continue;
+        if ($position === 'header_top') { $out .= top_strip('p' . $p['id'], '🏷️', (($p['title'] ?? '') ?: 'کد تخفیف ویژه') . ' — ' . discount_text(promo_disc($p)), '', '', (string) ($p['box_accent'] ?? ''), (string) $p['code']); continue; }
         $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . promo_box_html($p) . '</div>';
     }
     return $out;

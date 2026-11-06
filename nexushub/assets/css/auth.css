@@ -954,3 +954,13 @@ button { cursor: pointer; border: 0; background: none; }
 
     html.perf-safe .au-mini-holo { animation: none !important; }
 
+
+/* sign-up: invite code (optional, prefilled from an invite link, clearable) + a direct «sign up» link */
+.au-invite { position: relative; margin-top: 12px; }
+.au-invite .au-field input { padding-left: 46px; letter-spacing: 1.5px; font-weight: 800; text-transform: uppercase; }
+.au-inv-x { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); cursor: pointer; font-size: .8rem; transition: background .2s, transform .25s; z-index: 2; }
+.au-inv-x:hover { background: rgba(255,255,255,.14); transform: translateY(-50%) rotate(90deg); }
+.au-inv-note { margin: 8px 2px 0; font-size: .8rem; line-height: 1.8; color: rgba(255,255,255,.72); }
+.au-inv-note b { color: var(--primary); }
+.au-alt { margin: 14px 0 0; text-align: center; font-size: .84rem; color: rgba(255,255,255,.6); }
+.au-link { border: 0; background: none; padding: 0 2px; color: var(--primary); font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }

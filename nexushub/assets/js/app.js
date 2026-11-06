@@ -20,9 +20,12 @@
     if (NX.reveal && !reduce && 'IntersectionObserver' in window) document.documentElement.classList.add('js-reveal');
 
     /* ---------- Toast ---------- */
+    var lastToast = '', lastToastAt = 0;
     function toast(msg) {
         var wrap = $('#toasts');
         if (!wrap) return;
+        var now = Date.now(); if (msg === lastToast && now - lastToastAt < 1200) return;   // the same message twice in a row shows once
+        lastToast = msg; lastToastAt = now;
         var t = document.createElement('div');
         t.className = 'toast';
         t.textContent = msg;
@@ -560,8 +563,9 @@
     }
 
     /* ---------- Copy / Share ---------- */
-    $$('[data-copy]').forEach(function (b) {
-        b.addEventListener('click', function () {
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-copy]'); if (!b) return;
+        (function () {
             var txt = b.dataset.copy;
             var done = function () {
                 toast(b.dataset.copyMsg || (/^https?:/.test(txt) ? 'لینک کپی شد ✅' : 'کپی شد ✅'));
@@ -578,7 +582,7 @@
             };
             if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, legacy);
             else legacy();
-        });
+        })();
     });
     $$('[data-share]').forEach(function (b) {
         if (!navigator.share) { b.remove(); return; }
@@ -912,4 +916,34 @@
         timer = setTimeout(hide, 5000);
     }, true);
     window.addEventListener('resize', hide);
+})();
+
+/* «above the header» lines: ✕ closes (remembered until the text changes), several lines take turns */
+(function () {
+    'use strict';
+    var w = document.getElementById('nxStrips'); if (!w) return;
+    var get = function () { try { return JSON.parse(localStorage.getItem('nx_strip_x') || '{}'); } catch (e) { return {}; } };
+    var list = function () { return [].slice.call(w.querySelectorAll('.nx-strip')); };
+    var timer = 0, hold = false;
+    function show(next) {
+        var l = list(), cur = w.querySelector('.nx-strip.on'); if (!l.length) return;
+        if (cur && cur !== next) { cur.classList.remove('on'); cur.classList.add('out'); setTimeout(function () { cur.classList.remove('out'); }, 600); }
+        next.classList.add('on');
+    }
+    function rotate() {
+        clearInterval(timer); if (list().length < 2) return;
+        timer = setInterval(function () { if (hold || document.hidden) return; var l = list(), i = l.indexOf(w.querySelector('.nx-strip.on')); show(l[(i + 1) % l.length]); }, 6500);
+    }
+    w.addEventListener('mouseenter', function () { hold = true; }); w.addEventListener('mouseleave', function () { hold = false; });
+    w.addEventListener('click', function (e) {
+        var x = e.target.closest('[data-strip-close]'); if (!x) return;
+        var s = x.closest('.nx-strip'), m = get(); m[s.getAttribute('data-strip')] = Date.now();
+        try { localStorage.setItem('nx_strip_x', JSON.stringify(m)); } catch (er) {}
+        var l = list(), i = l.indexOf(s), nxt = l.length > 1 ? l[(i + 1) % l.length] : null;
+        s.classList.remove('on'); s.classList.add('out');
+        setTimeout(function () { s.remove(); if (!list().length) { w.style.height = w.offsetHeight + 'px'; requestAnimationFrame(function () { w.classList.add('gone'); w.style.height = ''; }); setTimeout(function () { w.remove(); }, 400); } }, 450);
+        if (nxt) show(nxt);
+        rotate();
+    });
+    rotate();
 })();

@@ -177,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (form) { form.addEventListener('input', live); form.addEventListener('change', live); }
     var all = q('#pmAll'); if (all) all.addEventListener('change', function () { [].forEach.call(document.querySelectorAll('[name="members[]"]'), function (c) { c.checked = all.checked; }); });
-    document.addEventListener('click', function (e) { var c = e.target.closest('[data-copy]'); if (!c) return; navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy); if (window.NXA && NXA.toast) NXA.toast('کپی شد ✅', 'success'); });
 });
 </script>
 <?php adm_foot(['discount-editor.js']);

@@ -19,8 +19,30 @@ function active_ads(string $position): array
 }
 
 /** خروجی HTML جایگاه تبلیغ */
+/**
+ * one slim line for the very top of the page (above the header): fixed height, one line of text, a small action and ✕.
+ * A closed line stays closed for that visitor until its text changes.
+ */
+function top_strip(string $key, string $icon, string $text, string $href = '', string $btn = '', string $accent = '', string $copy = '', bool $newTab = false, string $img = ''): string
+{
+    $accent = valid_hex($accent, '') ?: valid_hex((string) setting('color_primary', '#ff1f3d'), '#ff1f3d');
+    $text = trim(preg_replace('~\s+~u', ' ', strip_tags($text)));
+    $key = $key . '-' . substr(md5($text . $href . $copy), 0, 8);
+    $t = $newTab ? ' target="_blank" rel="nofollow noopener"' : '';
+    $body = ($img ? '<img class="nxs-img" src="' . e($img) . '" alt="" loading="lazy">' : '<span class="nxs-ic" aria-hidden="true">' . e($icon) . '</span>')
+        . '<span class="nxs-tx" title="' . e($text) . '">' . e($text) . '</span>';
+    $main = $href ? '<a class="nxs-main" href="' . e($href) . '"' . $t . '>' . $body . '</a>' : '<span class="nxs-main">' . $body . '</span>';
+    $act = $copy !== '' ? '<button type="button" class="nxs-btn nxs-copy" data-copy="' . e($copy) . '" data-copy-msg="کد تخفیف کپی شد ✅"><code dir="ltr">' . e($copy) . '</code> 📋</button>'
+        : ($href && $btn !== '' ? '<a class="nxs-btn" href="' . e($href) . '"' . $t . '>' . e($btn) . '</a>' : '');
+    [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($accent)));
+    $on = (0.299 * $r + 0.587 * $g + 0.114 * $b) > 165 ? '#0b0d12' : '#fff';          // readable text on the accent button
+    return '<div class="nx-strip" data-strip="' . e($key) . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . ';--nxp-on:' . $on . '">' . $main . $act
+        . '<button type="button" class="nxs-x" data-strip-close aria-label="بستن" title="بستن">' . icon('close', 14) . '</button></div>';
+}
+
 function ad_slot(string $position): string
 {
+    if ($position === 'header_top') return top_strips();
     $shop = shop_banner_slot($position) . raffle_slot($position) . wheel_slot($position) . promo_slot($position);   // the shop banner and running raffles can sit in any of these places too
     $ads = active_ads($position);
     if (!$ads) return $shop;
@@ -52,6 +74,27 @@ function ad_slot(string $position): string
     $stack = in_array($position, ['sidebar'], true);
     $rotate = !$stack && count($ads) > 1;
     return $shop . '<div class="nxp-slot nxp-pos-' . e($position) . ($rotate ? ' nxp-rotate' : '') . '" data-reveal>' . $inner . '</div>';
+}
+
+/** everything placed «above the header» as slim closable lines (one shows at a time; several take turns) */
+function top_strips(): string
+{
+    $out = shop_banner_slot('header_top') . raffle_slot('header_top') . wheel_slot('header_top') . promo_slot('header_top');
+    $ads = array_values(array_filter(active_ads('header_top'), fn($a) => $a['device'] === 'all' || ($a['device'] === 'mobile') === is_mobile_ua()));
+    if ($ads) {
+        try { if (!current_user()) q('UPDATE ads SET impressions = impressions + 1 WHERE id IN (' . implode(',', array_map(fn($a) => (int) $a['id'], $ads)) . ')'); } catch (Throwable $e) {}
+        foreach ($ads as $a) {
+            $text = trim(($a['heading'] ?: $a['title']) . ($a['body'] ? ' — ' . $a['body'] : ''));
+            if ($a['format'] === 'html' && $text === '') continue;                 // custom code can't be squeezed into one line
+            $out .= top_strip('a' . $a['id'], $a['emoji'] ?: '📣', $text ?: 'تبلیغ', safe_link((string) $a['link']) ? url('go/' . (int) $a['id']) : '', $a['button_text'] ?: (safe_link((string) $a['link']) ? 'مشاهده' : ''),
+                (string) $a['accent'], '', !empty($a['new_tab']), $a['format'] === 'image' && $a['image'] ? media_url($a['image']) : '');
+        }
+    }
+    if ($out === '') return '';
+    // closed lines are removed before they are drawn, so nothing jumps
+    return '<div class="nx-strips" id="nxStrips">' . $out . '</div>'
+        . '<script>(function(){try{var x=JSON.parse(localStorage.getItem("nx_strip_x")||"{}"),w=document.getElementById("nxStrips"),l=w.querySelectorAll(".nx-strip"),n=0;'
+        . 'for(var i=0;i<l.length;i++){if(x[l[i].getAttribute("data-strip")])l[i].remove();else n++;}if(!n)w.remove();else{w.className+=" js";w.querySelector(".nx-strip").classList.add("on");}}catch(e){}})();</script>';
 }
 
 /** the moving layers a theme draws behind an ad (embers, aurora, scan line …) */
@@ -120,7 +163,7 @@ function render_ad(array $a, bool $preview = false): string
 function shop_banner_places(): array
 {
     return ['home_shop' => 'صفحه اصلی — بخش فروشگاه (بالای محصولات ویژه)', 'home_top' => 'صفحه اصلی — زیر اسلایدر', 'home_middle' => 'صفحه اصلی — وسط', 'sidebar' => 'سایدبار', 'post_top' => 'خبر — بالای متن',
-        'post_bottom' => 'خبر — پایان متن', 'footer_top' => 'بالای فوتر (همه صفحات)', 'header_top' => 'بالای هدر (همه صفحات)'];
+        'post_bottom' => 'خبر — پایان متن', 'footer_top' => 'بالای فوتر (همه صفحات)', 'header_top' => 'بالای هدر — نوار باریک یک‌خطی (همه صفحات)'];
 }
 
 function shop_banner_ad(): array
@@ -141,5 +184,6 @@ function shop_banner_slot(string $position): string
     if (!shop_on() || !setting_on('shop_banner_on') || !isset(shop_banner_places()[$position])) return '';
     $places ??= array_filter(array_map('trim', explode(',', (string) setting('shop_banner_places'))));
     if (!in_array($position, $places, true)) return '';
+    if ($position === 'header_top') { $a = shop_banner_ad(); return top_strip('s', $a['emoji'] ?: '🛍️', trim($a['heading'] . ($a['body'] ? ' — ' . $a['body'] : '')) ?: 'فروشگاه', url('shop'), $a['button_text'] ?: 'بریم فروشگاه', (string) $a['accent']); }
     return '<div class="nxp-slot nxp-pos-' . e($position) . ' shop-promo" data-reveal>' . render_ad(shop_banner_ad(), true) . '</div>';
 }

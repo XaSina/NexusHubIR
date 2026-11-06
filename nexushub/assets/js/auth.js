@@ -484,7 +484,17 @@
         setHud('IDENTIFY');
         steps.identify.classList.add('in');
         if (!touch) setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
+        if (JOIN) setTimeout(toRegister, 260);          // came with an invite link: straight to sign-up
     });
+    var JOIN = /[?&]join=1/.test(location.search) && !!$('#auToReg');
+    function toRegister() { identity = { value: '', type: '' }; $('#auRegSub').hidden = true; $('#auRegSub2').hidden = false; show('register'); }
+    if ($('#auToReg')) $('#auToReg').addEventListener('click', toRegister);
+    (function () {
+        var x = $('#auInvX'), inp = steps.register.elements.invite; if (!inp) return;
+        var sync = function () { if (x) x.hidden = !inp.value; };
+        inp.addEventListener('input', function () { inp.value = inp.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); sync(); });
+        if (x) x.addEventListener('click', function () { inp.value = ''; sync(); var n = $('#auInvNote'); if (n) n.hidden = true; inp.closest('.au-field').classList.remove('err'); inp.focus(); });
+    })();
 
     /* keyboard on phones: lift the card smoothly (instead of the page jumping) so the focused field stays visible */
     (function () {
@@ -666,7 +676,7 @@
             show('login');
         } else {
             var f = steps.register;
-            $('#auRegId').textContent = j.value;
+            $('#auRegId').textContent = j.value; $('#auRegSub').hidden = false; $('#auRegSub2').hidden = true;
             ['phone', 'email', 'username'].forEach(function (k) { var inp = f.elements[k]; if (k === j.type) inp.value = j.value; else if (inp.dataset.auto) { inp.value = ''; delete inp.dataset.auto; } });
             show('register');
         }
@@ -706,7 +716,7 @@
     reg.addEventListener('submit', async function (e) {
         e.preventDefault(); clearErrors(this);
         var data = {}, f = this;
-        ['first_name', 'last_name', 'phone', 'email', 'username', 'password', 'website'].forEach(function (k) { data[k] = en(f.elements[k].value).trim(); });
+        ['first_name', 'last_name', 'phone', 'email', 'username', 'password', 'website', 'invite'].forEach(function (k) { if (f.elements[k]) data[k] = en(f.elements[k].value).trim(); });
         data.password = f.elements.password.value;
         var missing = ['first_name', 'last_name', 'phone', 'email', 'username', 'password'].filter(function (k) { return !data[k]; });
         if (missing.length) { missing.forEach(function (k) { f.elements[k].closest('.au-field').classList.add('err'); }); return errorOn(f, 'لطفاً همه‌ی فیلدها را کامل کن.'); }

@@ -181,7 +181,7 @@ function raffle_mine(array $r, ?array $m): ?array
         'ranges' => array_map(fn($x) => [(int) $x['from_no'], (int) $x['to_no']], $approved),
         'pending' => array_sum(array_map(fn($x) => $x['status'] === 'pending' ? (int) $x['qty'] : 0, $req)),
         'requests' => $req,
-        'invite' => site_url('raffle/' . rawurlencode((string) $r['slug'])) . '?ref=' . rawurlencode($m['member_code']),
+        'invite' => invite_link($m, 'r' . (int) $r['id']),
         'invited' => (int) val('SELECT COUNT(*) FROM raffle_entries WHERE raffle_id = ? AND ref_by = ?', [$rid, $mid]),
     ];
 }
@@ -198,8 +198,9 @@ function raffle_join(array $r, array $m, string $refCode = ''): array
     $rid = (int) $r['id']; $mid = (int) $m['id'];
     if (val('SELECT id FROM raffle_entries WHERE raffle_id = ? AND member_id = ?', [$rid, $mid])) return ['ok' => true, 'already' => true];
     $refId = null;
+    if ($r['mode'] === 'referral' && $refCode === '' && !empty($m['invited_by']) && strtotime((string) $m['created_at']) >= strtotime((string) $r['created_at'])) $refCode = (string) val('SELECT COALESCE(invite_code, member_code) FROM members WHERE id = ?', [(int) $m['invited_by']]);
     if ($r['mode'] === 'referral' && $refCode !== '') {
-        $ref = row("SELECT id FROM members WHERE member_code = ? AND status = 'active'", [mb_substr($refCode, 0, 20)]);
+        $ref = invite_owner(mb_substr($refCode, 0, 20));
         if ($ref && (int) $ref['id'] !== $mid && val('SELECT id FROM raffle_entries WHERE raffle_id = ? AND member_id = ?', [$rid, $ref['id']])) $refId = (int) $ref['id'];
     }
     try {
@@ -482,6 +483,7 @@ function raffle_slot(string $position): string
     foreach ($list as $r) {
         $places = array_filter(array_map('trim', explode(',', (string) $r['box_places'])));
         if (!in_array($position, $places, true)) continue;
+        if ($position === 'header_top') { $pz = raffle_prizes($r); $out .= top_strip('r' . $r['id'], '🎰', $r['title'] . ' — ' . ($pz[0]['emoji'] ?? '🎁') . ' ' . $pz[0]['title'] . (count($pz) > 1 ? ' + ' . fa_num((string) (count($pz) - 1)) . ' جایزه' : ''), raffle_url($r), $r['status'] === 'drawn' ? 'نتیجه' : 'شرکت', (string) ($r['box_accent'] ?? '')); continue; }
         $out .= '<div class="nxp-slot nxp-pos-' . e($position) . ' raffle-promo" data-reveal>' . raffle_box_html($r, $r['status'] === 'drawn' ? null : raffle_stats($r)) . '</div>';
     }
     return $out;
