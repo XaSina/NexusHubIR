@@ -511,9 +511,9 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
     .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .ss-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .pd-grid { grid-template-columns: minmax(0, 1fr); }
-    .pd-visual { position: static; }
+    .pd-visual { position: relative; top: auto; }
     .cart-grid { grid-template-columns: minmax(0, 1fr); }
-    .cart-sum { position: static; }
+    .cart-sum { position: relative; top: auto; }
     .order-steps { padding: 20px 6px 16px; }
     .order-steps::before, .os-beam { top: 44px; }
     .os-ic { width: 46px; height: 46px; border-radius: 15px; font-size: 1.15rem; }

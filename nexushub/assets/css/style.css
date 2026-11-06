@@ -670,7 +670,7 @@ html.nx-lock, html.nx-lock body { overflow: hidden; }
     .main-nav { display: none; }
     .burger { display: inline-grid; }
     .layout-2col { grid-template-columns: 1fr; }
-    .sidebar { position: static; margin-top: 30px; }
+    .sidebar { position: relative; top: auto; margin-top: 30px; }
     .hero-mag { grid-template-columns: 1fr; }
     .hm-main .pcard-big { min-height: 400px; }
     .h-scroll { grid-auto-columns: minmax(270px, 42%); }
@@ -1586,3 +1586,36 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
 @keyframes csFloat { 50% { transform: translateY(-5px); } }
 @keyframes csRing { 0% { opacity: .8; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.25); } }
 html.perf-calm .cs-ic, html.perf-calm .cs-ic::after { animation: none; }
+
+/* themed bubble for required fields (replaces the browser's English popup) */
+.nx-vtip { position: absolute; z-index: 400; max-width: min(320px, calc(100vw - 24px)); display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 12px; border-radius: 14px;
+    background: linear-gradient(160deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-rgb), .94)); border: 1px solid rgba(var(--primary-rgb), .45);
+    box-shadow: 0 14px 34px -12px rgba(0, 0, 0, .75), 0 0 0 4px rgba(var(--primary-rgb), .08); color: var(--text); font-size: .84rem; font-weight: 700; line-height: 1.7;
+    opacity: 0; transform: translateY(-6px) scale(.97); transform-origin: var(--ax, 50%) 0; transition: opacity .22s ease, transform .3s cubic-bezier(.3, 1.4, .5, 1); pointer-events: none; }
+.nx-vtip.show { opacity: 1; transform: none; }
+.nx-vtip::before { content: ""; position: absolute; top: -7px; left: calc(var(--ax, 50%) - 6px); width: 12px; height: 12px; transform: rotate(45deg); background: rgb(var(--surface-rgb));
+    border-top: 1px solid rgba(var(--primary-rgb), .45); border-left: 1px solid rgba(var(--primary-rgb), .45); border-radius: 3px 0 0 0; }
+.nx-vtip i { flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: .85rem; background: var(--grad); color: var(--on-grad, #fff); }
+.nx-invalid { animation: nxNudge .42s ease; }
+input.nx-invalid, textarea.nx-invalid, select.nx-invalid { border-color: rgba(var(--primary-rgb), .8) !important; box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .14) !important; }
+label.nx-invalid input[type=checkbox] { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .2); }
+@keyframes nxNudge { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
+html.perf-off .nx-invalid { animation: none; }
+
+/* the site's own checkbox (agree to rules, …) */
+.co-agree input[type=checkbox], .nx-check { -webkit-appearance: none; appearance: none; position: relative; width: 22px; height: 22px; margin: 3px 0 0; flex-shrink: 0; cursor: pointer;
+    border-radius: 7px; border: 1.5px solid rgba(var(--text-rgb), .28); background: rgba(var(--text-rgb), .05); transition: background .25s, border-color .25s, box-shadow .25s; }
+.co-agree input[type=checkbox]::after, .nx-check::after { content: ""; position: absolute; left: 50%; top: 45%; width: 6px; height: 11px; border: solid var(--on-grad, #fff); border-width: 0 2.5px 2.5px 0;
+    transform: translate(-50%, -50%) rotate(45deg) scale(0); transition: transform .28s cubic-bezier(.3, 1.6, .5, 1); }
+.co-agree input[type=checkbox]:checked, .nx-check:checked { background: var(--grad); border-color: transparent; box-shadow: 0 6px 16px -6px rgba(var(--primary-rgb), .8); }
+.co-agree input[type=checkbox]:checked::after, .nx-check:checked::after { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+.co-agree input[type=checkbox]:focus-visible, .nx-check:focus-visible { outline: 0; box-shadow: 0 0 0 4px rgba(var(--primary-rgb), .22); }
+.co-agree:hover input[type=checkbox]:not(:checked) { border-color: rgba(var(--primary-rgb), .6); }
+
+/* phones: side-scrolling news rows stay cheap to draw, so Chrome never shows dark unpainted patches while you scroll */
+@media (hover: none), (max-width: 900px) {
+    .h-scroll { contain: layout paint; background: transparent; }
+    .h-scroll .cover, .h-scroll .pcard-card .cover { transform: none !important; transition: opacity .5s ease !important; will-change: auto !important; }
+    .h-scroll [data-reveal], .h-scroll [data-reveal] * { will-change: auto !important; }
+    .h-scroll .pc-top, .h-scroll .pc-title, .h-scroll .pc-excerpt, .h-scroll .pc-meta { transform: none !important; }
+}

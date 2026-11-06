@@ -865,3 +865,51 @@
         tick(); setInterval(tick, 1000);
     }
 })();
+
+/* required fields / checkboxes: a themed bubble with the panel's text instead of the browser's English popup */
+(function () {
+    'use strict';
+    var M = (window.NX && NX.vmsg) || {}, tip = null, last = 0, timer = 0;
+    function msgFor(el) {
+        var v = el.validity || {};
+        if (el.dataset.msg) return el.dataset.msg;
+        if (el.type === 'checkbox' || el.type === 'radio') return M.check || 'برای ادامه، این گزینه رو تیک بزن ✅';
+        if (v.typeMismatch && el.type === 'email') return M.email || 'یه ایمیل درست بنویس';
+        if (v.tooShort) return String(M.short || 'باید دست‌کم {n} کاراکتر باشه').replace('{n}', String(el.minLength).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }));
+        if (v.valueMissing) return M.field || 'این قسمت رو پر کن ✍️';
+        return el.validationMessage || M.field || '';
+    }
+    function hide() {
+        clearTimeout(timer);
+        if (tip) { var t = tip; tip = null; t.classList.remove('show'); setTimeout(function () { t.remove(); }, 260); }
+        document.querySelectorAll('.nx-invalid').forEach(function (x) { x.classList.remove('nx-invalid'); });
+    }
+    function place(el) {
+        if (!tip) return;
+        var host = el.type === 'checkbox' || el.type === 'radio' ? (el.closest('label') || el) : el;
+        var r = host.getBoundingClientRect(), w = tip.offsetWidth, vw = document.documentElement.clientWidth;
+        var x = Math.min(Math.max(12, r.right - w), vw - w - 12), y = r.bottom + window.scrollY + 10;
+        tip.style.left = x + 'px'; tip.style.top = y + 'px';
+        var ar = el.getBoundingClientRect(); tip.style.setProperty('--ax', Math.min(Math.max(16, ar.left + ar.width / 2 - x), w - 16) + 'px');
+    }
+    document.addEventListener('invalid', function (e) {
+        var el = e.target; if (!el || !el.form || el.form.hasAttribute('data-native-valid')) return;
+        e.preventDefault();
+        var now = Date.now(); if (now - last < 400) return; last = now;        // one bubble per submit: the first field
+        hide();
+        var host = el.type === 'checkbox' || el.type === 'radio' ? (el.closest('label') || el) : el;
+        host.classList.add('nx-invalid'); void host.offsetWidth;
+        tip = document.createElement('div'); tip.className = 'nx-vtip'; tip.setAttribute('role', 'alert');
+        tip.innerHTML = '<i aria-hidden="true">!</i><span></span>'; tip.querySelector('span').textContent = msgFor(el);
+        document.body.appendChild(tip);
+        var r = host.getBoundingClientRect();
+        if (r.top < 90 || r.bottom > innerHeight - 90) host.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        place(el); requestAnimationFrame(function () { tip && tip.classList.add('show'); });
+        setTimeout(function () { place(el); }, 420);
+        try { el.focus({ preventScroll: true }); } catch (x) {}
+        var off = function () { if (el.checkValidity()) { hide(); el.removeEventListener('input', off); el.removeEventListener('change', off); } };
+        el.addEventListener('input', off); el.addEventListener('change', off);
+        timer = setTimeout(hide, 5000);
+    }, true);
+    window.addEventListener('resize', hide);
+})();

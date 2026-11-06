@@ -369,7 +369,7 @@ h2, h3, h4 { margin: 0 0 .6em; line-height: 1.5; }
     .adm-main { margin-right: 0; padding: 10px; }
     .adm-burger { display: inline-grid; }
     .split { grid-template-columns: 1fr; }
-    .split-side { position: static; }
+    .split-side { position: relative; top: auto; }
     .g3 { grid-template-columns: 1fr 1fr; }
     .ed-toolbar { top: 70px; }
 }
@@ -1168,7 +1168,7 @@ html.adm-motion .tbl tbody tr { animation: rowIn .45s var(--ease-silk) both; ani
 .rf-gallery .theme-opt { padding: 8px; }
 .rf-gallery .theme-opt .rfx { margin: 0; }
 @media (max-width: 1100px) { .rf-info { grid-template-columns: minmax(0, 1fr); } .rf-img { max-width: 420px; } .rf-img .ip-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-@media (max-width: 900px) { .rf-sticky { position: static; } }
+@media (max-width: 900px) { .rf-sticky { position: relative; top: auto; } }
 @media (max-width: 480px) { .rf-img { max-width: none; } .rf-img .ip-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .rf-gallery { grid-template-columns: minmax(0, 1fr) !important; } }
 /* phone: the multi-select opens as a bottom sheet over a dimmed page */
 @media (max-width: 640px) {
@@ -1188,7 +1188,7 @@ html.adm-motion .tbl tbody tr { animation: rowIn .45s var(--ease-silk) both; ani
 @media (max-width: 480px) { .rf-img .img-pick { max-width: 190px; } .rf-img .img-actions { max-width: none; } }
 
 /* raffle form: save card (its own design — not another copy of the header button) */
-.rf-sticky { position: static; }
+.rf-sticky { position: relative; top: auto; }
 .rf-savecard { position: sticky; top: 84px; overflow: hidden; isolation: isolate;
     background: linear-gradient(160deg, rgba(var(--primary-rgb), .16), rgba(var(--secondary-rgb), .08) 55%, transparent), var(--a-surface) !important;
     border: 1px solid rgba(var(--primary-rgb), .35) !important; }
@@ -1518,3 +1518,24 @@ html.perf-calm .rfl-card { animation: none; }
 /* discount code form: theme gallery with live previews (instead of a dropdown) */
 .pmx-glabel { display: block; margin: 16px 0 8px; font-weight: 800; }
 .pmx-box #pmGallery { margin-bottom: 4px; }
+/* order page header: number + status · amounts · buttons — tidy on every width */
+.ov-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px 22px; }
+.ov-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ov-id { display: flex; flex-direction: column; gap: 2px; }
+.ov-id h2 { margin: 0; font-size: 1.45rem; letter-spacing: .5px; cursor: copy; }
+.ov-top .badge { padding: 4px 10px; font-size: .74rem; white-space: nowrap; }
+.ov-money { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.ov-total { margin: 0; display: flex; flex-direction: column; gap: 2px; padding: 8px 14px; border-radius: 12px; background: rgba(var(--text-rgb, 255,255,255), .04); border: 1px solid rgba(var(--text-rgb, 255,255,255), .07); min-width: 150px; }
+.ov-total b { font-size: 1.2rem; white-space: nowrap; }
+.ov-disc b { color: #3ddc84; }
+.ov-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 760px) {
+    .ov-head { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .ov-top { justify-content: space-between; flex-wrap: nowrap; }
+    .ov-id h2 { font-size: 1.3rem; }
+    .ov-money { flex-direction: column; gap: 8px; }
+    .ov-total { flex-direction: row; justify-content: space-between; align-items: center; min-width: 0; }
+    .ov-total b { font-size: 1.1rem; }
+    .ov-btns { display: grid; grid-template-columns: 1fr 1fr; }
+    .ov-btns .abtn { justify-content: center; }
+}

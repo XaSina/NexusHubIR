@@ -20,6 +20,7 @@ $jsCfg = [
     'cursor' => setting_on('anim_cursor'),
     'reveal' => setting_on('anim_reveal'),
     'light' => $colors['light'],
+    'vmsg' => ['check' => (string) setting('vmsg_check'), 'field' => (string) setting('vmsg_field'), 'email' => (string) setting('vmsg_email'), 'short' => (string) setting('vmsg_short')],
 ];
 $menu = setting_json('menu');
 $reqPath = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
