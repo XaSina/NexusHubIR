@@ -291,11 +291,28 @@
         }).join('') + more;
     }
     if (nbBtn && nbPanel) {
-        var open = false;
+        var open = false, home = nbPanel.parentNode, mq = window.matchMedia('(max-width: 600px)');
+        // phones: the panel floats right under the header's real bottom edge — the same in every performance mode
+        // (a fixed «top» only matched when the header was stuck to the top, and some modes changed what it was measured from)
+        var place = function () {
+            if (!open) return;
+            if (mq.matches) {
+                if (nbPanel.parentNode !== document.body) document.body.appendChild(nbPanel);
+                nbPanel.classList.add('nb-float');
+                var hi = document.querySelector('.site-header .header-inner') || nbBtn, r = hi.getBoundingClientRect(), top = Math.max(8, Math.round(r.bottom + 10));
+                nbPanel.style.top = top + 'px';
+                nbPanel.style.maxHeight = Math.max(220, Math.min(520, Math.round(innerHeight * .72), innerHeight - top - 16)) + 'px';
+            } else {
+                if (nbPanel.parentNode !== home) home.appendChild(nbPanel);
+                nbPanel.classList.remove('nb-float'); nbPanel.style.top = ''; nbPanel.style.maxHeight = '';
+            }
+        };
+        window.addEventListener('scroll', place, { passive: true });
+        window.addEventListener('resize', place);
         var close = function () { open = false; nbPanel.hidden = true; nbBtn.setAttribute('aria-expanded', 'false'); };
         nbBtn.addEventListener('click', function (e) {
             e.stopPropagation();
-            open = !open; nbPanel.hidden = !open; nbBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            open = !open; nbPanel.hidden = !open; nbBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); place();
             if (open) api('api/notifs', { read: 1 }).then(function (j) { if (j.ok) { renderList(j.items, j); setCount(0); } }).catch(function () {});
         });
         document.addEventListener('click', function (e) { if (open && !nbPanel.contains(e.target)) close(); });

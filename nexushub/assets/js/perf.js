@@ -33,15 +33,30 @@
         } catch (e) { return ''; }
     }
     function measureFps(ms) {
-        return new Promise(function (res) {
-            var ts = [], t0 = performance.now();
-            (function f(t) { ts.push(t); if (t - t0 < ms) requestAnimationFrame(f); else {
-                var dts = []; for (var i = 1; i < ts.length; i++) dts.push(ts[i] - ts[i - 1]);
-                dts.sort(function (a, b) { return a - b; });
-                var med = dts[Math.floor(dts.length / 2)] || 16.7, slow = dts.filter(function (x) { return x > 34; }).length / (dts.length || 1);
-                res({ fps: Math.min(144, Math.round(1000 / med)), jank: slow });
-            } })(t0);
-        });
+        // only counts frames while the tab is on screen: a hidden or just-woken tab gives no frames, which read as «۰ فریم»
+        function once() {
+            return new Promise(function (res) {
+                var ts = [], t0 = performance.now();
+                (function f(t) { if (!document.hidden) ts.push(t); if (t - t0 < ms) requestAnimationFrame(f); else {
+                    var dts = []; for (var i = 1; i < ts.length; i++) { var dt = ts[i] - ts[i - 1]; if (dt > 0 && dt < 250) dts.push(dt); }   // gaps from pauses aren't frames
+                    dts.sort(function (a, b) { return a - b; });
+                    if (dts.length < 20) return res(null);                                    // not enough frames to judge
+                    var med = dts[Math.floor(dts.length / 2)], slow = dts.filter(function (x) { return x > 34; }).length / dts.length;
+                    res({ fps: Math.min(144, Math.round(1000 / med)), jank: slow });
+                } })(t0);
+            });
+        }
+        function visible() { return new Promise(function (res) { if (!document.hidden) return res(); var h = function () { if (!document.hidden) { document.removeEventListener('visibilitychange', h); setTimeout(res, 400); } }; document.addEventListener('visibilitychange', h); }); }
+        var best = null, tries = 0;
+        function run() {
+            return visible().then(once).then(function (r) {
+                tries++;
+                if (r && (!best || r.fps > best.fps || (r.fps === best.fps && r.jank < best.jank))) best = r;
+                if ((!r || r.jank > .15) && tries < 3) return new Promise(function (ok) { setTimeout(ok, 300); }).then(run);   // page was still busy: look again
+                return best || { fps: 60, jank: 0 };
+            });
+        }
+        return run();
     }
     function scoreOf(info) {
         var s = 0;
@@ -60,11 +75,11 @@
     }
     function levelFor(score, info) {
         if (info.reduce) return 'off';
-        if (info.touch) return score >= 88 ? 'balanced' : score >= 30 ? 'lite' : 'off';     // phones never get the heaviest mode by themselves
+        if (info.touch) return score >= 75 ? 'balanced' : score >= 30 ? 'lite' : 'off';     // phones never get the heaviest mode by themselves
         return score >= 62 ? 'ultra' : score >= 42 ? 'balanced' : score >= 25 ? 'lite' : 'off';
     }
     function fitOf(mode, score) {                     // how well a mode suits this device, in %
-        var need = (touch ? { ultra: 95, balanced: 80, lite: 30, off: 0 } : { ultra: 62, balanced: 42, lite: 25, off: 0 })[mode];   // phone GPUs need more headroom (browsers report at most 8 GB of memory, whatever the phone has)
+        var need = (touch ? { ultra: 92, balanced: 75, lite: 30, off: 0 } : { ultra: 62, balanced: 42, lite: 25, off: 0 })[mode];   // phone GPUs need more headroom (browsers report at most 8 GB of memory, whatever the phone has)
         return Math.max(5, Math.min(100, Math.round(100 - Math.max(0, need - score) * 1.6)));
     }
     function runTest() {
@@ -76,12 +91,12 @@
         return measureFps(1200).then(function (r) {
             info.fps = r.fps; info.jank = r.jank;
             var score = scoreOf(info), level = levelFor(score, info);
-            var saved = { score: score, level: level, info: info, at: Date.now() };
+            var saved = { v: 2, score: score, level: level, info: info, at: Date.now() };
             set('nx_perf_test', JSON.stringify(saved)); set('nx_perf_auto', level);
             return saved;
         });
     }
-    function lastTest() { try { return JSON.parse(get('nx_perf_test') || 'null'); } catch (e) { return null; } }
+    function lastTest() { try { var t = JSON.parse(get('nx_perf_test') || 'null'); return t && t.info && t.info.fps >= 10 && t.v === 2 ? t : null; } catch (e) { return null; } }
     function current() { return get('nx_perf') || 'auto'; }
     function active() { return d.getAttribute('data-perf') || 'ultra'; }
 

@@ -707,3 +707,6 @@ section.container.shop-page::before, section.container.shop-page::after, .site-m
     .flow-tracker { margin-bottom: 16px; }
     .order-steps li small { display: none; }
 }
+
+/* bell panel on phones: placed by JS right under the header, identical in every performance mode */
+.nb-panel.nb-float { position: fixed; left: 12px; right: 12px; width: auto; z-index: 160; margin: 0; transform: none; }
