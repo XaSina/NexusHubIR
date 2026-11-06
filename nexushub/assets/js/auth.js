@@ -214,6 +214,7 @@
     var comboCv = null;
     function buildSprites() {
         var L = LOGO, gsz = L.sz * 1.3, m = Math.ceil(gsz * dpr), o = gsz / 2, s2 = small ? 1.1 : 1.2;
+        if (!(m > 0)) { comboCv = null; return; }                // hidden / zero-size stage (e.g. after the intro is gone): nothing to pre-render
         var mk = function () { var c = document.createElement('canvas'); c.width = c.height = m; var x = c.getContext('2d'); x.scale(dpr, dpr); return [c, x]; };
         var g = mk(), gx = g[1];
         gx.globalAlpha = .07;
@@ -272,7 +273,7 @@
         var ga = Math.min(1, Math.max(0, (now - L.formAt) / 700)), gsz = sz * 1.3;
         var gxp = Math.round((L.cx - gsz / 2) * dpr) / dpr, gyp = Math.round((L.cy - gsz / 2) * dpr) / dpr;
         drawOrbit(now, false);
-        if (settled && comboCv) {
+        if (settled && comboCv && comboCv.width) {
             ctx.drawImage(comboCv, gxp, gyp, gsz, gsz);
             L.settled = true;
         } else {
@@ -484,9 +485,7 @@
         setHud('IDENTIFY');
         steps.identify.classList.add('in');
         if (!touch) setTimeout(function () { $('#auIdentifier').focus({ preventScroll: true }); }, 650);
-        if (JOIN) setTimeout(toRegister, 260);          // came with an invite link: straight to sign-up
     });
-    var JOIN = /[?&]join=1/.test(location.search) && !!$('#auToReg');
     function toRegister() { identity = { value: '', type: '' }; $('#auRegSub').hidden = true; $('#auRegSub2').hidden = false; show('register'); }
     if ($('#auToReg')) $('#auToReg').addEventListener('click', toRegister);
     (function () {
@@ -530,6 +529,10 @@
         document.addEventListener('focusout', function () { setTimeout(q, 120); });
     })();
 
+    (function () {   // phones: the back link steps aside while the sign-up form scrolls under it
+        var bk = document.querySelector('.au-back'); if (!bk || !stage) return;
+        stage.addEventListener('scroll', function () { bk.classList.toggle('away', stage.scrollTop > 6); }, { passive: true });
+    })();
     function setDots(n) { dots.forEach(function (d, i) { d.classList.toggle('on', i < n); }); }
     function show(name) {
         if (name === current) return;

@@ -198,7 +198,7 @@ switch ($seg[0] ?? '') {
         }
         if ($me) { header('Location: ' . url($dest)); exit; }
         if ($dest !== '') $_SESSION['after_login'] = $dest;
-        header('Location: ' . url('auth') . '?join=1'); exit;
+        header('Location: ' . url('auth')); exit;
 
     case 'auth':
         if (current_member()) { header('Location: ' . after_login_url()); exit; }

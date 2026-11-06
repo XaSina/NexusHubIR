@@ -964,3 +964,21 @@ button { cursor: pointer; border: 0; background: none; }
 .au-inv-note b { color: var(--primary); }
 .au-alt { margin: 14px 0 0; text-align: center; font-size: .84rem; color: rgba(255,255,255,.6); }
 .au-link { border: 0; background: none; padding: 0 2px; color: var(--primary); font: inherit; font-weight: 800; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+
+/* sign-up form: every label and value sits centred and level in its field — Persian and English alike */
+[data-step=register] .au-field input, [data-step=register] .au-field input[dir="ltr"] { height: 60px; padding: 25px 18px 9px; text-align: center; font-size: 1rem; line-height: 1.2; }
+[data-step=register] .au-flabel { right: 14px; left: 14px; top: 50%; transform: translateY(-50%); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-step=register] .au-field input:focus + .au-flabel, [data-step=register] .au-field input:not(:placeholder-shown) + .au-flabel { top: 15px; font-size: .7rem; }
+[data-step=register] .au-field.pw-box input { padding-right: 52px; }
+[data-step=register] .au-invite .au-field input { padding-left: 56px; padding-right: 56px; }
+[data-step=register] .au-field.pw-box .pw-eye { top: 30px; }
+[data-step=register] .au-inv-x { top: 30px; }
+[data-step=register] .au-invite .au-field input { letter-spacing: 2px; }
+[data-step=register] .au-ferr { text-align: center; }
+[data-step=register] .au-strength { justify-content: center; }
+
+/* phones: «back to site» never sits on the card — more room above it, and it fades out while the form is scrolled */
+@media (max-width: 600px) {
+    .au-stage { padding-top: 78px !important; }
+    .au-back.away { opacity: 0 !important; pointer-events: none; transform: translateY(-8px); }
+}
