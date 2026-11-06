@@ -710,3 +710,14 @@ section.container.shop-page::before, section.container.shop-page::after, .site-m
 
 /* bell panel on phones: placed by JS right under the header, identical in every performance mode */
 .nb-panel.nb-float { position: fixed; left: 12px; right: 12px; width: auto; z-index: 160; margin: 0; transform: none; }
+
+/* bell panel head: title and the three links on one tidy line; a little wider on laptops */
+.nb-panel { width: min(420px, calc(100vw - 24px)); box-shadow: 0 30px 70px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .03); }
+.nb-head { gap: 10px; flex-wrap: nowrap; }
+.nb-head b { white-space: nowrap; flex-shrink: 0; }
+.nb-head .nb-links { flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+.nb-head .nb-links a { white-space: nowrap; }
+@media (max-width: 380px) { .nb-head { flex-wrap: wrap; } .nb-head .nb-links { flex-wrap: wrap; justify-content: flex-start; } }
+.nb-dim { position: fixed; inset: 0; z-index: 48; background: rgba(var(--bg-rgb, 5, 6, 10), .55); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s ease, visibility 0s linear .25s; }
+.nb-dim.on { opacity: 1; visibility: visible; transition: opacity .25s ease; }
+html.perf-off .nb-dim { transition: none; }

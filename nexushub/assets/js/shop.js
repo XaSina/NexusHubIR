@@ -304,15 +304,20 @@
                 nbPanel.style.maxHeight = Math.max(220, Math.min(520, Math.round(innerHeight * .72), innerHeight - top - 16)) + 'px';
             } else {
                 if (nbPanel.parentNode !== home) home.appendChild(nbPanel);
-                nbPanel.classList.remove('nb-float'); nbPanel.style.top = ''; nbPanel.style.maxHeight = '';
+                nbPanel.classList.remove('nb-float'); nbPanel.style.maxHeight = '';
+                // desktop / laptop: 12px under the header card's bottom edge (not the bell's), so it never sits on the header or the ticker
+                var hd = document.querySelector('.site-header .header-inner'), wr = home.getBoundingClientRect();
+                nbPanel.style.top = hd ? Math.round(hd.getBoundingClientRect().bottom - wr.top + 12) + 'px' : '';
             }
         };
         window.addEventListener('scroll', place, { passive: true });
         window.addEventListener('resize', place);
-        var close = function () { open = false; nbPanel.hidden = true; nbBtn.setAttribute('aria-expanded', 'false'); };
+        // a soft dim over the page (the header stays bright) so the open panel reads as one clear card, never stacked on the ticker
+        var dim = document.createElement('div'); dim.className = 'nb-dim'; dim.setAttribute('aria-hidden', 'true'); document.body.appendChild(dim);
+        var close = function () { open = false; nbPanel.hidden = true; nbBtn.setAttribute('aria-expanded', 'false'); dim.classList.remove('on'); };
         nbBtn.addEventListener('click', function (e) {
             e.stopPropagation();
-            open = !open; nbPanel.hidden = !open; nbBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); place();
+            open = !open; nbPanel.hidden = !open; nbBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); dim.classList.toggle('on', open); place();
             if (open) api('api/notifs', { read: 1 }).then(function (j) { if (j.ok) { renderList(j.items, j); setCount(0); } }).catch(function () {});
         });
         document.addEventListener('click', function (e) { if (open && !nbPanel.contains(e.target)) close(); });
