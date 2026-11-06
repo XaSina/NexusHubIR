@@ -5,12 +5,24 @@
  */
 
 /** other names people type for the brand (Google uses these to match brand searches to the site) */
+/** the site name Google should show: the panel's choice, else the first brand name when the title has separators */
+function seo_site_name(): string
+{
+    $n = trim((string) setting('seo_site_name'));
+    if ($n !== '') return $n;
+    $t = trim((string) setting('site_title'));
+    if (!preg_match('~[|—–-]~u', $t)) return $t;
+    $alt = array_values(array_filter(array_map('trim', preg_split('~[,،\n]+~u', (string) setting('seo_alt_names', '')))));
+    return $alt[0] ?? trim(preg_replace('~\s*[|—–-]\s*~u', '', $t));
+}
+
 function seo_alt_names(): array
 {
     $list = array_filter(array_map('trim', preg_split('~[,،\n]+~u', (string) setting('seo_alt_names', ''))));
     $host = (string) parse_url(site_url(''), PHP_URL_HOST);
     if ($host && !preg_match('~^(localhost|127\.|10\.|192\.168\.)~', $host)) $list[] = preg_replace('~^www\.~', '', $host);
-    $main = (string) setting('site_title');
+    $list[] = (string) setting('site_title');
+    $main = seo_site_name();
     return array_values(array_unique(array_filter($list, fn($n) => $n !== '' && $n !== $main)));
 }
 
@@ -20,7 +32,7 @@ function seo_org(string $logoUrl): array
     $same = [];
     foreach (social_links() as $s) if (preg_match('~^https?://~i', (string) $s['url'])) $same[] = $s['url'];
     return array_filter([
-        '@type' => 'Organization', '@id' => site_url('#org'), 'name' => (string) setting('site_title'), 'alternateName' => seo_alt_names() ?: null, 'url' => site_url(''),
+        '@type' => 'Organization', '@id' => site_url('#org'), 'name' => seo_site_name(), 'alternateName' => seo_alt_names() ?: null, 'url' => site_url(''),
         'logo' => ['@type' => 'ImageObject', 'url' => $logoUrl, 'width' => 512, 'height' => 512],
         'sameAs' => $same ?: null,
     ]);
@@ -31,7 +43,7 @@ function seo_jsonld(array $meta, string $title, string $desc, string $image, str
 {
     $graph = [];
     $graph[] = [
-        '@type' => 'WebSite', '@id' => site_url('#website'), 'url' => site_url(''), 'name' => (string) setting('site_title'), 'alternateName' => seo_alt_names(),
+        '@type' => 'WebSite', '@id' => site_url('#website'), 'url' => site_url(''), 'name' => seo_site_name(), 'alternateName' => seo_alt_names(),
         'description' => (string) setting('site_description'), 'inLanguage' => 'fa-IR', 'publisher' => ['@id' => site_url('#org')],
         'potentialAction' => ['@type' => 'SearchAction', 'target' => ['@type' => 'EntryPoint', 'urlTemplate' => site_url('search') . '?q={search_term_string}'], 'query-input' => 'required name=search_term_string'],
     ];

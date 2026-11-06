@@ -63,6 +63,7 @@ function default_settings(): array
         'seo_https' => '1',
         'seo_alt_names' => 'NexusHub, Nexus Hub, نکسوس هاب, نکسوس, NexusHubIR',
         'seo_home_title' => '',
+        'seo_site_name' => '',
         'seo_index_authors' => '0',
         'indexnow_on' => '1',
         'news_sitemap_on' => '1',

@@ -79,7 +79,8 @@ $jsCfg['cart'] = $cartN;
 <?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,follow"><?php else: ?><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"><?php endif; ?>
 <meta name="theme-color" content="<?= e($colors['bg']) ?>">
 <?php if (setting('google_verify') !== ''): ?><meta name="google-site-verification" content="<?= e(setting('google_verify')) ?>"><?php endif; ?>
-<meta property="og:site_name" content="<?= e($siteTitle) ?>">
+<meta property="og:site_name" content="<?= e(seo_site_name()) ?>">
+<meta name="application-name" content="<?= e(seo_site_name()) ?>">
 <meta property="og:title" content="<?= e($title) ?>">
 <meta property="og:description" content="<?= e(str_excerpt((string) $desc, 300)) ?>">
 <meta property="og:type" content="<?= e($meta['type'] ?? 'website') ?>">

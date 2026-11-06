@@ -129,7 +129,7 @@ switch ($seg[0] ?? '') {
         if (!ctype_digit($aKey)) {                                    // old links (/author/<username>) move to the number, so the login name isn't public
             $old = row('SELECT id FROM users WHERE username = ? AND is_active = 1', [$aKey]);
             if (!$old) not_found();
-            header('Location: ' . site_url('author/' . (int) $old['id']), true, 301); exit;
+            header('Location: ' . site_url(''), true, 301); exit;      // Google moves that result to the home page
         }
         $author = row('SELECT * FROM users WHERE id = ? AND is_active = 1', [(int) $aKey]);
         if (!$author) not_found();
