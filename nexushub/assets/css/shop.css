@@ -644,3 +644,16 @@ span.pd-emoji { display: grid; place-items: center; width: 100%; height: 100%; }
 .pcard-shop:hover { border-color: rgba(var(--primary-rgb), .4); }
 
 *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+/* checkout: prize coupons (applied by the site itself) */
+.co-coupons { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 6px; }
+.co-cp-title { font-size: .78rem; color: var(--muted); font-weight: 700; }
+.co-cp { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; cursor: pointer;
+    background: rgba(var(--text-rgb), .04); border: 1.5px solid var(--line); transition: border-color .2s, background .2s; }
+.co-cp input { width: 18px; height: 18px; margin: 0; accent-color: #3ddc84; }
+.co-cp > span { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.co-cp b { font-size: .84rem; line-height: 1.7; }
+.co-cp small { font-size: .74rem; color: #3ddc84; font-weight: 700; }
+.co-cp code { font-size: .72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; letter-spacing: .4px; background: rgba(61,220,132,.1); color: #3ddc84; white-space: nowrap; }
+.co-cp:has(input:checked) { border-color: rgba(61,220,132,.7); background: linear-gradient(135deg, rgba(61,220,132,.12), transparent 70%), rgba(var(--text-rgb), .03); }
+.co-cp.is-off { cursor: not-allowed; opacity: .6; } .co-cp.is-off small { color: var(--muted); }
+.cs-disc b { color: #3ddc84; }

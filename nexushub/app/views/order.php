@@ -137,6 +137,7 @@ $steps = [
                     <b class="co-p"><?= money((int) $it['total']) ?></b>
                 </div>
             <?php endforeach; ?>
+            <?php if ((int) ($o['discount'] ?? 0) > 0): ?><div class="cs-row cs-disc"><span>🏷️ تخفیف جایزه</span><b>− <?= money((int) $o['discount']) ?> <small>تومان</small></b></div><?php endif; ?>
             <div class="cs-row cs-total"><span>جمع کل</span><b><?= money((int) $o['total']) ?> <small>تومان</small></b></div>
             <div class="cs-row"><span>تاریخ ثبت</span><b><?= jdate('j F Y — H:i', $o['created_at']) ?></b></div>
             <?php if ($o['receipt_ref']): ?><div class="cs-row"><span>شماره پیگیری</span><b dir="ltr"><?= e(fa_num($o['receipt_ref'])) ?></b></div><?php endif; ?>

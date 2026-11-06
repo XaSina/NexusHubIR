@@ -69,6 +69,7 @@ adm_head('سفارش ' . $o['code'], 'orders');
     <div><small class="muted">شماره سفارش</small><h2 class="ltr" style="margin:2px 0"><?= e($o['code']) ?></h2></div>
     <?= order_badge($o['status']) ?>
     <div class="ov-total"><small class="muted">مبلغ</small><b><?= money((int) $o['total']) ?> <small>تومان</small></b></div>
+    <?php if ((int) ($o['discount'] ?? 0) > 0): ?><div class="ov-total"><small class="muted">🏷️ تخفیف جایزه<?= $o['coupon_id'] ? ' (' . e((string) val('SELECT code FROM coupons WHERE id = ?', [$o['coupon_id']])) . ')' : '' ?></small><b>− <?= money((int) $o['discount']) ?> <small>تومان</small></b></div><?php endif; ?>
     <a class="abtn abtn-ghost abtn-sm" href="<?= e(url('order/' . $o['code'])) ?>" target="_blank"><?= icon('eye', 15) ?> نمای مشتری</a>
     <a class="abtn abtn-ghost abtn-sm" href="orders.php">← سفارش‌ها</a>
 </div>

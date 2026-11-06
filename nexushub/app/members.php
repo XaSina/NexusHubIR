@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 10;   // v10: lucky wheel tables (created by schema.php)
+const NX_DB_VERSION = 11;   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -52,6 +52,13 @@ function nx_migrate(): void
         // v9: how long a finished raffle keeps its result box on the site
         $rc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'raffles'"), 'COLUMN_NAME');
         if ($rc && !in_array('result_hours', $rc, true)) db()->exec("ALTER TABLE `raffles` ADD COLUMN `result_hours` INT UNSIGNED NOT NULL DEFAULT 24 AFTER `box_accent`");
+    }
+    if ($v < 11) {
+        // v11: prizes + coupons (tables from schema.php); orders remember the discount they got
+        $oc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders'"), 'COLUMN_NAME');
+        if ($oc && !in_array('discount', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `discount` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `total`");
+        if ($oc && !in_array('coupon_id', $oc, true)) db()->exec("ALTER TABLE `orders` ADD COLUMN `coupon_id` INT UNSIGNED NULL AFTER `discount`");
+        try { prizes_backfill(); } catch (Throwable $e) {}
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

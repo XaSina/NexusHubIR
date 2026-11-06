@@ -1533,3 +1533,7 @@ html[dir="ltr"] .js-reveal .sec-head[data-reveal] .sec-title { transform: transl
 
     html.perf-safe .nxp-shine { display: none !important; }
 
+/* bell panel: quick links at the top */
+.nb-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.nb-links a { font-size: .74rem; font-weight: 700; padding: 3px 10px; border-radius: 10px; background: rgba(var(--text-rgb), .06); border: 1px solid var(--line); }
+.nb-links a:hover { border-color: rgba(var(--primary-rgb), .5); }

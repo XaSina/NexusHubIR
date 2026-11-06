@@ -177,6 +177,7 @@ switch ($seg[1] ?? '') {
     case 'raffle-state':
     case 'raffle-join':
     case 'raffle-buy':
+        if (!setting_on('footer_raffle_link') && !current_user()) json_out(['ok' => false, 'error' => 'بخش قرعه‌کشی فعلاً بسته است.'], 410);
         $r = row('SELECT * FROM raffles WHERE id = ?', [(int) ($_POST['id'] ?? 0)]);
         if (!$r || ($r['status'] === 'draft' && !current_user())) json_out(['ok' => false, 'error' => 'قرعه‌کشی پیدا نشد.'], 404);
         $act = $seg[1];
@@ -203,6 +204,7 @@ switch ($seg[1] ?? '') {
     /* ---------- lucky wheel ---------- */
     case 'wheel-state':
     case 'wheel-spin':
+        if (!setting_on('footer_wheel_link') && !current_user()) json_out(['ok' => false, 'error' => 'بخش گردونه شانس فعلاً بسته است.'], 410);
         $w = row("SELECT * FROM wheels WHERE id = ? AND audience = 'public'", [(int) ($_POST['id'] ?? 0)]);
         if (!$w || ($w['status'] !== 'active' && !current_user())) json_out(['ok' => false, 'error' => 'گردونه پیدا نشد.'], 404);
         $me = current_member();

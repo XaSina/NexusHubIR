@@ -55,7 +55,8 @@ function adm_nav(): array
     $toReview = (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')");
     $openT = (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'");
     try { $raffleReq = (int) val("SELECT COUNT(*) FROM raffle_requests WHERE status = 'pending'"); } catch (Throwable $e) { $raffleReq = 0; }
-    try { $wheelTodo = (int) val("SELECT COUNT(*) FROM wheel_spins WHERE member_id IS NOT NULL AND kind = 'prize' AND status = 'new'"); } catch (Throwable $e) { $wheelTodo = 0; }
+    $wheelTodo = 0;
+    try { prizes_expire_due(); $prizeTodo = (int) val("SELECT COUNT(*) FROM prizes WHERE status = 'pending'"); } catch (Throwable $e) { $prizeTodo = 0; }
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
         ['سفارش‌ها', 'orders.php', 'orders', 'shop', 'orders', $toReview],
@@ -71,6 +72,7 @@ function adm_nav(): array
         ['تبلیغات', 'ads.php', 'ads', '*', 'ads', 0],
         ['قرعه‌کشی', 'raffles.php', 'gift', '*', 'raffles', $raffleReq],
         ['گردونه شانس', 'wheels.php', 'wheel', '*', 'wheels', $wheelTodo],
+        ['جایزه‌ها و برنده‌ها', 'prizes.php', 'gift', '*', 'prizes', $prizeTodo],
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
         ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],

@@ -7,8 +7,7 @@ if (is_post()) {
     $id = (int) ($_POST['id'] ?? 0);
     if (prize_claim_save()) redirect('admin/raffles.php');
     if (($_POST['act'] ?? '') === 'opts') {
-        save_settings(['footer_raffle_link' => !empty($_POST['footer_raffle_link']) ? '1' : '0',
-            'raffle_ended_access' => in_array($_POST['raffle_ended_access'] ?? '', ['all', 'participants', 'winners'], true) ? $_POST['raffle_ended_access'] : 'winners']);
+        save_settings(['raffle_ended_access' => in_array($_POST['raffle_ended_access'] ?? '', ['all', 'participants', 'winners'], true) ? $_POST['raffle_ended_access'] : 'winners']);
         flash('تنظیمات ذخیره شد ✅');
         redirect('admin/raffles.php');
     }
@@ -36,7 +35,6 @@ adm_head('قرعه‌کشی‌ها', 'raffles');
     <a class="rfl-new" href="raffle-edit.php"><span><?= adm_icon('plus', 18) ?></span> قرعه‌کشی جدید</a>
 </div>
 <form method="post" class="rfl-opts" id="rflOpts"><?= csrf_field() ?><input type="hidden" name="act" value="opts">
-    <label class="rfl-opt"><span class="rfl-sw"><input type="checkbox" name="footer_raffle_link" value="1" <?= setting_on('footer_raffle_link') ? 'checked' : '' ?>><i></i></span> لینک «قرعه‌کشی» توی فوتر سایت</label>
     <label class="rfl-opt">صفحه‌ی قرعه‌کشی‌های تموم‌شده (بعد از زمان نمایش نتیجه) باز باشه برای:
         <select name="raffle_ended_access"><?php foreach (['winners' => '🏆 فقط برنده‌ها', 'participants' => '👥 فقط شرکت‌کننده‌ها', 'all' => '🌍 همه'] as $k => $t): ?><option value="<?= $k ?>" <?= setting('raffle_ended_access', 'winners') === $k ? 'selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
 </form>

@@ -295,11 +295,11 @@ switch ($seg[0] ?? '') {
             if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
             elseif (empty($_POST['agree'])) $err = 'برای ثبت سفارش، قوانین فروشگاه را بپذیرید.';
             else {
-                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''));
+                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''), (int) ($_POST['coupon'] ?? 0));
                 if ($order) redirect('order/' . $order['code'] . '?new=1');
             }
         }
-        page_out('checkout', ['lines' => $lines, 'member' => $member, 'err' => $err, 'bodyClass' => 'page-shop page-checkout'], ['title' => 'تکمیل خرید | ' . setting('shop_title'), 'noindex' => true]);
+        page_out('checkout', ['lines' => $lines, 'member' => $member, 'err' => $err, 'coupons' => coupons_for_cart($member, $lines), 'bodyClass' => 'page-shop page-checkout'], ['title' => 'تکمیل خرید | ' . setting('shop_title'), 'noindex' => true]);
         break;
 
     case 'order':
@@ -425,6 +425,7 @@ switch ($seg[0] ?? '') {
 
     /* ======================= Raffles ======================= */
     case 'raffle':
+        if (!setting_on('footer_raffle_link') && !current_user()) { http_response_code(410); page_out('section_closed', ['what' => 'قرعه‌کشی', 'icon' => '🎰'], ['title' => 'قرعه‌کشی | ' . setting('site_title'), 'noindex' => true]); break; }
         raffles_due();
         track_visit();
         $slug = (string) ($seg[1] ?? '');
@@ -461,8 +462,27 @@ switch ($seg[0] ?? '') {
         ]);
         break;
 
+    /* ======================= Prizes & notifications (members) ======================= */
+    case 'prizes':
+    case 'notifications':
+        $member = current_member();
+        if (!$member) { $_SESSION['after_login'] = $seg[0]; redirect('auth'); }
+        header('Cache-Control: no-store');
+        if ($seg[0] === 'prizes') {
+            page_out('prizes', ['member' => $member, 'list' => prizes_for_member((int) $member['id']), 'bodyClass' => 'page-prizes'], ['title' => 'جایزه‌های من | ' . setting('site_title'), 'noindex' => true]);
+        } else {
+            $aud = 'm:' . $member['id']; notifs_cleanup();
+            $per = 15; $total = (int) val('SELECT COUNT(*) FROM notifications WHERE audience = ?', [$aud]); $pages = max(1, (int) ceil($total / $per));
+            $page = max(1, min($pages, (int) ($_GET['p'] ?? 1)));
+            $list = rows('SELECT * FROM notifications WHERE audience = ? ORDER BY updated_at DESC, id DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per), [$aud]);
+            q('UPDATE notifications SET is_read = 1 WHERE audience = ? AND is_read = 0', [$aud]);
+            page_out('notifications', ['list' => $list, 'page' => $page, 'pages' => $pages, 'bodyClass' => 'page-prizes'], ['title' => 'اعلان‌های من | ' . setting('site_title'), 'noindex' => true]);
+        }
+        break;
+
     /* ======================= Lucky wheel ======================= */
     case 'wheel':
+        if (!setting_on('footer_wheel_link') && !current_user()) { http_response_code(410); page_out('section_closed', ['what' => 'گردونه شانس', 'icon' => '🎡'], ['title' => 'گردونه شانس | ' . setting('site_title'), 'noindex' => true]); break; }
         track_visit();
         $slug = (string) ($seg[1] ?? '');
         if ($slug === '') {

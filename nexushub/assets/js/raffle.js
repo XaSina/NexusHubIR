@@ -191,6 +191,15 @@
         });
     }
 
+    /* ---------- participants: drag (mouse) or swipe (touch) to scroll, no scrollbar ---------- */
+    (function dragScroll() {
+        var el = $('#rfPeople'); if (!el) return;
+        var y0 = 0, t0 = 0, down = false;
+        el.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') return; down = true; y0 = e.clientY; t0 = el.scrollTop; el.classList.add('dragging'); });
+        window.addEventListener('pointermove', function (e) { if (down) el.scrollTop = t0 - (e.clientY - y0); });
+        window.addEventListener('pointerup', function () { down = false; el.classList.remove('dragging'); });
+    })();
+
     /* ---------- start ---------- */
     refreshAll();
     var note = $('#rfWheelNote');

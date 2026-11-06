@@ -394,19 +394,25 @@ function new_code(string $table, string $prefix): string
 }
 
 /** Create an order from the cart. Returns [order|null, error]. */
-function order_create(array $member, string $note = ''): array
+function order_create(array $member, string $note = '', int $couponId = 0): array
 {
     $lines = cart_lines();
     if (!$lines) return [null, 'سبد خرید شما خالی است.'];
     foreach ($lines as $l) if ($l['error']) return [null, $l['title'] . ': ' . $l['error']];
     $total = array_sum(array_column($lines, 'total'));
     if ($total <= 0) return [null, 'مبلغ سفارش معتبر نیست.'];
+    $discount = 0; $coupon = null;
+    if ($couponId) {   // a prize coupon: checked again here, used once
+        foreach (coupons_for_cart($member, $lines) as $cc) if ((int) $cc['c']['id'] === $couponId) $coupon = $cc;
+        if (!$coupon || $coupon['why'] !== '' || $coupon['off'] <= 0) return [null, 'کد تخفیف انتخاب‌شده روی این سبد اعمال نمی‌شه.'];
+        $discount = min($coupon['off'], $total - 1);
+    }
     $r = shop_rates();
     db()->beginTransaction();
     try {
         $code = new_code('orders', 'NX');
         $oid = insert('orders', [
-            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total,
+            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total - $discount, 'discount' => $discount, 'coupon_id' => $coupon ? (int) $coupon['c']['id'] : null,
             'items_count' => array_sum(array_column($lines, 'qty')), 'customer_note' => mb_substr(trim($note), 0, 1000) ?: null,
             'rates' => json_encode(['usd' => $r['usd'], 'ton' => $r['ton'], 'margin' => (float) setting('shop_margin', '0')]),
             'ip' => client_ip(), 'expires_at' => date('Y-m-d H:i:s', time() + 60 * max(10, (int) setting('shop_pay_minutes', '60'))),
@@ -421,9 +427,15 @@ function order_create(array $member, string $note = ''): array
             ]);
             if ($l['variant'] && $l['variant']['stock'] !== null) q('UPDATE product_variants SET stock = GREATEST(stock - ?, 0) WHERE id = ?', [$l['qty'], $l['variant']['id']]);
         }
+        if ($coupon) {
+            $ok = q("UPDATE coupons SET status = 'used', order_id = ?, used_at = ? WHERE id = ? AND status = 'active'", [$oid, now(), $coupon['c']['id']])->rowCount();
+            if (!$ok) throw new RuntimeException('coupon-taken');
+            if ($coupon['c']['prize_id']) q("UPDATE prizes SET status = 'used', updated_at = ? WHERE id = ?", [now(), $coupon['c']['prize_id']]);
+        }
         db()->commit();
     } catch (Throwable $e) {
         db()->rollBack();
+        if ($e->getMessage() === 'coupon-taken') return [null, 'این کد تخفیف قبلاً استفاده شده.'];
         throw $e;
     }
     $_SESSION['cart'] = [];
@@ -477,7 +489,7 @@ function order_set_status(array $o, string $status, array $extra = []): array
     if ($status === 'approved') $d['approved_at'] = now();
     if ($status === 'completed') { $d['completed_at'] = now(); if (!$o['approved_at']) $d['approved_at'] = now(); }
     update('orders', $d, (int) $o['id']);
-    if (in_array($status, ['canceled', 'expired'], true) && !in_array($prev, ['canceled', 'expired', 'completed'], true)) order_restock($o);
+    if (in_array($status, ['canceled', 'expired'], true) && !in_array($prev, ['canceled', 'expired', 'completed'], true)) { order_restock($o); coupon_release($o); }
     if ($status === 'completed' && $prev !== 'completed') {
         foreach (order_items((int) $o['id']) as $it) if ($it['product_id']) q('UPDATE products SET sales = sales + ? WHERE id = ?', [$it['qty'], $it['product_id']]);
     }
@@ -656,7 +668,7 @@ function after_login_url(bool $consume = true): string
 {
     $to = (string) ($_SESSION['after_login'] ?? '');
     if ($consume) unset($_SESSION['after_login']);
-    return preg_match('~^(checkout|orders|order/[A-Z0-9]+|support(/[A-Z0-9]+)?|raffle/[a-z0-9-]+|wheel/[a-z0-9-]+)$~i', $to) ? url($to) : url('account');
+    return preg_match('~^(checkout|orders|order/[A-Z0-9]+|support(/[A-Z0-9]+)?|raffle/[a-z0-9-]+|wheel/[a-z0-9-]+|prizes|notifications)$~i', $to) ? url($to) : url('account');
 }
 
 /* =========================================================================

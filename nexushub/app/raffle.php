@@ -77,28 +77,37 @@ function prize_claim_ids(): array
 /** deadline (unix time) for a prize won at $wonAt */
 function prize_claim_deadline(string $wonAt): int { return strtotime($wonAt) + prize_claim_hours() * 3600; }
 
-/** one-line message for notifications: "تا ۲۴ ساعت به @a یا @b پیام بده…" */
+/** one-line message for notifications (no IDs in the text — the Telegram buttons are on the prizes page) */
 function prize_claim_text(?string $wonAt = null): string
 {
     if (!prize_claim_on()) return 'به زودی برای تحویل جایزه باهات تماس می‌گیریم.';
-    $ids = array_map(fn($id) => "\u{2068}" . $id . "\u{2069}", array_keys(prize_claim_ids()));   // isolated, so "@name" never flips inside Persian text
-    $who = $ids ? implode(' یا ', $ids) : 'پشتیبانی سایت';
     $until = $wonAt ? ' (تا ' . jdate('l j F — ساعت H:i', prize_claim_deadline($wonAt)) . ')' : '';
-    return '📩 برای دریافت جایزه تا ' . fa_num((string) prize_claim_hours()) . ' ساعت' . $until . ' به ' . $who . ' توی تلگرام پیام بده؛ بعد از این زمان جایزه باطل می‌شه.';
+    return '📩 برای دریافت جایزه تا ' . fa_num((string) prize_claim_hours()) . ' ساعت' . $until . ' از دکمه‌ی تلگرام توی «جایزه‌های من» بهمون پیام بده؛ بعد از این زمان جایزه باطل می‌شه.';
 }
 
-/** a box for the winner: deadline, time left and buttons to the IDs */
+/** the Telegram logo */
+function tg_logo(int $s = 22): string
+{
+    return '<svg width="' . $s . '" height="' . $s . '" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#29a9eb"/><path fill="#fff" d="M5.4 11.7 17 7.2c.5-.2 1 .1.8.9l-2 9.3c-.1.6-.5.8-1 .5l-3-2.2-1.5 1.4c-.2.2-.3.3-.6.3l.2-3.1 5.6-5c.2-.2 0-.3-.4-.1l-6.9 4.3-3-.9c-.6-.2-.6-.6.2-.9Z"/></svg>';
+}
+
+/** Telegram buttons (logo only) for the owner's IDs */
+function prize_claim_buttons(): string
+{
+    $h = ''; $n = 0;
+    foreach (prize_claim_ids() as $id => $link) $h .= '<a class="pc-id" href="' . e($link) . '" target="_blank" rel="noopener" title="پیام در تلگرام" aria-label="پیام در تلگرام">' . tg_logo(24) . (count(prize_claim_ids()) > 1 ? '<small>' . fa_num((string) ++$n) . '</small>' : '') . '</a>';
+    return $h !== '' ? $h : '<a class="pc-id pc-sup" href="' . e(url('support')) . '" title="پشتیبانی">💬</a>';
+}
+
+/** a box for the winner: deadline, time left and the Telegram button(s) */
 function prize_claim_box(string $wonAt, string $prize = ''): string
 {
     if (!prize_claim_on()) return '';
     $end = prize_claim_deadline($wonAt); $left = $end - time();
-    $btns = '';
-    foreach (prize_claim_ids() as $id => $link) $btns .= '<a class="pc-id" href="' . e($link) . '" target="_blank" rel="noopener"><span>✈️</span><b dir="ltr">' . e($id) . '</b></a>';
-    if ($btns === '') $btns = '<a class="pc-id" href="' . e(url('support')) . '"><span>💬</span><b>پشتیبانی سایت</b></a>';
     return '<div class="pc-box' . ($left <= 0 ? ' is-over' : '') . '">'
         . '<div class="pc-head"><span class="pc-ic">' . ($left > 0 ? '📩' : '⌛') . '</span><div><b>' . ($left > 0 ? 'جایزه‌ت رو بگیر' . ($prize !== '' ? ': ' . e($prize) : '') : 'مهلت دریافت جایزه تموم شد') . '</b>'
-        . '<small>' . ($left > 0 ? 'تا ' . e(jdate('l j F — ساعت H:i', $end)) . ' (' . e(raffle_left_text($left)) . ' مونده) به یکی از این آیدی‌ها پیام بده؛ بعدش جایزه باطل می‌شه.' : 'مهلت ' . fa_num((string) prize_claim_hours()) . ' ساعته‌ی پیام دادن گذشته و جایزه باطل شده.') . '</small></div></div>'
-        . ($left > 0 ? '<div class="pc-ids">' . $btns . '</div>' : '') . '</div>';
+        . '<small>' . ($left > 0 ? e(raffle_left_text($left)) . ' وقت داری (تا ' . e(jdate('l j F — H:i', $end)) . ') از دکمه‌ی تلگرام بهمون پیام بدی؛ بعدش جایزه باطل می‌شه.' : 'مهلت ' . fa_num((string) prize_claim_hours()) . ' ساعته‌ی پیام دادن گذشته و جایزه باطل شده.') . '</small></div>'
+        . ($left > 0 ? '<div class="pc-ids">' . prize_claim_buttons() . '</div>' : '') . '</div></div>';
 }
 
 /** full name of a member by id (for results saved before full names were stored) */
@@ -172,7 +181,7 @@ function raffle_mine(array $r, ?array $m): ?array
         'ranges' => array_map(fn($x) => [(int) $x['from_no'], (int) $x['to_no']], $approved),
         'pending' => array_sum(array_map(fn($x) => $x['status'] === 'pending' ? (int) $x['qty'] : 0, $req)),
         'requests' => $req,
-        'invite' => raffle_url($r) . '?ref=' . rawurlencode($m['member_code']),
+        'invite' => site_url('raffle/' . rawurlencode((string) $r['slug'])) . '?ref=' . rawurlencode($m['member_code']),
         'invited' => (int) val('SELECT COUNT(*) FROM raffle_entries WHERE raffle_id = ? AND ref_by = ?', [$rid, $mid]),
     ];
 }
@@ -311,7 +320,7 @@ function raffle_maybe_draw(array $r, bool $force = false): array
         q("UPDATE raffles SET status = 'drawn', results = ?, draw_seed = ?, drawn_at = ?, updated_at = ? WHERE id = ?",
             [json_encode($results, JSON_UNESCAPED_UNICODE), bin2hex(random_bytes(12)), now(), now(), $r['id']]);
         $pdo->commit();
-        foreach ($results as $w) notify('m:' . $w['member_id'], 'raffle', (int) $r['id'], '🏆', 'تبریک! برنده‌ی قرعه‌کشی شدی', 'جایزه: ' . $w['prize'] . ' — «' . $r['title'] . '». ' . prize_claim_text(now()), 'raffle/' . $r['slug'], 'success');
+        foreach ($results as $i => $w) prize_create((int) $w['member_id'], 'raffle', (int) $r['id'], (string) $w['prize'], (string) ($prizes[$i]['emoji'] ?? ''), discount_norm($prizes[$i]['discount'] ?? null), null, (string) $r['title']);
         notify('admin', 'raffle', (int) $r['id'], '🏆', 'قرعه‌کشی برگزار شد', $r['title'] . ' — ' . implode('، ', array_column($results, 'full')), 'admin/raffle-view.php?id=' . $r['id'], 'success');
         return row('SELECT * FROM raffles WHERE id = ?', [$r['id']]);
     } catch (Throwable $e) {
@@ -459,6 +468,7 @@ function raffle_box_html(array $r, ?array $st = null, bool $preview = false): st
 
 function raffle_slot(string $position): string
 {
+    if (!setting_on('footer_raffle_link')) return '';
     static $list = null;
     if ($list === null) {
         $list = [];

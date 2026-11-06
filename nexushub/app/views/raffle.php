@@ -72,7 +72,7 @@ $medals = ['🥇', '🥈', '🥉'];
                 <?php else: ?>
                     <h3><?= $r['status'] === 'drawn' ? '🏆 قرعه‌کشی برگزار شد' : ($r['status'] === 'failed' ? 'ℹ️ قرعه‌کشی برگزار نشد' : ($r['status'] === 'cancelled' ? 'این قرعه‌کشی لغو شد' : '⏰ ثبت‌نام بسته شد')) ?></h3>
                     <p class="muted"><?= $r['status'] === 'failed' ? 'تعداد شرکت‌کننده‌ها به حد نصاب نرسید.' : ($r['status'] === 'drawn' ? 'نتیجه رو کنار گردونه ببین.' : 'چند لحظه دیگه گردونه می‌چرخه…') ?></p>
-                    <?php if ($r['status'] === 'drawn' && $me && $r['drawn_at']) foreach (json_decode((string) $r['results'], true) ?: [] as $w) if ((int) $w['member_id'] === (int) $me['id']) echo prize_claim_box((string) $r['drawn_at'], (string) $w['prize']); ?>
+                    <?php if ($r['status'] === 'drawn' && $me) foreach (prizes_for_member((int) $me['id']) as $pz) if ($pz['source'] === 'raffle' && (int) $pz['source_id'] === (int) $r['id']) echo prize_card_html($pz, false); ?>
                 <?php endif; ?>
                 <div id="rfMine"></div>
             </div>
@@ -93,7 +93,7 @@ $medals = ['🥇', '🥈', '🥉'];
                     <?php endif; ?>
                     <li>اگه تا زمان برگزاری حداقل <b><?= fa_num((string) $r['min_participants']) ?></b> نفر شرکت نکنن، قرعه‌کشی برگزار نمی‌شه.</li>
                     <li>سر ساعت، گردونه همین‌جا زنده می‌چرخه و هر نفر فقط یک جایزه می‌بره.</li>
-                    <?php if (prize_claim_on()): ?><li>🏆 برنده‌ها باید تا <b><?= fa_num((string) prize_claim_hours()) ?> ساعت</b> بعد از قرعه‌کشی <?= prize_claim_ids() ? 'به ' . implode(' یا ', array_map(fn($id, $l) => '<a href="' . e($l) . '" target="_blank" rel="noopener" dir="ltr">' . e($id) . '</a>', array_keys(prize_claim_ids()), prize_claim_ids())) : 'به پشتیبانی' ?> توی تلگرام پیام بدن؛ وگرنه جایزه باطل می‌شه.</li><?php endif; ?>
+                    <?php if (prize_claim_on()): ?><li>🏆 برنده‌ها باید تا <b><?= fa_num((string) prize_claim_hours()) ?> ساعت</b> بعد از قرعه‌کشی از تلگرام بهمون پیام بدن؛ وگرنه جایزه باطل می‌شه. جوایز تخفیفی خودکار موقع خرید اعمال می‌شن.</li><?php endif; ?>
                 </ul>
             </div>
 
@@ -104,6 +104,6 @@ $medals = ['🥇', '🥈', '🥉'];
         </aside>
     </div>
 </section>
-<script>window.NX_RAFFLE = <?= json_encode($state + ['price' => (int) $r['ticket_price'], 'cap' => (int) $r['max_tickets_user'], 'invite' => $me && $mode === 'referral' ? raffle_url($r) . '?ref=' . rawurlencode($me['member_code']) : '', 'logged' => (bool) $me, 'prizes' => $prizes, 'bonusPct' => (float) $r['ticket_bonus'], 'maxRef' => (int) $r['max_referrals'], 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time(), 'resultLive' => raffle_result_live($r), 'show' => !empty($_GET['show'])], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
+<script>window.NX_RAFFLE = <?= json_encode($state + ['price' => (int) $r['ticket_price'], 'cap' => (int) $r['max_tickets_user'], 'invite' => $me && $mode === 'referral' ? site_url('raffle/' . rawurlencode((string) $r['slug'])) . '?ref=' . rawurlencode($me['member_code']) : '', 'logged' => (bool) $me, 'prizes' => $prizes, 'bonusPct' => (float) $r['ticket_bonus'], 'maxRef' => (int) $r['max_referrals'], 'drawnAt' => $r['drawn_at'] ? strtotime($r['drawn_at']) : 0, 'now' => time(), 'resultLive' => raffle_result_live($r), 'show' => !empty($_GET['show'])], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
 <script src="<?= e(asset('js/wheel.js')) ?>" defer></script>
 <script src="<?= e(asset('js/raffle.js')) ?>" defer></script>

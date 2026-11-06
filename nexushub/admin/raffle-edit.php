@@ -21,7 +21,10 @@ if (is_post()) {
     $pz = [];
     foreach ((array) ($_POST['prize_title'] ?? []) as $i => $t) {
         $t = mb_substr(trim((string) $t), 0, 120);
-        if ($t !== '') $pz[] = ['title' => $t, 'emoji' => mb_substr(trim((string) ($_POST['prize_emoji'][$i] ?? '🎁')), 0, 4) ?: '🎁'];
+        if ($t === '') continue;
+        $one = ['title' => $t, 'emoji' => mb_substr(trim((string) ($_POST['prize_emoji'][$i] ?? '🎁')), 0, 4) ?: '🎁'];
+        if (($_POST['prize_kind'][$i] ?? '') === 'discount' && ($dc = discount_norm(json_decode((string) ($_POST['prize_disc'][$i] ?? ''), true)))) $one['discount'] = $dc;
+        $pz[] = $one;
     }
     $d['prizes'] = json_encode(array_slice($pz, 0, 20), JSON_UNESCAPED_UNICODE);
     $d['draw_at'] = jalali_to_datetime((string) ($_POST['draw_at'] ?? '')) ?: $r['draw_at'];
@@ -97,7 +100,8 @@ $bonus = (string) (float) $r['ticket_bonus'];
             <div class="card-head"><h3>🎁 جایزه‌ها</h3><small class="muted">به ترتیب: نفر اول، دوم، …</small></div>
             <div id="pzList" class="pz-list">
                 <?php foreach ($prizes as $i => $p): ?>
-                <div class="pz-row"><b class="pz-n"><?= fa_num((string) ($i + 1)) ?></b><input class="pz-emoji" name="prize_emoji[]" value="<?= e($p['emoji'] ?? '🎁') ?>" maxlength="4" aria-label="ایموجی"><input name="prize_title[]" value="<?= e($p['title'] ?? '') ?>" placeholder="مثلاً ۳ ماه پریمیوم تلگرام" aria-label="عنوان جایزه"><button type="button" class="abtn abtn-sm abtn-ghost pz-del" aria-label="حذف">✕</button></div>
+                <?php $isD = !empty($p['discount']); ?>
+                <div class="pz-wrap"><div class="pz-row"><b class="pz-n"><?= fa_num((string) ($i + 1)) ?></b><input class="pz-emoji" name="prize_emoji[]" value="<?= e($p['emoji'] ?? '🎁') ?>" maxlength="4" aria-label="ایموجی"><input name="prize_title[]" value="<?= e($p['title'] ?? '') ?>" placeholder="مثلاً ۳ ماه پریمیوم تلگرام" aria-label="عنوان جایزه"><input type="hidden" name="prize_kind[]" value="<?= $isD ? 'discount' : 'item' ?>"><input type="hidden" class="dsc-data" name="prize_disc[]" value="<?= e(json_encode($p['discount'] ?? new stdClass(), JSON_UNESCAPED_UNICODE)) ?>"><button type="button" class="pz-kind <?= $isD ? 'is-d' : '' ?>" data-pzkind><?= $isD ? '🏷️ تخفیف' : '🎁 هدیه' ?></button><button type="button" class="abtn abtn-sm abtn-ghost pz-del" aria-label="حذف">✕</button></div><div class="pz-dsc-host"></div></div>
                 <?php endforeach; ?>
             </div>
             <button type="button" class="abtn abtn-sm tb-add" id="pzAdd"><?= adm_icon('plus', 16) ?> افزودن جایزه</button>
@@ -169,7 +173,7 @@ $bonus = (string) (float) $r['ticket_bonus'];
             <?= f_text('result_hours', 'نمایش نتیجه روی سایت (ساعت)', (string) (int) ($r['result_hours'] ?? 24), ['type' => 'number', 'min' => 0, 'max' => 720]) ?>
             <?= $chips('result_hours', ['0' => 'نه', '6' => '۶ ساعت', '24' => '۱ روز', '72' => '۳ روز', '168' => '۱ هفته'], (string) (int) ($r['result_hours'] ?? 24)) ?>
             <small class="af-hint">تو این مدت کادر «برنده مشخص شد» روی سایت می‌مونه و گردونه برای هر کی وارد صفحه بشه خودکار می‌چرخه.</small>
-            <?= f_switch('footer_raffle_link', 'لینک «قرعه‌کشی» توی فوتر سایت', setting_on('footer_raffle_link'), 'برای همه‌ی قرعه‌کشی‌ها یکیه') ?>
+            <?= f_switch('footer_raffle_link', 'بخش «قرعه‌کشی» روی سایت باز باشه (لینک فوتر)', setting_on('footer_raffle_link'), 'اگه خاموش کنی لینک فوتر و کادرها برداشته می‌شن و هر کی لینک رو باز کنه می‌بینه این بخش بسته‌ست') ?>
         </div>
         <div class="card rf-savecard">
             <div class="rf-save-head"><span class="rf-save-ic">🎰</span><div><b><?= $r['id'] ? 'ذخیره‌ی تغییرات' : 'ساخت قرعه‌کشی' ?></b><small>وضعیت فعلی: <?= e(['draft' => '📝 پیش‌نویس', 'active' => '🟢 فعال', 'cancelled' => '⛔ لغو شده', 'drawn' => '🏆 برگزار شده', 'failed' => 'ℹ️ برگزار نشد'][$r['status']] ?? $r['status']) ?></small></div></div>
@@ -188,11 +192,23 @@ document.addEventListener('DOMContentLoaded', function () {
     var list = document.getElementById('pzList');
     function renum() { $$('.pz-n', list).forEach(function (b, i) { b.textContent = NXA.fa(i + 1); }); }
     document.getElementById('pzAdd').addEventListener('click', function () {
-        var d = document.createElement('div'); d.className = 'pz-row';
-        d.innerHTML = '<b class="pz-n"></b><input class="pz-emoji" name="prize_emoji[]" value="🎁" maxlength="4" aria-label="ایموجی"><input name="prize_title[]" placeholder="عنوان جایزه" aria-label="عنوان جایزه"><button type="button" class="abtn abtn-sm abtn-ghost pz-del" aria-label="حذف">✕</button>';
-        list.appendChild(d); renum(); d.querySelector('[name="prize_title[]"]').focus(); live();
+        var w = document.createElement('div'); w.className = 'pz-wrap';
+        w.innerHTML = '<div class="pz-row"><b class="pz-n"></b><input class="pz-emoji" name="prize_emoji[]" value="🎁" maxlength="4" aria-label="ایموجی"><input name="prize_title[]" placeholder="عنوان جایزه" aria-label="عنوان جایزه"><input type="hidden" name="prize_kind[]" value="item"><input type="hidden" class="dsc-data" name="prize_disc[]" value="{}"><button type="button" class="pz-kind" data-pzkind>🎁 هدیه</button><button type="button" class="abtn abtn-sm abtn-ghost pz-del" aria-label="حذف">✕</button></div><div class="pz-dsc-host"></div>';
+        list.appendChild(w); renum(); w.querySelector('[name="prize_title[]"]').focus(); live();
     });
-    list.addEventListener('click', function (e) { var x = e.target.closest('.pz-del'); if (x && list.children.length > 1) { x.closest('.pz-row').remove(); renum(); live(); } });
+    list.addEventListener('click', function (e) {
+        var x = e.target.closest('.pz-del'); if (x && list.children.length > 1) { x.closest('.pz-wrap').remove(); renum(); live(); return; }
+        var k = e.target.closest('[data-pzkind]'); if (k) { var row = k.closest('.pz-row'), kind = row.querySelector('[name="prize_kind[]"]'); setPz(row, kind.value === 'discount' ? 'item' : 'discount'); }
+    });
+    var pzPanels = new WeakMap();
+    function setPz(row, v) {   // a prize is a gift, or a discount the shop applies by itself
+        row.querySelector('[name="prize_kind[]"]').value = v;
+        var b = row.querySelector('[data-pzkind]'); b.textContent = v === 'discount' ? '🏷️ تخفیف' : '🎁 هدیه'; b.classList.toggle('is-d', v === 'discount');
+        var cur = pzPanels.get(row), host = row.parentNode.querySelector('.pz-dsc-host');
+        if (v === 'discount' && !cur && window.NXDiscount) { pzPanels.set(row, NXDiscount(row, row.querySelector('.dsc-data'), host)); var t = row.querySelector('[name="prize_title[]"]'); if (!t.value.trim()) t.value = '۱۰٪ تخفیف فروشگاه'; }
+        if (v !== 'discount' && cur) { cur.remove(); pzPanels.delete(row); }
+    }
+    $$('.pz-row', list).forEach(function (r) { if (r.querySelector('[name="prize_kind[]"]').value === 'discount') setPz(r, 'discount'); });
     // mode cards -> show only that mode's settings
     function mode() { var m = (document.querySelector('[name=mode]:checked') || {}).value; $$('[data-mode]').forEach(function (el) { el.hidden = el.getAttribute('data-mode') !== m; }); }
     $$('[name=mode]').forEach(function (r) { r.addEventListener('change', mode); }); mode();
@@ -231,4 +247,5 @@ document.addEventListener('DOMContentLoaded', function () {
     live();
 });
 </script>
-<?php adm_foot();
+<script>window.NX_SHOP = <?= json_encode(['cats' => rows('SELECT id, name FROM shop_categories ORDER BY sort_order, id'), 'products' => rows("SELECT id, title FROM products WHERE status = 'active' ORDER BY id DESC LIMIT 300")], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
+<?php adm_foot(['discount-editor.js']);

@@ -24,7 +24,8 @@ if (is_post()) {
         $stock = trim((string) en_num((string) ($_POST['it_stock'][$i] ?? '')));
         $items[] = ['label' => $lab, 'emoji' => mb_substr(trim((string) ($_POST['it_emoji'][$i] ?? '')), 0, 4),
             'chance' => max(0, min(100, round((float) en_num(str_replace(['٫', ','], '.', (string) ($_POST['it_chance'][$i] ?? '0'))), 3))),
-            'kind' => in_array($_POST['it_kind'][$i] ?? '', ['empty', 'again'], true) ? $_POST['it_kind'][$i] : 'prize',
+            'kind' => in_array($_POST['it_kind'][$i] ?? '', ['empty', 'again', 'discount'], true) ? $_POST['it_kind'][$i] : 'prize',
+            'disc' => ($_POST['it_kind'][$i] ?? '') === 'discount' ? discount_norm(json_decode((string) ($_POST['it_disc'][$i] ?? ''), true)) : null,
             'code' => mb_substr(trim((string) ($_POST['it_code'][$i] ?? '')), 0, 120), 'stock' => $stock === '' ? -1 : max(0, (int) $stock)];
     }
     $d['items'] = json_encode(array_slice($items, 0, 24), JSON_UNESCAPED_UNICODE);
@@ -69,7 +70,8 @@ $chips = function (string $for, array $opts, string $cur): string {
     foreach ($opts as $v => $t) $h .= '<button type="button" data-v="' . e((string) $v) . '"' . ((string) $v === $cur ? ' class="on"' : '') . '>' . e($t) . '</button>';
     return $h . '</div>';
 };
-$kinds = ['prize' => ['🎁', 'جایزه'], 'empty' => ['😅', 'پوچ'], 'again' => ['🔁', 'دوباره']];
+$kinds = ['prize' => ['🎁', 'جایزه'], 'empty' => ['😅', 'پوچ'], 'again' => ['🔁', 'دوباره'], 'discount' => ['🏷️', 'تخفیف']];
+$shopData = ['cats' => rows('SELECT id, name FROM shop_categories ORDER BY sort_order, id'), 'products' => rows("SELECT id, title FROM products WHERE status = 'active' ORDER BY id DESC LIMIT 300")];
 adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شانس جدید', 'wheels');
 ?>
 <link rel="stylesheet" href="<?= e(asset('css/wheel.css')) ?>">
@@ -104,7 +106,7 @@ adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شان�
             <div class="lw-rows-head"><span></span><span>ایموجی</span><span>عنوان</span><span>شانس ٪</span><span>نوع</span><span>کد / توضیح برنده</span><span>موجودی</span><span></span></div>
             <div class="lw-rows" id="lwRows">
                 <?php foreach ($items as $i => $it): ?>
-                <div class="lw-row">
+                <div class="lw-wrap"><div class="lw-row">
                     <b class="lw-n"><?= fa_num((string) ($i + 1)) ?></b>
                     <input class="lw-emoji" name="it_emoji[]" value="<?= e($it['emoji']) ?>" maxlength="4" aria-label="ایموجی">
                     <input name="it_label[]" value="<?= e($it['label']) ?>" placeholder="مثلاً ۵۰ استارز" aria-label="عنوان">
@@ -113,7 +115,8 @@ adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شان�
                     <input name="it_code[]" value="<?= e($it['code']) ?>" placeholder="اختیاری — به برنده نشون داده می‌شه" aria-label="کد">
                     <input name="it_stock[]" value="<?= $it['stock'] < 0 ? '' : (int) $it['stock'] ?>" placeholder="∞" inputmode="numeric" dir="ltr" aria-label="موجودی">
                     <button type="button" class="rfl-ib rfl-del lw-del" aria-label="حذف"><?= adm_icon('trash', 15) ?></button>
-                </div>
+                    <input type="hidden" class="dsc-data" name="it_disc[]" value="<?= e(json_encode($it['disc'] ?: new stdClass(), JSON_UNESCAPED_UNICODE)) ?>">
+                </div><div class="lw-dsc-host"></div></div>
                 <?php endforeach; ?>
             </div>
             <div class="lw-tools">
@@ -176,7 +179,7 @@ adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شان�
             <div class="card-head"><h3>⏰ وضعیت</h3></div>
             <?= f_select('status', 'وضعیت', ['draft' => 'پیش‌نویس (فقط خودت می‌بینی)', 'active' => 'فعال — کاربرها می‌تونن بچرخونن', 'paused' => 'متوقف'], $w['status']) ?>
             <?= f_jdate('end_at', 'پایان (اختیاری، شمسی)', $w['end_at'], 'خالی = همیشه فعال') ?>
-            <input type="hidden" name="footer_wheel_seen" value="1"><?= f_switch('footer_wheel_link', 'لینک «گردونه شانس» توی فوتر سایت', setting_on('footer_wheel_link'), 'برای همه‌ی گردونه‌ها یکیه') ?>
+            <input type="hidden" name="footer_wheel_seen" value="1"><?= f_switch('footer_wheel_link', 'بخش «گردونه شانس» روی سایت باز باشه (لینک فوتر)', setting_on('footer_wheel_link'), 'اگه خاموش کنی لینک فوتر و کادرها برداشته می‌شن و هر کی لینک رو باز کنه می‌بینه این بخش بسته‌ست') ?>
         </div>
         <div class="card rf-savecard">
             <div class="rf-save-head"><span class="rf-save-ic">🎡</span><div><b><?= $w['id'] ? 'ذخیره‌ی تغییرات' : 'ساخت گردونه' ?></b><small>بعد از ذخیره، توی صفحه‌ی مدیریت می‌تونی بچرخونیش.</small></div></div>
@@ -187,11 +190,11 @@ adm_head($w['id'] ? 'ویرایش گردونه شانس' : 'گردونه شان�
 </div>
 <input type="hidden" name="box_places[]" value="">
 </form>
-<script>window.LW_SAMPLE = <?= json_encode(wheel_sample_items(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
+<script>window.LW_SAMPLE = <?= json_encode(wheel_sample_items(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>; window.NX_SHOP = <?= json_encode($shopData, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var $$ = function (s, c) { return [].slice.call((c || document).querySelectorAll(s)); };
-    var rows = document.getElementById('lwRows'), KIND = { prize: ['🎁', 'جایزه'], empty: ['😅', 'پوچ'], again: ['🔁', 'دوباره'] }, ORDER = ['prize', 'empty', 'again'];
+    var rows = document.getElementById('lwRows'), KIND = { prize: ['🎁', 'جایزه'], empty: ['😅', 'پوچ'], again: ['🔁', 'دوباره'], discount: ['🏷️', 'تخفیف'] }, ORDER = ['prize', 'discount', 'empty', 'again'];
     var num = function (v) { v = String(v || '').replace(/[۰-۹]/g, function (c) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(c); }).replace(/[٫,]/g, '.'); return parseFloat(v) || 0; };
     var W = window.NXWheel ? NXWheel(document.getElementById('lwPrev'), { empty: 'گزینه اضافه کن' }) : null;
     function rowHtml(it) {
@@ -200,15 +203,27 @@ document.addEventListener('DOMContentLoaded', function () {
             + '<span class="lw-pct"><input name="it_chance[]" inputmode="decimal" dir="ltr" aria-label="شانس"><i>٪</i></span>'
             + '<input type="hidden" name="it_kind[]"><button type="button" class="lw-kind" data-kind></button>'
             + '<input name="it_code[]" placeholder="اختیاری — به برنده نشون داده می‌شه" aria-label="کد"><input name="it_stock[]" placeholder="∞" inputmode="numeric" dir="ltr" aria-label="موجودی">'
-            + '<button type="button" class="rfl-ib rfl-del lw-del" aria-label="حذف"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>';
+            + '<button type="button" class="rfl-ib rfl-del lw-del" aria-label="حذف"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+            + '<input type="hidden" class="dsc-data" name="it_disc[]" value="{}">';
     }
-    function setKind(row, k) { row.querySelector('[name="it_kind[]"]').value = k; var b = row.querySelector('[data-kind]'); b.className = 'lw-kind k-' + k; b.textContent = KIND[k][0] + ' ' + KIND[k][1]; }
+    var panels = new WeakMap();
+    function setKind(row, k) {
+        row.querySelector('[name="it_kind[]"]').value = k; var b = row.querySelector('[data-kind]'); b.className = 'lw-kind k-' + k; b.textContent = KIND[k][0] + ' ' + KIND[k][1];
+        var host = row.parentNode.querySelector('.lw-dsc-host'), cur = panels.get(row);
+        if (k === 'discount' && !cur && window.NXDiscount && host) {
+            panels.set(row, NXDiscount(row, row.querySelector('.dsc-data'), host));
+            var lab = row.querySelector('[name="it_label[]"]'); if (!lab.value.trim()) lab.value = JSON.parse(row.querySelector('.dsc-data').value || '{}').pct ? NXA.fa(JSON.parse(row.querySelector('.dsc-data').value).pct) + '٪ تخفیف' : '۱۰٪ تخفیف';
+        }
+        if (k !== 'discount' && cur) { cur.remove(); panels.delete(row); }
+    }
     function addRow(it) {
-        var r = document.createElement('div'); r.className = 'lw-row'; r.innerHTML = rowHtml(it || {});
+        var w = document.createElement('div'); w.className = 'lw-wrap'; w.innerHTML = '<div class="lw-row"></div><div class="lw-dsc-host"></div>';
+        var r = w.firstChild; r.innerHTML = rowHtml(it || {});
+        if (it && it.disc) r.querySelector('.dsc-data').value = JSON.stringify(it.disc);
         r.querySelector('[name="it_emoji[]"]').value = (it && it.emoji) || '🎁'; r.querySelector('[name="it_label[]"]').value = (it && it.label) || '';
         r.querySelector('[name="it_chance[]"]').value = it && it.chance != null ? it.chance : 10; r.querySelector('[name="it_code[]"]').value = (it && it.code) || '';
         r.querySelector('[name="it_stock[]"]').value = it && it.stock >= 0 ? it.stock : '';
-        setKind(r, (it && it.kind) || 'prize'); rows.appendChild(r); return r;
+        rows.appendChild(w); setKind(r, (it && it.kind) || 'prize'); return r;
     }
     function list() { return $$('.lw-row', rows).map(function (r) { return { row: r, label: r.querySelector('[name="it_label[]"]').value.trim(), emoji: r.querySelector('[name="it_emoji[]"]').value.trim(), chance: num(r.querySelector('[name="it_chance[]"]').value) }; }); }
     function sync() {
@@ -221,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('lwAdd').addEventListener('click', function () { var r = addRow({}); sync(); r.querySelector('[name="it_label[]"]').focus(); });
     rows.addEventListener('click', function (e) {
         var k = e.target.closest('[data-kind]'); if (k) { var row = k.closest('.lw-row'), cur = row.querySelector('[name="it_kind[]"]').value; setKind(row, ORDER[(ORDER.indexOf(cur) + 1) % ORDER.length]); return; }
-        var x = e.target.closest('.lw-del'); if (x && rows.children.length > 2) { x.closest('.lw-row').remove(); sync(); }
+        var x = e.target.closest('.lw-del'); if (x && rows.children.length > 2) { x.closest('.lw-wrap').remove(); sync(); }
     });
     rows.addEventListener('input', sync);
     document.getElementById('lwEqual').addEventListener('click', function () { var L = list().filter(function (x) { return x.label; }), v = Math.floor(10000 / L.length) / 100; L.forEach(function (x, i) { x.row.querySelector('[name="it_chance[]"]').value = i === L.length - 1 ? Math.round((100 - v * (L.length - 1)) * 100) / 100 : v; }); sync(); });
@@ -237,7 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
         q.addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (b) { inp.value = b.dataset.v; s(); } });
         inp.addEventListener('input', s); s();
     });
+    $$('.lw-row', rows).forEach(function (r) { var k = r.querySelector('[name="it_kind[]"]').value; if (k === 'discount') setKind(r, k); });
     sync();
 });
 </script>
-<?php adm_foot(['wheel.js']);
+<?php adm_foot(['wheel.js', 'discount-editor.js']);

@@ -182,7 +182,7 @@ $jsCfg['cart'] = $cartN;
                 <div class="nb-wrap">
                     <button class="icon-btn nb-btn" id="nbBtn" aria-label="اعلان‌ها" aria-expanded="false"><?= icon('bell') ?><em class="hb-count" id="nbCount"<?= $nUnread ? '' : ' hidden' ?>><?= fa_num((string) $nUnread) ?></em></button>
                     <div class="nb-panel" id="nbPanel" hidden>
-                        <div class="nb-head"><b><?= icon('bell', 16) ?> اعلان‌ها</b><?php if ($shopOn): ?><a href="<?= e(url('orders')) ?>">سفارش‌های من</a><?php endif; ?></div>
+                        <div class="nb-head"><b><?= icon('bell', 16) ?> اعلان‌ها</b><span class="nb-links"><a href="<?= e(url('notifications')) ?>">همه‌ی اعلان‌ها</a><a href="<?= e(url('prizes')) ?>">🎁 جایزه‌ها</a><?php if ($shopOn): ?><a href="<?= e(url('orders')) ?>">سفارش‌ها</a><?php endif; ?></span></div>
                         <div class="nb-list" id="nbList"><div class="nb-empty"><span>🔔</span>در حال بارگذاری...</div></div>
                     </div>
                 </div>
@@ -251,6 +251,8 @@ $jsCfg['cart'] = $cartN;
                 <?php if (setting_on('footer_wheel_link')) { try { $lwN = (int) val("SELECT COUNT(*) FROM wheels WHERE audience = 'public' AND status = 'active' AND (end_at IS NULL OR end_at > ?)", [now()]); } catch (Throwable $e) { $lwN = 0; } } else $lwN = 0; if ($lwN): ?><li><a href="<?= e(url('wheel')) ?>">🎡 گردونه شانس</a></li><?php endif; ?>
                 <?php if ($shopOn && setting_on('shop_in_footer')): ?><li><a href="<?= e(url('shop')) ?>">🛍️ <?= e(setting('shop_menu_label', 'فروشگاه')) ?></a></li><?php if (setting_on('shop_support_on')): ?><li><a href="<?= e(url('support')) ?>">پشتیبانی فروشگاه</a></li><?php endif; ?><?php endif; ?>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
+                <?php if (setting_on('link_prizes_footer')): ?><li><a href="<?= e(url('prizes')) ?>">🎁 جایزه‌های من</a></li><?php endif; ?>
+                <?php if (setting_on('link_notifs_footer')): ?><li><a href="<?= e(url('notifications')) ?>">🔔 اعلان‌های من</a></li><?php endif; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
             </ul>
         </div>
@@ -306,6 +308,8 @@ $jsCfg['cart'] = $cartN;
             <?php foreach ($drawerItems as $i => $m): $dc = $m['cat'] ?? null; $ds = !empty($m['shop']); ?>
                 <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?><?= $dc ? ';--c:' . e($dc['color']) : '' ?>"<?= $dc ? ' class="dn-cat"' : ($ds ? ' class="dn-shop"' : '') ?>><span><?php if ($dc): ?><i class="dn-ic"><?= e($dc['icon']) ?></i><?php elseif ($ds): ?><i class="dn-ic"><?= icon('bag', 16) ?></i><?php endif; ?><?= e($m['title'] ?? '') ?><?php if ($ds && $cartN): ?> <em class="dn-badge"><?= fa_num((string) $cartN) ?> در سبد</em><?php endif; ?></span> <?= icon('chevron-left', 16) ?></a>
             <?php endforeach; ?>
+            <?php if ($me && setting_on('link_prizes_drawer')): ?><a href="<?= e(url('prizes')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic">🎁</i>جایزه‌های من</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
+            <?php if ($me && setting_on('link_notifs_drawer')): ?><a href="<?= e(url('notifications')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic"><?= icon('bell', 16) ?></i>اعلان‌های من</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
             <?php if ($me && $shopOn): ?>
                 <a href="<?= e(url('orders')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic"><?= icon('box', 16) ?></i>سفارش‌های من</span> <?= icon('chevron-left', 16) ?></a>
                 <?php if (setting_on('shop_support_on')): ?><a href="<?= e(url('support')) ?>" style="--i:<?= count($drawerItems) + 1 ?>"><span><i class="dn-ic"><?= icon('support', 16) ?></i>پشتیبانی</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>

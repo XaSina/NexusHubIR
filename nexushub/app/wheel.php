@@ -15,7 +15,9 @@ function wheel_items(array $w): array
         $label = trim((string) ($it['label'] ?? ''));
         if ($label === '') continue;
         $out[] = ['label' => mb_substr($label, 0, 60), 'emoji' => mb_substr((string) ($it['emoji'] ?? ''), 0, 4), 'chance' => max(0, min(100, round((float) ($it['chance'] ?? 0), 3))),
-            'kind' => in_array($it['kind'] ?? '', ['empty', 'again'], true) ? $it['kind'] : 'prize', 'code' => mb_substr((string) ($it['code'] ?? ''), 0, 120), 'stock' => (int) ($it['stock'] ?? -1)];
+            'kind' => in_array($it['kind'] ?? '', ['empty', 'again', 'discount'], true) ? $it['kind'] : 'prize', 'code' => mb_substr((string) ($it['code'] ?? ''), 0, 120), 'stock' => (int) ($it['stock'] ?? -1),
+            'disc' => discount_norm($it['disc'] ?? null)];
+        $k = array_key_last($out); if ($out[$k]['kind'] === 'discount' && !$out[$k]['disc']) $out[$k]['disc'] = discount_norm(['pct' => 10]);
     }
     return $out;
 }
@@ -56,7 +58,7 @@ function wheel_member(array $w, ?array $m): ?array
     return ['left' => $left, 'left_daily' => min($left, $leftDaily), 'earned' => $earned, 'used' => $usedAll, 'buys' => $buys, 'invites' => $invites, 'grants' => $grants,
         'buy_next' => $R['buy_every'] ? $R['buy_every'] - $buys % $R['buy_every'] : 0, 'invite_next' => $R['invite_every'] ? $R['invite_every'] - $invites % $R['invite_every'] : 0,
         'capped' => $R['max_user'] && $usedAll >= $R['max_user'],
-        'invite' => wheel_url($w) . '?ref=' . rawurlencode((string) $m['member_code'])];
+        'invite' => site_url('wheel/' . rawurlencode((string) $w['slug'])) . '?ref=' . rawurlencode((string) $m['member_code'])];
 }
 
 /** weighted pick with a CSPRNG; items with no stock left drop out and the rest share their chance */
@@ -93,19 +95,23 @@ function wheel_spin(array $w, ?array $m): array
             $items[$i]['stock']--;
             q('UPDATE wheels SET items = ?, updated_at = ? WHERE id = ?', [json_encode($items, JSON_UNESCAPED_UNICODE), now(), $w['id']]);
         }
-        $sid = (int) insert('wheel_spins', ['wheel_id' => $w['id'], 'member_id' => $m ? (int) $m['id'] : null, 'item' => $i, 'label' => $it['label'], 'kind' => $it['kind'],
-            'src' => $src, 'status' => $it['kind'] === 'prize' && $m ? 'new' : 'done', 'created_at' => now()]);
+        $won = in_array($it['kind'], ['prize', 'discount'], true);
+        $sid = (int) insert('wheel_spins', ['wheel_id' => $w['id'], 'member_id' => $m ? (int) $m['id'] : null, 'item' => $i, 'label' => $it['label'], 'kind' => $won ? 'prize' : $it['kind'],
+            'src' => $src, 'status' => $won && $m ? 'new' : 'done', 'created_at' => now()]);
         if ($m && $it['kind'] === 'again') insert('wheel_grants', ['wheel_id' => $w['id'], 'member_id' => (int) $m['id'], 'spins' => 1, 'note' => 'چرخش دوباره از خود گردونه', 'created_at' => now()]);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         return ['ok' => false, 'error' => $e instanceof RuntimeException ? $e->getMessage() : 'خطا در چرخش؛ دوباره امتحان کن.'];
     }
-    if ($m && $it['kind'] === 'prize') {
-        notify('m:' . $m['id'], 'wheel', (int) $w['id'], '🎡', 'جایزه‌ی گردونه شانس: ' . $it['label'], ($it['code'] !== '' ? 'کد / توضیح جایزه: ' . $it['code'] . ' — ' : '') . '«' . $w['title'] . '». ' . prize_claim_text(now()), 'wheel/' . $w['slug'], 'success');
+    $coupon = null;
+    if ($m && in_array($it['kind'], ['prize', 'discount'], true)) {
+        $pid = prize_create((int) $m['id'], 'wheel', (int) $w['id'], $it['label'], $it['emoji'], $it['kind'] === 'discount' ? $it['disc'] : null, $sid, (string) $w['title']);
+        if ($it['kind'] === 'discount') $coupon = ['code' => (string) val('SELECT c.code FROM coupons c JOIN prizes p ON p.coupon_id = c.id WHERE p.id = ?', [$pid]), 'text' => discount_text($it['disc'])];
         notify('admin', 'wheel', (int) $w['id'], '🎡', 'برنده‌ی گردونه: ' . $it['label'], member_full_name($m) . ' — «' . $w['title'] . '»', 'admin/wheel-view.php?id=' . $w['id'], 'success');
     }
-    return ['ok' => true, 'index' => $i, 'spin' => $sid, 'item' => ['label' => $it['label'], 'emoji' => $it['emoji'], 'kind' => $it['kind'], 'code' => $it['code']]];
+    return ['ok' => true, 'index' => $i, 'spin' => $sid, 'item' => ['label' => $it['label'], 'emoji' => $it['emoji'], 'kind' => $it['kind'], 'code' => $it['code'], 'coupon' => $coupon,
+        'disc' => $it['kind'] === 'discount' ? discount_text($it['disc']) : '']];
 }
 
 /** remember who invited a member (only members who signed up after the wheel was made count) */
@@ -128,17 +134,18 @@ function wheel_state(array $w, ?array $me, bool $admin = false): array
     $items = wheel_items($w);
     $show = $admin || !empty($w['show_chances']);
     $total = array_sum(array_map(fn($it) => $it['stock'] !== 0 ? $it['chance'] : 0, $items)) ?: 1;
-    $recent = rows("SELECT s.label, s.created_at, m.first_name, m.last_name FROM wheel_spins s LEFT JOIN members m ON m.id = s.member_id
-        WHERE s.wheel_id = ? AND s.kind = 'prize' AND s.member_id IS NOT NULL ORDER BY s.id DESC LIMIT 10", [$w['id']]);
-    $mine = $me ? rows('SELECT label, kind, item, status, created_at FROM wheel_spins WHERE wheel_id = ? AND member_id = ? ORDER BY id DESC LIMIT 12', [$w['id'], $me['id']]) : [];
+    $recent = [];
+    if ($me) prizes_expire_due();
+    $mine = $me ? rows('SELECT s.label, s.kind, s.item, s.created_at, p.status pstatus, p.prize_type, p.deadline, c.code FROM wheel_spins s LEFT JOIN prizes p ON p.spin_id = s.id LEFT JOIN coupons c ON c.id = p.coupon_id
+        WHERE s.wheel_id = ? AND s.member_id = ? ORDER BY s.id DESC LIMIT 12', [$w['id'], $me['id']]) : [];
     return [
         'id' => (int) $w['id'], 'admin' => $admin, 'open' => wheel_open($w), 'audience' => $w['audience'], 'status' => $w['status'],
         'items' => array_map(fn($it) => ['label' => $it['label'], 'emoji' => $it['emoji'], 'kind' => $it['kind'], 'w' => 1,
             'chance' => $show ? round($it['stock'] !== 0 ? $it['chance'] / $total * 100 : 0, 2) : null, 'out' => $it['stock'] === 0], $items),
         'me' => wheel_member($w, $me),
-        'mine' => array_map(fn($x) => ['label' => $x['label'], 'kind' => $x['kind'], 'when' => jago($x['created_at']), 'delivered' => $x['status'] === 'delivered',
-            'left' => $x['kind'] === 'prize' && prize_claim_on() ? prize_claim_deadline($x['created_at']) - time() : null], $mine),
-        'claim' => prize_claim_on() ? ['hours' => prize_claim_hours(), 'ids' => prize_claim_ids(), 'support' => url('support')] : null,
+        'mine' => array_map(fn($x) => ['label' => $x['label'], 'kind' => $x['prize_type'] === 'discount' ? 'discount' : $x['kind'], 'when' => jago($x['created_at']), 'status' => $x['pstatus'],
+            'code' => $x['code'], 'left' => $x['pstatus'] === 'pending' && $x['deadline'] ? strtotime($x['deadline']) - time() : null], $mine),
+        'claim' => prize_claim_on() ? ['hours' => prize_claim_hours(), 'buttons' => prize_claim_buttons(), 'prizes' => url('prizes')] : null,
         'recent' => array_map(fn($x) => ['name' => $admin ? trim($x['first_name'] . ' ' . $x['last_name']) : wheel_first_name($x['first_name']), 'label' => $x['label'], 'when' => jago($x['created_at'])], $recent),
         'rules' => wheel_rules($w), 'logged' => (bool) $me,
     ];
@@ -169,6 +176,7 @@ function wheel_box_html(array $w, bool $preview = false): string
 
 function wheel_slot(string $position): string
 {
+    if (!setting_on('footer_wheel_link')) return '';
     static $list = null;
     if ($list === null) {
         $list = [];
@@ -187,10 +195,10 @@ function wheel_sample_items(): array
 {
     return [
         ['label' => 'پوچ', 'emoji' => '😅', 'chance' => 35, 'kind' => 'empty', 'code' => '', 'stock' => -1],
-        ['label' => '۱۰٪ تخفیف', 'emoji' => '🏷️', 'chance' => 25, 'kind' => 'prize', 'code' => '', 'stock' => -1],
+        ['label' => '۱۰٪ تخفیف', 'emoji' => '🏷️', 'chance' => 25, 'kind' => 'discount', 'code' => '', 'stock' => -1, 'disc' => ['pct' => 10, 'max' => 0, 'min' => 0, 'scope' => 'all', 'ids' => [], 'days' => 30]],
         ['label' => 'یه چرخش دیگه', 'emoji' => '🔁', 'chance' => 10, 'kind' => 'again', 'code' => '', 'stock' => -1],
         ['label' => '۵۰ استارز', 'emoji' => '⭐', 'chance' => 15, 'kind' => 'prize', 'code' => '', 'stock' => -1],
-        ['label' => '۲۰٪ تخفیف', 'emoji' => '💸', 'chance' => 10, 'kind' => 'prize', 'code' => '', 'stock' => -1],
+        ['label' => '۲۰٪ تخفیف', 'emoji' => '💸', 'chance' => 10, 'kind' => 'discount', 'code' => '', 'stock' => -1, 'disc' => ['pct' => 20, 'max' => 0, 'min' => 0, 'scope' => 'all', 'ids' => [], 'days' => 30]],
         ['label' => 'پریمیوم ۳ ماهه', 'emoji' => '💎', 'chance' => 5, 'kind' => 'prize', 'code' => '', 'stock' => 3],
     ];
 }

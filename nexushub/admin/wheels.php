@@ -28,10 +28,6 @@ adm_head('گردونه شانس', 'wheels');
         <a class="rfl-new" href="wheel-edit.php"><span><?= adm_icon('plus', 18) ?></span> گردونه برای سایت</a>
     </div>
 </div>
-<form method="post" class="rfl-opts" id="rflOpts"><?= csrf_field() ?><input type="hidden" name="act" value="opts">
-    <label class="rfl-opt"><span class="rfl-sw"><input type="checkbox" name="footer_wheel_link" value="1" <?= setting_on('footer_wheel_link') ? 'checked' : '' ?>><i></i></span> لینک «گردونه شانس» توی فوتر سایت</label>
-</form>
-<script>document.addEventListener('change', function (e) { if (e.target.closest('#rflOpts')) e.target.closest('form').submit(); });</script>
 <?= prize_claim_card() ?>
 <?php if (!$list): ?>
     <div class="card"><div class="empty-state"><span>🎡</span>هنوز گردونه‌ای نساختی.<br><small class="muted">«گردونه برای سایت»: کاربرها با ثبت‌نام، خرید و دعوت چرخش می‌گیرن · «گردونه‌ی شخصی»: فقط خودت توی پنل می‌چرخونی.</small></div></div>
