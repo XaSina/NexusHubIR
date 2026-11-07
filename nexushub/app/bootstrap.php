@@ -47,8 +47,10 @@ require NX_APP . '/raffle.php';
 require NX_APP . '/wheel.php';
 require NX_APP . '/prizes.php';
 require NX_APP . '/promos.php';
+require NX_APP . '/security.php';
 
 nx_session_start();
+security_headers();
 
 register_shutdown_function(function () {
     $er = error_get_last();

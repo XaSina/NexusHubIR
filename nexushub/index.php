@@ -53,6 +53,14 @@ if (count($seg) === 1 && preg_match('~^[A-Za-z0-9_-]{3,80}\.(txt|html?)$~', $seg
     }
 }
 
+// security code picture
+if (count($seg) === 1 && $seg[0] === 'captcha') captcha_serve();
+// the secret panel entrance: every visit hands out a new one-time login link
+if (count($seg) === 1 && ($gk = (string) setting('admin_gate_key')) !== '' && hash_equals($gk, $seg[0])) {
+    if (current_user()) redirect('admin/');
+    admin_gate_open();
+}
+
 // حالت تعمیر
 if (setting_on('maintenance') && (!current_user() || isset($_GET['maintenance_preview'])) && ($seg[0] ?? '') !== 'go') {
     http_response_code(503);
@@ -178,9 +186,11 @@ switch ($seg[0] ?? '') {
             if ($old['email'] !== '' && !filter_var($old['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'ایمیل معتبر نیست.';
             if (mb_strlen($old['body']) < 5) $errors[] = 'متن پیام خیلی کوتاه است.';
             if (time() - (int) ($_SESSION['last_contact'] ?? 0) < 60) $errors[] = 'لطفاً یک دقیقه بعد دوباره پیام دهید.';
+            elseif (rate_over('contact', 6, 3600)) $errors[] = 'از این اینترنت پیام زیادی فرستاده شده؛ کمی بعد دوباره تلاش کن.';
             if (!$errors) {
                 insert('messages', $old + ['ip' => client_ip(), 'created_at' => now()]);
                 $_SESSION['last_contact'] = time();
+                rate_hit('contact', 6, 3600);
                 $sent = true;
                 $old = array_map(fn() => '', $old);
             }

@@ -132,6 +132,13 @@ function default_settings(): array
 
         // نظرات و واکنش‌ها
         'members_register' => '1',
+        'captcha_site' => '1',          // security code on the site's sign-in and sign-up
+        'captcha_admin' => '1',         // security code on the panel sign-in
+        'captcha_len' => '5',
+        'admin_gate_on' => '0',         // hidden panel entrance (turned on from the panel, after the link is copied)
+        'admin_gate_key' => '',
+        'admin_idle_min' => '120',      // panel sign-out after this many idle minutes
+        'admin_login_log' => '[]',
         'comments_enabled' => '1',
         'comments_moderation' => '1',
         'reactions_enabled' => '1',

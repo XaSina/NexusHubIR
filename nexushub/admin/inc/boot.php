@@ -81,6 +81,7 @@ function adm_nav(): array
         ['اعضای سایت', 'members.php', 'user', '*', 'members', $newMembers],
         ['کاربران پنل', 'users.php', 'users', '*', 'users', 0],
         ['تنظیمات', 'settings.php', 'settings', '*', 'settings', 0],
+        ['امنیت', 'security.php', 'shield', '*', 'security', admin_gate_on() ? 0 : 1],
         ['پشتیبان‌گیری', 'backup.php', 'database', '*', 'backup', 0],
     ];
 }

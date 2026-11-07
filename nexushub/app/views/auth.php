@@ -20,6 +20,7 @@ $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'ca
 <link rel="preload" href="<?= e($logo) ?>" as="image">
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/auth.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/captcha.css')) ?>">
 <?php $decorHtml = decor_html('auth'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 <?= perf_head() ?>
@@ -156,6 +157,7 @@ $auWaves = [
                     <input type="password" name="password" id="auPassword" dir="ltr" autocomplete="current-password" placeholder=" " required>
                     <span class="au-flabel">رمز عبور</span>
                 </label>
+                <?= captcha_html('login') ?>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ورود</span><i class="au-spin"></i><svg class="au-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="100"/></svg></button>
             </form>
@@ -184,6 +186,7 @@ $auWaves = [
                     <button type="button" class="au-inv-x" id="auInvX" aria-label="پاک کردن کد دعوت" title="پاک کردن"<?= $invBy ? '' : ' hidden' ?>>✕</button>
                 </div>
                 <?php if ($invBy): ?><p class="au-inv-note" id="auInvNote">🎁 با دعوت <b><?= e($invBy['first_name']) ?></b> اومدی — کد خودکار گذاشته شد؛ اگه نمی‌خوای پاکش کن.</p><?php endif; ?>
+                <?= captcha_html('register') ?>
                 <div class="au-strength" id="auStrength"><i></i><i></i><i></i><i></i><span>حداقل ۸ کاراکتر، شامل حروف انگلیسی و عدد</span></div>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ثبت‌نام</span><i class="au-spin"></i></button>
@@ -233,6 +236,7 @@ $auWaves = [
 </div>
 
 <script>window.NXAU = <?= json_encode($cfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
+<script src="<?= e(asset('js/captcha.js')) ?>" defer></script>
 <script src="<?= e(asset('js/auth.js')) ?>" defer></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 <?= perf_foot() ?>

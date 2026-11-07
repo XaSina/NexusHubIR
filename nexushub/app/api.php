@@ -54,6 +54,7 @@ switch ($seg[1] ?? '') {
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['ok' => false, 'error' => 'ایمیل معتبر نیست.'], 422);
         if (mb_strlen($body) < 3) json_out(['ok' => false, 'error' => 'متن نظر خیلی کوتاه است.'], 422);
         if (!$user && time() - (int) ($_SESSION['last_comment'] ?? 0) < 30) json_out(['ok' => false, 'error' => 'لطفاً ۳۰ ثانیه صبر کنید.'], 429);
+        if (!$user && !rate_hit('comment', 12, 3600)) json_out(['ok' => false, 'error' => 'از این اینترنت نظر زیادی ثبت شده؛ کمی بعد دوباره تلاش کن.'], 429);   // per IP: no cookie trick
         if (!$user && preg_match_all('~https?://~i', $body) > 2) json_out(['ok' => false, 'error' => 'لینک‌های زیادی در نظر وجود دارد.'], 422);
 
         $parent = (int) ($_POST['parent_id'] ?? 0);
@@ -150,10 +151,8 @@ switch ($seg[1] ?? '') {
         $id = mb_substr(trim((string) ($_POST['identifier'] ?? '')), 0, 190);
         $type = identifier_type($id);
         if (!$type) json_out(['ok' => false, 'error' => 'یک شماره موبایل، ایمیل یا نام کاربری معتبر وارد کنید.'], 422);
-        // جلوگیری از بررسی انبوه شناسه‌ها
-        $_SESSION['auth_checks'] = array_values(array_filter($_SESSION['auth_checks'] ?? [], fn($t) => $t > time() - 600));
-        if (count($_SESSION['auth_checks']) >= 30) json_out(['ok' => false, 'error' => 'تعداد درخواست‌ها زیاد است؛ چند دقیقه دیگر تلاش کنید.'], 429);
-        $_SESSION['auth_checks'][] = time();
+        // جلوگیری از بررسی انبوه شناسه‌ها (per IP, so dropping the cookie doesn't reset it)
+        if (!rate_hit('authchk', 40, 600)) json_out(['ok' => false, 'error' => 'تعداد درخواست‌ها زیاد است؛ چند دقیقه دیگر تلاش کنید.'], 429);
         $m = find_member($id);
         if ($m && $m['status'] !== 'active') json_out(['ok' => false, 'error' => 'این حساب مسدود شده است. با پشتیبانی تماس بگیرید.'], 403);
         if (!$m && !setting_on('members_register')) json_out(['ok' => false, 'error' => 'حسابی با این مشخصات پیدا نشد و ثبت‌نام در حال حاضر غیرفعال است.'], 403);
@@ -166,12 +165,17 @@ switch ($seg[1] ?? '') {
         ]);
 
     case 'auth-login':
-        if ($wait = member_login_blocked()) json_out(['ok' => false, 'error' => 'به دلیل تلاش‌های ناموفق، ' . fa_num((string) ceil($wait / 60)) . ' دقیقه دیگر تلاش کنید.'], 429);
+        if ($wait = member_login_blocked()) json_out(['ok' => false, 'error' => 'به دلیل تلاش‌های ناموفق، ' . fa_num((string) ceil($wait / 60)) . ' دقیقه دیگر تلاش کنید.', 'cap' => 1], 429);
+        if (!captcha_check('login', (string) ($_POST['captcha'] ?? ''))) json_out(['ok' => false, 'error' => 'کد امنیتی درست نیست؛ کد جدید رو وارد کن.', 'field' => 'captcha', 'cap' => 1], 422);
         $m = find_member((string) ($_POST['identifier'] ?? ''));
+        $acct = $m ? 'm' . $m['id'] : '';
+        if ($acct !== '' && ($w2 = rate_over('mlogin-acct', 15, 1800, $acct))) json_out(['ok' => false, 'error' => 'برای امنیت این حساب، ورود ' . fa_num((string) ceil($w2 / 60)) . ' دقیقه بسته شد.', 'cap' => 1], 429);
         if (!$m || !password_verify((string) ($_POST['password'] ?? ''), $m['password'])) {
             member_login_failed();
-            json_out(['ok' => false, 'error' => 'رمز عبور اشتباه است.', 'field' => 'password'], 422);
+            if ($acct !== '') rate_hit('mlogin-acct', 15, 1800, $acct);     // many IPs on one account are stopped too
+            json_out(['ok' => false, 'error' => 'رمز عبور اشتباه است.', 'field' => 'password', 'cap' => 1], 422);
         }
+        if ($acct !== '') rate_clear('mlogin-acct', $acct);
         if ($m['status'] !== 'active') json_out(['ok' => false, 'error' => 'این حساب مسدود شده است.'], 403);
         q('DELETE FROM login_attempts WHERE ip = ?', ['m:' . client_ip()]);
         member_login($m);
@@ -251,11 +255,14 @@ switch ($seg[1] ?? '') {
         if (!setting_on('members_register')) json_out(['ok' => false, 'error' => 'ثبت‌نام در حال حاضر غیرفعال است.'], 403);
         if (!empty($_POST['website'])) json_out(['ok' => false, 'error' => 'درخواست نامعتبر.'], 422); // honeypot
         if (time() - (int) ($_SESSION['last_register'] ?? 0) < 60) json_out(['ok' => false, 'error' => 'لطفاً یک دقیقه بعد دوباره تلاش کنید.'], 429);
+        if (rate_over('register', 6, 3600)) json_out(['ok' => false, 'error' => 'از این اینترنت ثبت‌نام زیادی انجام شده؛ کمی بعد دوباره تلاش کن.', 'cap' => 1], 429);
+        if (!captcha_check('register', (string) ($_POST['captcha'] ?? ''))) json_out(['ok' => false, 'error' => 'کد امنیتی درست نیست؛ کد جدید رو وارد کن.', 'field' => 'captcha', 'cap' => 1], 422);
         [$d, $err] = validate_member_input($_POST);
         $invCode = strtoupper(trim(en_num((string) ($_POST['invite'] ?? ''))));
         $inviter = $invCode !== '' ? invite_owner($invCode) : null;
         if ($invCode !== '' && !$inviter) $err['invite'] = 'این کد دعوت پیدا نشد؛ درستش کن یا پاکش کن.';
-        if ($err) json_out(['ok' => false, 'errors' => $err, 'error' => reset($err)], 422);
+        if ($err) json_out(['ok' => false, 'errors' => $err, 'error' => reset($err), 'cap' => 1], 422);
+        rate_hit('register', 6, 3600);
         $code = new_member_code();
         $mid = insert('members', [
             'member_code' => $code, 'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'phone' => $d['phone'],

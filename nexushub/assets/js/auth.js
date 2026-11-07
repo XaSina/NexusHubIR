@@ -690,9 +690,12 @@
         e.preventDefault(); clearErrors(this);
         var pw = $('#auPassword').value;
         if (!pw) { $('#auPassword').closest('.au-field').classList.add('err'); return errorOn(this, 'رمز عبور را وارد کن.'); }
+        var capBox = this.querySelector('.nx-cap'), cap = capBox ? capBox.querySelector('input[name=captcha]').value : '';
+        if (capBox && !cap) { capBox.classList.add('err'); capBox.querySelector('input').focus(); return errorOn(this, 'کد امنیتی رو وارد کن.'); }
         loading(this, true); setHud('AUTHENTICATING');
-        var j = await api('auth-login', { identifier: identity.value, password: pw });
+        var j = await api('auth-login', { identifier: identity.value, password: pw, captcha: cap });
         loading(this, false);
+        if (!j.ok && j.cap && window.NXCap) { if (j.field === 'captcha') { NXCap.error(this); setHud('VERIFY'); return errorOn(this, j.error || 'کد امنیتی درست نیست'); } NXCap.refresh(this); }
         if (!j.ok) { setHud('VERIFY'); $('#auPassword').closest('.au-field').classList.add('err'); $('#auPassword').select(); return errorOn(this, j.error || 'خطا'); }
         var lb = $('.au-btn', this); lb.disabled = true; lb.classList.add('done');
         await wait(420);
@@ -719,13 +722,16 @@
     reg.addEventListener('submit', async function (e) {
         e.preventDefault(); clearErrors(this);
         var data = {}, f = this;
-        ['first_name', 'last_name', 'phone', 'email', 'username', 'password', 'website', 'invite'].forEach(function (k) { if (f.elements[k]) data[k] = en(f.elements[k].value).trim(); });
+        ['first_name', 'last_name', 'phone', 'email', 'username', 'password', 'website', 'invite', 'captcha'].forEach(function (k) { if (f.elements[k]) data[k] = en(f.elements[k].value).trim(); });
         data.password = f.elements.password.value;
         var missing = ['first_name', 'last_name', 'phone', 'email', 'username', 'password'].filter(function (k) { return !data[k]; });
         if (missing.length) { missing.forEach(function (k) { f.elements[k].closest('.au-field').classList.add('err'); }); return errorOn(f, 'لطفاً همه‌ی فیلدها را کامل کن.'); }
         loading(f, true); setHud('CREATING ID');
+        var capB = f.querySelector('.nx-cap');
+        if (capB && !data.captcha) { loading(f, false); setHud('NEW MEMBER'); capB.classList.add('err'); capB.querySelector('input').focus(); return errorOn(f, 'کد امنیتی رو وارد کن.'); }
         var j = await api('auth-register', data);
         loading(f, false);
+        if (!j.ok && j.cap && window.NXCap) { if (j.field === 'captcha') NXCap.error(f); else NXCap.refresh(f); }
         if (!j.ok) {
             setHud('NEW MEMBER');
             if (j.errors) Object.keys(j.errors).forEach(function (k) {

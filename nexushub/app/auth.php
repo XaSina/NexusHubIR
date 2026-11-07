@@ -24,10 +24,14 @@ function current_user(): ?array
     $user = null;
     if (!empty($_SESSION['uid'])) {
         $u = row('SELECT * FROM users WHERE id = ? AND is_active = 1', [(int) $_SESSION['uid']]);
-        if ($u && hash_equals((string) ($_SESSION['upw'] ?? ''), substr(hash('sha256', $u['password']), 0, 32))) {
+        $idle = max(10, (int) setting('admin_idle_min', 120)) * 60;
+        $uaOk = hash_equals((string) ($_SESSION['uua'] ?? ''), substr(hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 24));
+        $fresh = time() - (int) ($_SESSION['uat'] ?? 0) < $idle;
+        if ($u && $uaOk && $fresh && hash_equals((string) ($_SESSION['upw'] ?? ''), substr(hash('sha256', $u['password']), 0, 32))) {
             $user = $u;
+            $_SESSION['uat'] = time();
         } else {
-            unset($_SESSION['uid'], $_SESSION['upw']);
+            unset($_SESSION['uid'], $_SESSION['upw'], $_SESSION['uua'], $_SESSION['uat']);
         }
     }
     return $user;
@@ -44,7 +48,10 @@ function can(string $cap): bool
 function require_login(): array
 {
     $u = current_user();
-    if (!$u) redirect('admin/login.php');
+    if (!$u) {
+        if (admin_gate_on()) admin_gate_hide();
+        redirect('admin/login.php');
+    }
     return $u;
 }
 
@@ -79,11 +86,16 @@ function attempt_login(string $username, string $password): bool
         }
         $_SESSION['uid'] = (int) $u['id'];
         $_SESSION['upw'] = substr(hash('sha256', $u['password']), 0, 32);
+        $_SESSION['uua'] = substr(hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 24);
+        $_SESSION['uat'] = time();
+        unset($_SESSION['gate']);
+        admin_login_log($u, true);
         q('UPDATE users SET last_login = ? WHERE id = ?', [now(), $u['id']]);
         q('DELETE FROM login_attempts WHERE ip = ?', [client_ip()]);
         return true;
     }
     q('INSERT INTO login_attempts (ip, attempts, last_attempt) VALUES (?, 1, ?) ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt = VALUES(last_attempt)', [client_ip(), now()]);
+    if ($u) { rate_hit('alogin-acct', 10, 1800, 'u' . $u['id']); admin_login_log($u, false); }
     return false;
 }
 

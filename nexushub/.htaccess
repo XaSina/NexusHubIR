@@ -10,13 +10,34 @@ DirectoryIndex index.php
 
     # جلوگیری از دسترسی مستقیم به پوشه app
     RewriteRule ^app(/|$) - [F,L]
+    # پوشه‌ی داخلی پنل
+    RewriteRule ^admin/inc(/|$) - [F,L]
+    # فایل‌های مخفی (.git, .env, .htaccess …) — به‌جز .well-known
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    # ربات‌هایی که دنبال وردپرس / phpMyAdmin و … می‌گردن، بدون اجرای سایت رد می‌شن
+    RewriteRule ^(wp-login\.php|wp-admin|wp-content|wp-includes|xmlrpc\.php|phpmyadmin|pma|myadmin|adminer|vendor/|cgi-bin) - [F,L,NC]
+    # روش‌های TRACE / TRACK بسته
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$
+    RewriteRule .* - [F,L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
+# فایل‌های پشتیبان، دیتابیس، لاگ و فشرده هیچ‌وقت دانلود نمی‌شن
+<FilesMatch "\.(sql|sqlite|db|log|bak|old|orig|save|swp|ini|env|sh|dist|lock|zip|tar|gz|tgz|7z|rar)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 <IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"

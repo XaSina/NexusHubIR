@@ -129,6 +129,9 @@ function redirect(string $to): never
 function nx_session_start(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) return;
+    ini_set('session.use_strict_mode', '1');      // a made-up session id is never accepted
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.use_trans_sid', '0');
     session_name('nxsess');
     session_set_cookie_params([
         'lifetime' => 0,
