@@ -37,3 +37,31 @@
 html.perf-calm .nxc-scan { animation-duration: 5s; }
 html.perf-off .nxc-scan { display: none; }
 @media (max-width: 420px) { .nxc-field input { letter-spacing: 7px; font-size: 1.25rem; } }
+
+/* compact size */
+.nx-cap { gap: 8px; margin: 10px 0 2px; }
+.nxc-frame { height: 58px; border-radius: 14px; padding-left: 46px; }
+.nxc-img { max-height: 58px; border-radius: 8px; }
+.nxc-re { left: 9px; width: 30px; height: 30px; border-radius: 10px; }
+.nxc-re svg { width: 15px; height: 15px; }
+.nxc-scan { left: 46px; }
+.nxc-c { width: 10px; height: 10px; }
+.nxc-c1, .nxc-c2 { top: 5px; } .nxc-c3, .nxc-c4 { bottom: 5px; } .nxc-c1, .nxc-c3 { right: 5px; } .nxc-c2, .nxc-c4 { left: 5px; }
+.nxc-field input { height: 46px; border-radius: 14px; padding: 0 44px; font-size: 1.15rem; letter-spacing: 8px; }
+.nxc-field input::placeholder { font-size: .84rem; }
+.nxc-ic { right: 14px; }
+.nxc-ic svg { width: 16px; height: 16px; }
+@media (max-width: 420px) { .nxc-field input { letter-spacing: 6px; font-size: 1.1rem; } }
+
+/* one compact line: picture + field side by side (stacked only when there's no room) */
+.nx-cap { container-type: inline-size; }
+.nxc-row { display: grid; gap: 8px; }
+@container (min-width: 330px) {
+    .nxc-row { grid-template-columns: 196px minmax(0, 1fr); align-items: center; }
+    .nxc-frame { height: 50px; padding-left: 38px; }
+    .nxc-img { max-height: 50px; }
+    .nxc-re { left: 6px; width: 28px; height: 28px; }
+    .nxc-scan { left: 38px; }
+    .nxc-field input { height: 50px; padding: 0 38px 0 12px; letter-spacing: 6px; font-size: 1.1rem; }
+    .nxc-ic { right: 12px; }
+}

@@ -174,13 +174,13 @@ function captcha_html(string $ctx, string $inputClass = '', string $label = 'ک�
 {
     if (!captcha_on($ctx)) return '';
     $src = url('captcha') . '?c=' . $ctx;
-    return '<div class="nx-cap" data-cap="' . e($ctx) . '" data-src="' . e($src) . '">'
+    return '<div class="nx-cap" data-cap="' . e($ctx) . '" data-src="' . e($src) . '"><div class="nxc-row">'
         . '<div class="nxc-frame"><img class="nxc-img" src="' . e($src) . '&amp;v=' . bin2hex(random_bytes(4)) . '" alt="کد امنیتی" width="240" height="80" draggable="false">'
         . '<i class="nxc-scan" aria-hidden="true"></i><i class="nxc-c nxc-c1"></i><i class="nxc-c nxc-c2"></i><i class="nxc-c nxc-c3"></i><i class="nxc-c nxc-c4"></i>'
         . '<button type="button" class="nxc-re" title="کد جدید" aria-label="کد جدید"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div>'
         . '<label class="nxc-field ' . e($inputClass) . '"><span class="nxc-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></span>'
         . '<input name="captcha" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="8" placeholder="' . e($label) . '" dir="ltr" required></label>'
-        . '</div>';
+        . '</div></div>';
 }
 
 /* =========================================================================

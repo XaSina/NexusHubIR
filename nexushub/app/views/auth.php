@@ -143,7 +143,6 @@ $auWaves = [
                 </label>
                 <div class="au-error" role="alert"></div>
                 <button class="au-btn" type="submit"><span>ادامه</span><i class="au-spin"></i></button>
-                <?php if (setting_on('members_register')): ?><p class="au-alt">حساب نداری؟ <button type="button" class="au-link" id="auToReg">مستقیم ثبت‌نام کن</button></p><?php endif; ?>
             </form>
 
             <!-- 2: login -->
