@@ -137,6 +137,7 @@ function default_settings(): array
         'captcha_len' => '5',
         'admin_gate_on' => '0',         // hidden panel entrance (turned on from the panel, after the link is copied)
         'admin_gate_key' => '',
+        'admin_gate_hash' => '',
         'admin_idle_min' => '120',      // panel sign-out after this many idle minutes
         'admin_login_log' => '[]',
         'comments_enabled' => '1',

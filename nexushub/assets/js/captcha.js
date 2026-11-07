@@ -16,7 +16,7 @@
     function init(box) {
         if (box._nxc) return; box._nxc = true;
         var inp = box.querySelector('input[name=captcha]');
-        box.querySelector('.nxc-frame').addEventListener('click', function (e) { e.preventDefault(); refresh(box); if (inp) inp.focus(); });
+        [].forEach.call(box.querySelectorAll('.nxc-frame, .nxc-re'), function (el) { el.addEventListener('click', function (e) { e.preventDefault(); refresh(box); if (inp) inp.focus(); }); });
         if (inp) inp.addEventListener('input', function () {
             var v = inp.value.replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/\D/g, '');
             if (v !== inp.value) inp.value = v;

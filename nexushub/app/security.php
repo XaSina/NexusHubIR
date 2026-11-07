@@ -87,63 +87,57 @@ function captcha_check(string $ctx, string $typed): bool
     return $typed !== '' && hash_equals((string) $c['c'], $typed);
 }
 
-/** the picture: noisy, warped, every digit at its own angle; drawn fresh each time */
+/** the picture: noisy, warped, every digit at its own angle; drawn fresh each time at double size (sharp on phones) */
 function captcha_png(string $code): string
 {
-    $W = 240; $H = 80;
+    $W = 360; $H = 112;                                   // shown at 180×56
     $font = NX_APP . '/fonts/captcha.ttf';
     $tt = function_exists('imagettftext') && is_file($font);
     $im = imagecreatetruecolor($W, $H);
     $p = sscanf(ltrim(valid_hex((string) (theme_colors()['primary'] ?? '#ff1f3d'), '#ff1f3d'), '#'), '%02x%02x%02x');
-    // background: deep night with a tint of the theme colour
-    for ($y = 0; $y < $H; $y++) {
+    for ($y = 0; $y < $H; $y++) {                         // deep night with a tint of the theme colour
         $t = $y / $H;
-        $col = imagecolorallocate($im, (int) (8 + $p[0] * .10 * (1 - $t)), (int) (10 + $p[1] * .08 * (1 - $t)), (int) (18 + $p[2] * .12 * (1 - $t)));
-        imageline($im, 0, $y, $W, $y, $col);
+        imageline($im, 0, $y, $W, $y, imagecolorallocate($im, (int) (10 + $p[0] * .12 * (1 - $t)), (int) (12 + $p[1] * .09 * (1 - $t)), (int) (22 + $p[2] * .14 * (1 - $t))));
     }
-    // faint HUD grid
-    $grid = imagecolorallocatealpha($im, $p[0], $p[1], $p[2], 112);
-    for ($x = 0; $x < $W; $x += 12) imageline($im, $x, 0, $x, $H, $grid);
-    for ($y = 0; $y < $H; $y += 12) imageline($im, 0, $y, $W, $y, $grid);
-    // noise: arcs and dust
-    imagesetthickness($im, 2);
-    for ($i = 0; $i < 7; $i++) {
-        $c = imagecolorallocatealpha($im, random_int(80, 255), random_int(80, 255), random_int(120, 255), random_int(70, 100));
-        imagearc($im, random_int(-40, $W + 40), random_int(-20, $H + 20), random_int(80, 260), random_int(40, 140), random_int(0, 360), random_int(0, 360), $c);
+    $grid = imagecolorallocatealpha($im, $p[0], $p[1], $p[2], 114);
+    for ($x = 0; $x < $W; $x += 18) imageline($im, $x, 0, $x, $H, $grid);
+    for ($y = 0; $y < $H; $y += 18) imageline($im, 0, $y, $W, $y, $grid);
+    imagesetthickness($im, 3);
+    for ($i = 0; $i < 6; $i++) {
+        $c = imagecolorallocatealpha($im, random_int(90, 255), random_int(90, 255), random_int(130, 255), random_int(78, 104));
+        imagearc($im, random_int(-60, $W + 60), random_int(-30, $H + 30), random_int(120, 380), random_int(60, 200), random_int(0, 360), random_int(0, 360), $c);
     }
     imagesetthickness($im, 1);
-    for ($i = 0; $i < 520; $i++) { $c = imagecolorallocatealpha($im, random_int(120, 255), random_int(120, 255), random_int(120, 255), random_int(60, 110)); imagesetpixel($im, random_int(0, $W - 1), random_int(0, $H - 1), $c); }
-    // the digits
-    $n = strlen($code); $step = ($W - 36) / $n;
+    for ($i = 0; $i < 900; $i++) { $c = imagecolorallocatealpha($im, random_int(130, 255), random_int(130, 255), random_int(130, 255), random_int(64, 112)); imagefilledellipse($im, random_int(0, $W - 1), random_int(0, $H - 1), 2, 2, $c); }
+    // the digits fill the picture edge to edge (no empty margins)
+    $n = strlen($code); $step = ($W - 64) / $n;
     for ($i = 0; $i < $n; $i++) {
         $ch = $code[$i];
-        $x = (int) (18 + $i * $step + random_int(-3, 5));
-        $mix = random_int(0, 100) / 100;
-        $col = imagecolorallocate($im, (int) (255 * (1 - $mix) + $p[0] * $mix * .6 + 60 * $mix), (int) (255 * (1 - $mix) + $p[1] * $mix * .6 + 60 * $mix), (int) (255 * (1 - $mix) + $p[2] * $mix * .6 + 60 * $mix));
-        $shadow = imagecolorallocatealpha($im, 0, 0, 0, 40);
+        $x = (int) (26 + $i * $step + random_int(-3, 5));
+        $mix = random_int(0, 70) / 100;
+        $col = imagecolorallocate($im, (int) min(255, 255 * (1 - $mix) + ($p[0] * .7 + 70) * $mix), (int) min(255, 255 * (1 - $mix) + ($p[1] * .7 + 70) * $mix), (int) min(255, 255 * (1 - $mix) + ($p[2] * .7 + 70) * $mix));
+        $shadow = imagecolorallocatealpha($im, 0, 0, 0, 30);
         if ($tt) {
-            $size = random_int(28, 36); $ang = random_int(-30, 30); $y = random_int(50, 64);
-            imagettftext($im, $size, $ang, $x + 2, $y + 2, $shadow, $font, $ch);
+            $size = random_int(48, 58); $ang = random_int(-28, 28); $y = random_int(78, 94);
+            imagettftext($im, $size, $ang, $x + 3, $y + 3, $shadow, $font, $ch);
             imagettftext($im, $size, $ang, $x, $y, $col, $font, $ch);
-        } else {                                                   // no FreeType: a tiny built-in glyph, blown up and tilted
+        } else {
             $g = imagecreatetruecolor(10, 16); imagefill($g, 0, 0, imagecolorallocatealpha($g, 0, 0, 0, 127)); imagesavealpha($g, true);
             imagestring($g, 5, 1, 0, $ch, imagecolorallocate($g, 255, 255, 255));
             $g2 = imagerotate($g, random_int(-25, 25), imagecolorallocatealpha($g, 0, 0, 0, 127));
-            imagecopyresampled($im, $g2, $x, random_int(10, 22), 0, 0, 30, 46, imagesx($g2), imagesy($g2));
+            imagecopyresampled($im, $g2, $x, random_int(14, 26), 0, 0, 46, 70, imagesx($g2), imagesy($g2));
         }
     }
-    // two wavy strike lines through the text
-    imagesetthickness($im, 2);
-    for ($k = 0; $k < 2; $k++) {
-        $c = imagecolorallocatealpha($im, $p[0], $p[1], $p[2], 30);
-        $amp = random_int(6, 14); $per = random_int(30, 60) / 10; $off = random_int(24, 56); $ph = random_int(0, 628) / 100;
+    imagesetthickness($im, 3);
+    for ($k = 0; $k < 2; $k++) {                          // two wavy strike lines through the text
+        $c = imagecolorallocatealpha($im, $p[0], $p[1], $p[2], 34);
+        $amp = random_int(8, 18); $per = random_int(30, 60) / 10; $off = random_int(36, 80); $ph = random_int(0, 628) / 100;
         $px = 0; $py = (int) ($off + sin($ph) * $amp);
-        for ($x = 4; $x <= $W; $x += 4) { $y = (int) ($off + sin($ph + $x / ($W / $per)) * $amp); imageline($im, $px, $py, $x, $y, $c); $px = $x; $py = $y; }
+        for ($x = 6; $x <= $W; $x += 6) { $y = (int) ($off + sin($ph + $x / ($W / $per)) * $amp); imageline($im, $px, $py, $x, $y, $c); $px = $x; $py = $y; }
     }
-    // gentle wave warp, column by column
-    $out = imagecreatetruecolor($W, $H);
+    $out = imagecreatetruecolor($W, $H);                  // gentle wave warp, column by column
     imagecopy($out, $im, 0, 0, 0, 0, $W, $H);
-    $amp = random_int(2, 4); $per = random_int(26, 40); $ph = random_int(0, 628) / 100;
+    $amp = random_int(3, 6); $per = random_int(38, 58); $ph = random_int(0, 628) / 100;
     for ($x = 0; $x < $W; $x++) { $dy = (int) round(sin($ph + $x / $per) * $amp); imagecopy($out, $im, $x, $dy, $x, 0, 1, $H); }
     ob_start(); imagepng($out, null, 6); $png = (string) ob_get_clean();
     imagedestroy($im); imagedestroy($out);
@@ -161,7 +155,7 @@ function captcha_serve(): never
     $code = captcha_new($ctx);
     if (!function_exists('imagecreatetruecolor')) {               // no GD at all: a plain text picture (still single use)
         header('Content-Type: image/svg+xml');
-        echo '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80"><rect width="240" height="80" fill="#0b0d14"/><text x="120" y="52" font-size="34" font-family="monospace" fill="#fff" text-anchor="middle" letter-spacing="8">' . $code . '</text></svg>';
+        echo '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="56"><rect width="180" height="56" fill="#0b0d14"/><text x="90" y="38" font-size="28" font-family="monospace" fill="#fff" text-anchor="middle" letter-spacing="8">' . $code . '</text></svg>';
         exit;
     }
     header('Content-Type: image/png');
@@ -169,18 +163,18 @@ function captcha_serve(): never
     exit;
 }
 
-/** the captcha block for a form (picture + refresh + field) */
-function captcha_html(string $ctx, string $inputClass = '', string $label = 'کد امنیتی'): string
+/** the captcha block for a form: picture (its frame is exactly the picture) + refresh beside it, then the field */
+function captcha_html(string $ctx, string $inputClass = '', string $label = 'کد امنیتی رو وارد کن'): string
 {
     if (!captcha_on($ctx)) return '';
     $src = url('captcha') . '?c=' . $ctx;
-    return '<div class="nx-cap" data-cap="' . e($ctx) . '" data-src="' . e($src) . '"><div class="nxc-row">'
-        . '<div class="nxc-frame"><img class="nxc-img" src="' . e($src) . '&amp;v=' . bin2hex(random_bytes(4)) . '" alt="کد امنیتی" width="240" height="80" draggable="false">'
-        . '<i class="nxc-scan" aria-hidden="true"></i><i class="nxc-c nxc-c1"></i><i class="nxc-c nxc-c2"></i><i class="nxc-c nxc-c3"></i><i class="nxc-c nxc-c4"></i>'
-        . '<button type="button" class="nxc-re" title="کد جدید" aria-label="کد جدید"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div>'
-        . '<label class="nxc-field ' . e($inputClass) . '"><span class="nxc-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></span>'
+    return '<div class="nx-cap" data-cap="' . e($ctx) . '" data-src="' . e($src) . '">'
+        . '<div class="nxc-top"><div class="nxc-frame"><img class="nxc-img" src="' . e($src) . '&amp;v=' . bin2hex(random_bytes(4)) . '" alt="کد امنیتی" width="180" height="56" draggable="false">'
+        . '<i class="nxc-scan" aria-hidden="true"></i><i class="nxc-c nxc-c1"></i><i class="nxc-c nxc-c2"></i><i class="nxc-c nxc-c3"></i><i class="nxc-c nxc-c4"></i></div>'
+        . '<button type="button" class="nxc-re" title="کد جدید" aria-label="کد جدید"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg><span>کد جدید</span></button></div>'
+        . '<label class="nxc-field ' . e($inputClass) . '"><span class="nxc-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg></span>'
         . '<input name="captcha" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="8" placeholder="' . e($label) . '" dir="ltr" required></label>'
-        . '</div></div>';
+        . '</div>';
 }
 
 /* =========================================================================
@@ -190,42 +184,65 @@ function captcha_html(string $ctx, string $inputClass = '', string $label = 'ک�
 function admin_gate_on(): bool
 {
     if (is_file(NX_APP . '/admin-unlock.txt')) return false;
-    return setting_on('admin_gate_on') && admin_gate_key() !== '';
+    return setting_on('admin_gate_on') && admin_gate_hash() !== '';
 }
 
-function admin_gate_key(): string
+/** only a fingerprint of the secret address is kept (in the database and the code); the address itself is never stored */
+function admin_gate_hash(): string { return (string) setting('admin_gate_hash'); }
+
+function admin_gate_match(string $seg): bool
 {
-    $k = (string) setting('admin_gate_key');
-    if ($k === '') { $k = admin_gate_newkey(); save_settings(['admin_gate_key' => $k]); }
-    return $k;
+    $h = admin_gate_hash();
+    return $h !== '' && strlen($seg) >= 24 && hash_equals($h, hash('sha256', $seg));
 }
 
+/** a new 48-character secret address word */
 function admin_gate_newkey(): string
 {
-    $abc = 'abcdefghjkmnpqrstuvwxyz23456789';
-    $k = 'nx-'; for ($i = 0; $i < 14; $i++) $k .= $abc[random_int(0, strlen($abc) - 1)];
+    $abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    $k = ''; for ($i = 0; $i < 48; $i++) $k .= $abc[random_int(0, strlen($abc) - 1)];
     return $k;
 }
 
-function admin_gate_url(): string { return site_url(admin_gate_key()); }
+/** set a new secret address; returns the full link (shown once, never saved) */
+function admin_gate_reset(): string
+{
+    $k = admin_gate_newkey();
+    save_settings(['admin_gate_hash' => hash('sha256', $k), 'admin_gate_key' => '']);
+    return site_url($k);
+}
 
-/** the secret address was opened: hand out a fresh one-time login link (it changes on every visit) */
+/** the secret address was opened: hand out a fresh one-time login link */
 function admin_gate_open(): never
 {
-    if (!rate_hit('gate', 30, 600)) { http_response_code(429); exit('Too many requests'); }
-    $t = bin2hex(random_bytes(16));
-    $_SESSION['gate'] = ['t' => $t, 'exp' => time() + 900];
+    if (!rate_hit('gate', 40, 600)) { http_response_code(429); exit('Too many requests'); }
+    admin_gate_ticket_go();
+}
+
+/** a brand-new long one-time login address for this browser, and go there */
+function admin_gate_ticket_go(): never
+{
+    $t = bin2hex(random_bytes(48));                      // 96 characters, new every time
+    $_SESSION['gate'] = ['t' => $t, 'exp' => time() + 900, 'seen' => false];
     header('Cache-Control: no-store');
     header('Location: ' . url('admin/login.php') . '?t=' . $t);
     exit;
 }
 
-/** is this request carrying the visitor's current one-time ticket? */
+/**
+ * is this request carrying this browser's current ticket? A refresh (the same address opened again) swaps it for a new one,
+ * so the login address changes on every refresh; the address copied into another browser is a plain 404.
+ */
 function admin_gate_ticket_ok(): bool
 {
     $g = $_SESSION['gate'] ?? null;
     $t = (string) ($_GET['t'] ?? '');
-    return $g && $t !== '' && ($g['exp'] ?? 0) > time() && hash_equals((string) $g['t'], $t);
+    if (!$g || $t === '' || ($g['exp'] ?? 0) < time() || !hash_equals((string) $g['t'], $t)) return false;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+        if (!empty($g['seen'])) admin_gate_ticket_go();     // refreshed: new address
+        $_SESSION['gate']['seen'] = true;
+    }
+    return true;
 }
 
 /** looks exactly like any missing address (nothing tells a scanner the panel lives here) */

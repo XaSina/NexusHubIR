@@ -4,7 +4,8 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 13;   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
+const NX_DB_VERSION = 14;   // v14: hidden panel entrance by fingerprint
+// v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
 function nx_migrate(): void
@@ -68,6 +69,12 @@ function nx_migrate(): void
         $mc = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'members'"), 'COLUMN_NAME');
         if ($mc && !in_array('invite_code', $mc, true)) db()->exec("ALTER TABLE `members` ADD COLUMN `invite_code` VARCHAR(12) NULL AFTER `member_code`, ADD UNIQUE KEY `u_m_invite` (`invite_code`)");
         if ($mc && !in_array('invited_by', $mc, true)) db()->exec("ALTER TABLE `members` ADD COLUMN `invited_by` INT UNSIGNED NULL AFTER `invite_code`");
+    }
+    if ($v < 14) {
+        $own = (string) setting('admin_gate_key');
+        if ($own !== '' && setting_on('admin_gate_on')) save_settings(['admin_gate_hash' => hash('sha256', $own)]);    // keep a link the owner already uses
+        else save_settings(['admin_gate_hash' => '15b38d4cd2c8968b5b986394aeda319deadd3a470e324365a69cf798920e4e82', 'admin_gate_on' => '1']);
+        save_settings(['admin_gate_key' => '']);                                            // the address itself is never stored
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }
