@@ -97,6 +97,13 @@ function top_strips(): string
         . 'for(var i=0;i<l.length;i++){if(x[l[i].getAttribute("data-strip")])l[i].remove();else n++;}if(!n)w.remove();else{w.className+=" js";w.querySelector(".nx-strip").classList.add("on");}}catch(e){}})();</script>';
 }
 
+/** readable text colour on top of an accent (dark on light accents, white on dark ones) */
+function nxp_on(string $hex): string
+{
+    [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($hex)));
+    return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 165 ? '#0b0d12' : '#fff';
+}
+
 /** the moving layers a theme draws behind an ad (embers, aurora, scan line …) */
 function ad_deco(string $theme): string
 {
@@ -128,7 +135,7 @@ function render_ad(array $a, bool $preview = false): string
     $ribbon = ($theme === 'ribbon' || !empty($a['badge'])) ? '<span class="nxp-ribbon">' . e($a['badge'] ?: 'ویژه') . '</span>' : '';
     $device = $a['device'] ?? 'all';
     $cls = 'nxp nxp-theme-' . $theme . ' nxp-fmt-' . $format . ($device !== 'all' ? ' only-' . $device : '');
-    $out = '<div class="' . $cls . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '" data-nxp="' . $id . '">';
+    $out = '<div class="' . $cls . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . ';--nxp-on:' . nxp_on($accent) . '" data-nxp="' . $id . '">';
     $out .= $deco . $ribbon;
     if ($label !== '') $out .= '<span class="nxp-label">' . e($label) . '</span>';
 

@@ -164,7 +164,7 @@ function wheel_box_html(array $w, bool $preview = false): string
     $how = $R['signup'] ? '🎁 ثبت‌نام = ' . fa_num((string) $R['signup']) . ' چرخش رایگان' : ($R['daily'] ? '☀️ هر روز ' . fa_num((string) $R['daily']) . ' چرخش رایگان' : ($R['buy_every'] ? '🛍️ هر ' . fa_num((string) $R['buy_every']) . ' خرید = چرخش' : '🎡 بچرخون و جایزه ببر'));
     $img = !empty($w['image']) ? media_url((string) $w['image']) : '';
     $title = e(($w['title'] ?? '') ?: 'گردونه شانس');
-    return '<div class="nxp nxp-theme-' . $theme . ' rfx rfx-wheel" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '">'
+    return '<div class="nxp nxp-theme-' . $theme . ' rfx rfx-wheel" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . ';--nxp-on:' . nxp_on($accent) . '">'
         . ad_deco($theme) . ($theme === 'ribbon' ? '<span class="nxp-ribbon">ویژه</span>' : '')
         . '<a class="nxp-inner rfx-in" href="' . e($preview ? '#' : wheel_url($w)) . '">'
         . '<span class="rfx-art rfx-art-wheel" aria-hidden="true"><span class="rfx-ring"></span>' . ($img ? '<img src="' . e($img) . '" alt="" loading="lazy">' : '<span class="rfx-mini"></span>') . '</span>'

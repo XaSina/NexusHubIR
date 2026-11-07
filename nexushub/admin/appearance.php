@@ -255,7 +255,7 @@ adm_head('ظاهر سایت', 'appearance');
                 <div class="sort-item menu-row" draggable="true"><span class="sort-handle">⋮⋮</span><input value="<?= e($m['title'] ?? '') ?>" placeholder="عنوان"><input value="<?= e($m['url'] ?? '') ?>" placeholder="/category/game" dir="ltr"><button type="button" class="adm-ib" data-del><?= adm_icon('trash', 15) ?></button></div>
             <?php endforeach; ?>
         </div>
-        <div class="mt small muted">لینک‌های سریع:
+        <div class="mt small muted quick-links"><span>لینک‌های سریع:</span>
             <?php foreach (get_categories() as $c): ?><button type="button" class="abtn abtn-ghost abtn-xs" data-quick="<?= e($c['name']) ?>|/category/<?= e($c['slug']) ?>"><?= e($c['icon'] . ' ' . $c['name']) ?></button> <?php endforeach; ?>
             <button type="button" class="abtn abtn-ghost abtn-xs" data-quick="همه اخبار|/archive">همه اخبار</button>
             <button type="button" class="abtn abtn-ghost abtn-xs" data-quick="تماس|/contact">تماس</button>

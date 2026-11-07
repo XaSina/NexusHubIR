@@ -159,9 +159,11 @@ adm_head('تنظیمات', 'settings');
         <div class="card">
             <div class="card-head"><h3>✅ فایل‌های تأیید دامنه (اینماد و …)</h3></div>
             <?= f_textarea('verify_files', 'نام فایل‌ها (هر خط یکی)', (string) ($s['verify_files'] ?? ''), ['rows' => 4, 'code' => true, 'placeholder' => '35243901.txt', 'hint' => 'اسم فایلی که اینماد (یا هر سایت دیگه) گفته رو اینجا بنویس، مثلاً 35243901.txt — دیگه لازم نیست فایلی آپلود کنی؛ سایت خودش اون آدرس رو خالی تحویل می‌ده. حتماً دامنه‌ی ثبت‌شده در اینماد درست باشه: nexushubstore.ir']) ?>
+            <div class="row-flex vf-links">
             <?php foreach (array_filter(array_map('trim', preg_split('~[\r\n,]+~', (string) ($s['verify_files'] ?? '')))) as $vfn): ?>
                 <a class="abtn abtn-sm" href="<?= e(url($vfn)) ?>" target="_blank" rel="noopener" dir="ltr"><?= e($vfn) ?> ↗</a>
             <?php endforeach; ?>
+            </div>
         </div>
     </div>
 </div>

@@ -61,7 +61,7 @@ function promo_box_html(array $p, bool $preview = false): string
     $accent = valid_hex((string) ($p['box_accent'] ?? ''), '') ?: valid_hex((string) setting('color_primary', '#ff1f3d'), '#ff1f3d');
     $title = e(($p['title'] ?? '') ?: 'کد تخفیف ویژه');
     $left = $p['expires_at'] ? strtotime($p['expires_at']) - time() : 0;
-    return '<div class="nxp nxp-theme-' . $theme . ' rfx rfx-promo" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '">'
+    return '<div class="nxp nxp-theme-' . $theme . ' rfx rfx-promo" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . ';--nxp-on:' . nxp_on($accent) . '">'
         . ad_deco($theme)
         . '<div class="nxp-inner rfx-in">'
         . '<span class="rfx-art" aria-hidden="true"><span class="rfx-ring"></span><span class="rfx-emoji">🏷️</span></span>'

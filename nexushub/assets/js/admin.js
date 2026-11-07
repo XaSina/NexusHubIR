@@ -410,12 +410,31 @@
                 return '<a class="anb-item' + (n.read ? '' : ' unread') + '" href="' + esc(n.link) + '"><span>' + esc(n.icon) + '</span><span><b>' + esc(n.title) + '</b><small>' + esc(n.body) + '</small><small>' + esc(n.ago) + '</small></span></a>';
             }).join('') : '<div class="anb-empty">🎉 کار انجام‌نشده‌ای نیست</div>';
         };
+        var home = panel.parentNode, dim = document.createElement('div'); dim.className = 'anb-dim'; document.body.appendChild(dim);
+        var mq = window.matchMedia('(max-width: 760px)');
+        var place = function () {                         // always 12px under the top bar's real bottom edge
+            if (panel.hidden) return;
+            var top = document.querySelector('.adm-top'), r = top ? top.getBoundingClientRect() : btn.getBoundingClientRect();
+            if (mq.matches) {
+                if (panel.parentNode !== document.body) document.body.appendChild(panel);
+                panel.classList.add('anb-float');
+                var t = Math.round(r.bottom + 12);
+                panel.style.top = t + 'px'; panel.style.maxHeight = Math.max(220, Math.min(560, innerHeight - t - 16)) + 'px';
+            } else {
+                if (panel.parentNode !== home) home.appendChild(panel);
+                panel.classList.remove('anb-float'); panel.style.maxHeight = '';
+                panel.style.top = Math.round(r.bottom - home.getBoundingClientRect().top + 12) + 'px';
+            }
+        };
+        var setOpen = function (o) { panel.hidden = !o; dim.classList.toggle('on', o); btn.setAttribute('aria-expanded', o ? 'true' : 'false'); if (o) place(); };
+        window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', place);
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            panel.hidden = !panel.hidden;
-            if (!panel.hidden) A.post('admin_notifs', { read: 1 }).then(function (j) { if (j.ok) { render(j.items); setN(0); } });
+            setOpen(panel.hidden);
+            if (!panel.hidden) A.post('admin_notifs', { read: 1 }).then(function (j) { if (j.ok) { render(j.items); setN(0); place(); } });
         });
-        document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target) && e.target !== btn) panel.hidden = true; });
+        document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) setOpen(false); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) setOpen(false); });
         var seen = null;
         var poll = function () {
             if (document.hidden) return;

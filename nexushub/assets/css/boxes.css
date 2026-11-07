@@ -311,3 +311,54 @@ html.perf-safe .rfx-art-wheel .rfx-mini { animation: none; }
 }
 html.perf-calm .nx-strip::after { animation: none; }
 html.perf-off .nx-strip { transition: none; }
+
+/* =====================================================================
+   Boxes v2 — cleaner hierarchy, no dashed lines, one button shape
+   (ads, raffle, lucky wheel and discount-code boxes, on the site and in the panel previews)
+   ===================================================================== */
+.nxp { border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 18px 40px -28px rgba(0, 0, 0, .9); }
+.nxp-inner { padding: 18px 20px; gap: 16px; }
+/* ad card: the emoji sits in a tinted tile, the title leads, the text is calm, one clear button */
+.nxp-fmt-card .nxp-head { gap: 12px; }
+.nxp-fmt-card .nxp-emoji { flex-shrink: 0; width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center; font-size: 1.55rem; animation: none; filter: none;
+    background: radial-gradient(circle at 30% 25%, rgba(var(--nxp-rgb), .45), rgba(var(--nxp-rgb), .1) 70%); border: 1px solid rgba(var(--nxp-rgb), .45); box-shadow: 0 10px 22px -14px rgba(var(--nxp-rgb), .9); }
+.nxp-title { font-size: 1.08rem; line-height: 1.6; letter-spacing: -.1px; }
+.nxp-text { font-size: .86rem; line-height: 1.9; }
+.nxp-btn { min-height: 44px; padding: 0 22px; border-radius: 14px; font-size: .88rem; justify-content: center; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--nxp), color-mix(in srgb, var(--nxp) 60%, #ff9a3d)); box-shadow: 0 12px 24px -14px rgba(var(--nxp-rgb), 1), inset 0 1px 0 rgba(255, 255, 255, .25); }
+.nxp-label { top: 10px; left: 12px; padding: 2px 9px; border-radius: 9px; font-size: .64rem; letter-spacing: .2px; background: rgba(0, 0, 0, .45); border: 1px solid rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .75); }
+.nxp-countdown b { min-width: 38px; padding: 6px 4px; border-radius: 11px; text-align: center; background: rgba(var(--text-rgb, 255,255,255), .05); border: 1px solid rgba(var(--nxp-rgb), .4); }
+@media (max-width: 640px) {
+    .nxp-fmt-card .nxp-inner { flex-direction: column; align-items: stretch; text-align: right; gap: 12px; padding: 18px 16px 16px; }
+    .nxp-fmt-card .nxp-btn { width: 100%; }
+    .nxp-fmt-card .nxp-thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+}
+
+/* raffle / wheel / discount boxes */
+.rfx .rfx-in { gap: 16px; padding: 18px 20px; }
+.rfx-art { border-radius: 18px; box-shadow: 0 12px 26px -16px rgba(var(--nxp-rgb), .95); }
+.rfx-tag { padding: 3px 11px; font-size: .68rem; letter-spacing: .1px; }
+.rfx-title { font-size: 1.08rem; font-weight: 900; letter-spacing: -.1px; }
+.rfx-prize { font-size: .86rem; color: rgba(var(--text-rgb, 255,255,255), .82); }
+.rfx-bar { height: 7px; background: rgba(var(--text-rgb, 255,255,255), .08); }
+.rfx-cd { gap: 3px 5px; }
+.rfx-cd b { min-width: 38px; padding: 6px 4px; border-radius: 11px; background: rgba(var(--text-rgb, 255,255,255), .05); border: 1px solid rgba(var(--nxp-rgb), .38); }
+.rfx-cd small { font-size: .6rem; color: var(--muted); }
+.rfx-cta { min-height: 44px; padding: 0 20px; border-radius: 14px; font-size: .88rem; }
+@container rfx (min-width: 760px) {
+    .rfx-side { border-right: 0 !important; padding-right: 0; position: relative; }
+    .rfx-side::before { content: ""; position: absolute; right: -12px; top: 8%; bottom: 8%; width: 1px; background: linear-gradient(180deg, transparent, rgba(var(--nxp-rgb), .45), transparent); }
+    .rfx-cd b { min-width: 50px; padding: 8px 4px; }
+    .rfx-cta { min-height: 50px; padding: 0 26px; font-size: .95rem; border-radius: 15px; }
+}
+@container rfx (max-width: 560px) {
+    .rfx-side { border-top: 0 !important; padding-top: 12px; position: relative; }
+    .rfx-side::before { content: ""; position: absolute; top: 0; left: 6%; right: 6%; height: 1px; background: linear-gradient(90deg, transparent, rgba(var(--nxp-rgb), .4), transparent); }
+}
+/* discount code chip: a solid frame, the code clearly separate from the copy button */
+.pmx-code { gap: 10px; padding: 5px 5px 5px 14px; border-radius: 14px; border: 1px solid rgba(var(--nxp-rgb), .55); background: linear-gradient(135deg, rgba(var(--nxp-rgb), .16), rgba(var(--nxp-rgb), .05)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.pmx-code code { font-size: 1rem; letter-spacing: 2px; }
+.pmx-code span { padding: 7px 12px; border-radius: 10px; color: var(--nxp-on, #fff); }
+/* text on accent-coloured buttons follows the accent's brightness */
+.nxp-btn, .rfx-cta { color: var(--nxp-on, #fff); }
+.rfx-is-done .rfx-cta { color: #1a0d00; }

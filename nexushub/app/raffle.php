@@ -456,7 +456,7 @@ function raffle_box_html(array $r, ?array $st = null, bool $preview = false): st
             . '<span class="rfx-cta">' . ($paid ? '🎟️ خرید تیکت' : '🎰 شرکت کن') . ' ' . icon('arrow-left', 15) . '</span>';
     }
     $title = e(($r['title'] ?? '') ?: 'قرعه‌کشی بزرگ');
-    return '<div class="nxp nxp-theme-' . $theme . ' rfx' . ($drawn ? ' rfx-is-done' : '') . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . '">'
+    return '<div class="nxp nxp-theme-' . $theme . ' rfx' . ($drawn ? ' rfx-is-done' : '') . '" style="--nxp:' . $accent . ';--nxp-rgb:' . hex_to_rgb($accent) . ';--nxp-on:' . nxp_on($accent) . '">'
         . ad_deco($theme) . ($theme === 'ribbon' ? '<span class="nxp-ribbon">ویژه</span>' : '')
         . '<a class="nxp-inner rfx-in" href="' . e($href) . '">'
         . $art
