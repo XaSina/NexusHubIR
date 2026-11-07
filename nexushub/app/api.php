@@ -37,6 +37,20 @@ switch ($seg[1] ?? '') {
         db()->commit();
         json_out(['ok' => true, 'counts' => post_reactions($postId), 'mine' => $mine]);
 
+    case 'bookmark':
+        if (!bookmarks_on()) json_out(['ok' => false, 'error' => 'غیرفعال'], 403);
+        $m = current_member();
+        $postId = (int) ($_POST['post_id'] ?? 0);
+        if (!$m) {
+            $slug = (string) val('SELECT slug FROM posts WHERE id = ?', [$postId]);
+            if ($slug !== '') $_SESSION['after_login'] = 'post/' . rawurlencode($slug);
+            json_out(['ok' => false, 'login' => url('auth'), 'error' => 'برای ذخیره‌ی خبر اول وارد حسابت شو.'], 401);
+        }
+        if (!rate_hit('bookmark', 90, 600, 'm' . $m['id'])) json_out(['ok' => false, 'error' => 'کمی آرام‌تر 🙂 چند لحظه بعد دوباره امتحان کن.'], 429);
+        if (!val('SELECT id FROM posts WHERE id = ? AND ' . pub_where('posts'), [$postId])) json_out(['ok' => false, 'error' => 'خبر یافت نشد'], 404);
+        $on = bookmark_toggle((int) $m['id'], $postId);
+        json_out(['ok' => true, 'saved' => $on, 'count' => bookmarks_count((int) $m['id']), 'msg' => $on ? 'به «ذخیره‌شده‌ها» اضافه شد 🔖' : 'از ذخیره‌شده‌ها برداشته شد']);
+
     case 'comment':
         if (!setting_on('comments_enabled')) json_out(['ok' => false, 'error' => 'ارسال نظر غیرفعال است.'], 403);
         $postId = (int) ($_POST['post_id'] ?? 0);

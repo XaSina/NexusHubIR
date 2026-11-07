@@ -35,6 +35,7 @@ $suggest = get_posts(['limit' => 3]);
                 <?php if ($tg = safe_link((string) setting('social_telegram'))): ?><a class="btn btn-primary" href="<?= e($tg) ?>" target="_blank" rel="noopener"><?= icon('telegram', 18) ?> کانال تلگرام</a><?php endif; ?>
                 <button class="btn btn-ghost" type="button" data-copy="<?= e($m['member_code']) ?>"><?= icon('copy', 17) ?> کپی کد عضویت</button>
                 <?php if (shop_on()): ?><a class="btn btn-ghost" href="<?= e(url('orders')) ?>"><?= icon('box', 17) ?> سفارش‌های من</a><?php endif; ?>
+                <?php if (bookmarks_on()): $svN = bookmarks_count((int) $m['id']); ?><a class="btn btn-ghost" href="<?= e(url('saved')) ?>">🔖 ذخیره‌شده‌ها<?php if ($svN): ?> <em class="acc-n"><?= fa_num((string) $svN) ?></em><?php endif; ?></a><?php endif; ?>
                 <?php if (shop_on() && setting_on('shop_support_on')): ?><a class="btn btn-ghost" href="<?= e(url('support')) ?>"><?= icon('support', 17) ?> پشتیبانی</a><?php endif; ?>
                 <form method="post" style="display:inline"><?= csrf_field() ?><input type="hidden" name="act" value="logout"><button class="btn btn-ghost" type="submit"><?= icon('arrow-right', 17) ?> خروج</button></form>
             </div>

@@ -45,7 +45,7 @@ $excerpt = trim(strip_shortcodes((string) $p['excerpt'])) ?: str_excerpt((string
         <?php if (!empty($p['is_breaking'])): ?><span class="chip chip-hot pc-float"><?= icon('bolt', 13) ?> فوری</span><?php endif; ?>
     </a>
     <div class="pc-body">
-        <div class="pc-top"><?= $catChip ?><span class="pc-time"><?= jago($p['published_at']) ?></span></div>
+        <div class="pc-top"><?= $catChip ?><span class="pc-time"><?= jago($p['published_at']) ?></span><?php if (current_member()) echo bookmark_btn((int) $p['id'], 'bm-btn bm-card'); ?></div>
         <h3 class="pc-title"><a href="<?= e($href) ?>"><?= e($p['title']) ?></a></h3>
         <p class="pc-excerpt"><?= e($excerpt) ?></p>
         <div class="pc-meta">

@@ -18,6 +18,55 @@ switch ($_POST['action'] ?? '') {
         if (empty($_FILES['file'])) json_out(['ok' => false, 'error' => 'فایلی ارسال نشد (شاید حجم فایل از حد مجاز سرور بیشتر است).'], 422);
         json_out(upload_story_media($_FILES['file']));
 
+    case 'cmd_search':
+        // quick search for the command palette: posts, orders, members, products, tickets, promo codes, raffles, wheels
+        $raw = trim(en_num((string) ($_POST['q'] ?? '')));
+        if (mb_strlen($raw) < 2) json_out(['ok' => true, 'items' => []]);
+        $like = '%' . addcslashes(mb_substr($raw, 0, 60), '%_\\') . '%';
+        $out = [];
+        $add = function (string $grp, string $icon, string $title, string $sub, string $href) use (&$out) {
+            $out[] = ['g' => $grp, 'i' => $icon, 't' => $title, 's' => $sub, 'h' => url('admin/' . $href)];
+        };
+        $try = function (callable $fn) { try { $fn(); } catch (Throwable $e) { } };
+        if (can('posts')) $try(function () use ($like, $add) {
+            $own = can('edit_others') ? '' : ' AND author_id = ' . (int) current_user()['id'];
+            foreach (rows("SELECT id, title, status, published_at FROM posts WHERE title LIKE ?$own ORDER BY id DESC LIMIT 6", [$like]) as $r)
+                $add('اخبار', '📰', (string) $r['title'], $r['status'] === 'published' ? 'منتشر شده' : ($r['status'] === 'scheduled' ? 'زمان‌بندی' : 'پیش‌نویس'), 'post-edit.php?id=' . $r['id']);
+        });
+        if (can('shop')) {
+            $try(function () use ($like, $add) {
+                foreach (rows("SELECT o.id, o.code, o.status, o.total, m.first_name, m.last_name FROM orders o LEFT JOIN members m ON m.id = o.member_id
+                    WHERE o.code LIKE ? OR o.receipt_ref LIKE ? OR CONCAT(m.first_name, ' ', m.last_name) LIKE ? OR m.phone LIKE ? ORDER BY o.id DESC LIMIT 6", [$like, $like, $like, $like]) as $r)
+                    $add('سفارش‌ها', '🧾', 'سفارش ' . $r['code'], trim($r['first_name'] . ' ' . $r['last_name']) . ' · ' . fa_num(number_format((int) $r['total'])) . ' ت', 'order-view.php?id=' . $r['id']);
+            });
+            $try(function () use ($like, $add) {
+                foreach (rows('SELECT id, title FROM products WHERE title LIKE ? ORDER BY id DESC LIMIT 5', [$like]) as $r)
+                    $add('محصولات', '🛍️', (string) $r['title'], 'ویرایش محصول', 'product-edit.php?id=' . $r['id']);
+            });
+            $try(function () use ($like, $add) {
+                foreach (rows('SELECT id, code, subject, status FROM tickets WHERE subject LIKE ? OR code LIKE ? ORDER BY id DESC LIMIT 4', [$like, $like]) as $r)
+                    $add('تیکت‌ها', '🎫', (string) $r['subject'], 'تیکت ' . $r['code'] . ($r['status'] === 'open' ? ' · باز' : ''), 'ticket-view.php?id=' . $r['id']);
+            });
+        }
+        if (can('*')) {
+            $try(function () use ($like, $add) {
+                foreach (rows("SELECT id, member_code, first_name, last_name, phone, username FROM members
+                    WHERE CONCAT(first_name, ' ', last_name) LIKE ? OR phone LIKE ? OR member_code LIKE ? OR username LIKE ? OR email LIKE ? ORDER BY id DESC LIMIT 6", [$like, $like, $like, $like, $like]) as $r)
+                    $add('اعضا', '👤', trim($r['first_name'] . ' ' . $r['last_name']), fa_num((string) $r['phone']) . ' · ' . $r['member_code'], 'member-view.php?id=' . $r['id']);
+            });
+            $try(function () use ($like, $add) {
+                foreach (rows('SELECT id, code, pct FROM promo_codes WHERE code LIKE ? OR title LIKE ? ORDER BY id DESC LIMIT 4', [$like, $like]) as $r)
+                    $add('کدهای تخفیف', '🏷️', (string) $r['code'], fa_num(rtrim(rtrim((string) $r['pct'], '0'), '.')) . '٪ تخفیف', 'promos.php');
+            });
+            $try(function () use ($like, $add) {
+                foreach (rows('SELECT id, title, status FROM raffles WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
+                    $add('قرعه‌کشی', '🎁', (string) $r['title'], 'مدیریت قرعه‌کشی', 'raffle-view.php?id=' . $r['id']);
+                foreach (rows('SELECT id, title FROM wheels WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
+                    $add('گردونه شانس', '🎡', (string) $r['title'], 'مدیریت گردونه', 'wheel-view.php?id=' . $r['id']);
+            });
+        }
+        json_out(['ok' => true, 'items' => $out]);
+
     case 'online':
         [$t, $m] = online_count();
         json_out(['ok' => true, 'total' => $t, 'members' => $m]);

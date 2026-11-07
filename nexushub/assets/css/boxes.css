@@ -362,3 +362,12 @@ html.perf-off .nx-strip { transition: none; }
 /* text on accent-coloured buttons follows the accent's brightness */
 .nxp-btn, .rfx-cta { color: var(--nxp-on, #fff); }
 .rfx-is-done .rfx-cta { color: #1a0d00; }
+
+/* ad card in a narrow spot (phone, sidebar, panel gallery): picture on top, then the heading row, full-width button */
+.nxp-fmt-card { container: nxpc / inline-size; }
+@container nxpc (max-width: 440px) {
+    .nxp-fmt-card .nxp-inner { flex-direction: column; align-items: stretch; text-align: right; gap: 12px; }
+    .nxp-fmt-card .nxp-thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .nxp-fmt-card .nxp-btn { width: 100%; }
+    .nxp-fmt-card .nxp-title { overflow-wrap: anywhere; }
+}

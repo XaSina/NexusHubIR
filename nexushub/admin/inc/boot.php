@@ -49,6 +49,13 @@ function adm_icon(string $name, int $size = 20): string
 
 function adm_nav(): array
 {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    return $cache = adm_nav_build();
+}
+
+function adm_nav_build(): array
+{
     $pendingC = (int) val("SELECT COUNT(*) FROM comments WHERE status = 'pending'");
     $unread = (int) val('SELECT COUNT(*) FROM messages WHERE is_read = 0');
     $newMembers = (int) val('SELECT COUNT(*) FROM members WHERE created_at >= ?', [date('Y-m-d 00:00:00')]);
@@ -84,6 +91,35 @@ function adm_nav(): array
         ['امنیت', 'security.php', 'shield', '*', 'security', admin_gate_on() ? 0 : 1],
         ['پشتیبان‌گیری', 'backup.php', 'database', '*', 'backup', 0],
     ];
+}
+
+/** pages and quick actions for the command palette (only what this user may open) */
+function adm_cmd_items(): array
+{
+    static $emo = ['dashboard' => '📊', 'orders' => '🧾', 'products' => '🛍️', 'tickets' => '🎫', 'shop-settings' => '⚙️', 'posts' => '📰', 'post-new' => '✍️', 'categories' => '🗂️',
+        'comments' => '💬', 'media' => '🖼️', 'stories' => '⭕', 'ads' => '📢', 'raffles' => '🎁', 'wheels' => '🎡', 'prizes' => '🏆', 'promos' => '🏷️', 'appearance' => '🎨',
+        'pages' => '📄', 'messages' => '✉️', 'members' => '👥', 'users' => '🛡️', 'settings' => '🔧', 'security' => '🔒', 'backup' => '💾'];
+    $out = [];
+    foreach (adm_nav() as [$label, $href, $ic, $cap, $key, $badge]) {
+        if ($cap === '*' && !can('*')) continue;
+        if ($cap && $cap !== '*' && !can($cap)) continue;
+        $out[] = ['g' => 'صفحه‌های پنل', 'i' => $emo[$key] ?? '•', 't' => $label, 's' => $badge ? fa_num((string) $badge) . ' مورد جدید' : '', 'h' => url('admin/' . $href), 'b' => (int) $badge];
+    }
+    $acts = [
+        ['shop', '➕', 'محصول جدید', 'product-edit.php'],
+        ['*', '🎁', 'قرعه‌کشی جدید', 'raffle-edit.php'],
+        ['*', '🎡', 'گردونه شانس جدید', 'wheel-edit.php'],
+        ['*', '📢', 'تبلیغ جدید', 'ad-edit.php'],
+        ['*', '⭕', 'استوری جدید', 'story-edit.php'],
+        ['pages', '📄', 'صفحه جدید', 'page-edit.php'],
+        ['*', '🛡️', 'ساخت لینک ورود جدید پنل', 'security.php'],
+        ['*', '💾', 'گرفتن نسخه پشتیبان', 'backup.php'],
+    ];
+    foreach ($acts as [$cap, $i, $t, $h]) if (can($cap)) $out[] = ['g' => 'کار سریع', 'i' => $i, 't' => $t, 's' => '', 'h' => url('admin/' . $h)];
+    $out[] = ['g' => 'کار سریع', 'i' => '🌐', 't' => 'مشاهده سایت', 's' => 'در زبانه جدید', 'h' => url(''), 'x' => 1];
+    $out[] = ['g' => 'کار سریع', 'i' => '👤', 't' => 'پروفایل من', 's' => '', 'h' => url('admin/profile.php')];
+    $out[] = ['g' => 'کار سریع', 'i' => '🚪', 't' => 'خروج از پنل', 's' => '', 'h' => url('admin/logout.php')];
+    return $out;
 }
 
 function adm_head(string $title, string $active = ''): void
@@ -137,6 +173,7 @@ function adm_head(string $title, string $active = ''): void
             <h1 class="adm-title"><?= e($title) ?></h1>
             <span class="adm-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?></span>
             <div class="adm-top-actions">
+                <button class="adm-ib adm-cmd-btn" id="cmdBtn" type="button" aria-label="جستجوی سریع" title="جستجوی سریع (Ctrl + K)"><?= icon('search', 18) ?><span class="adm-cmd-hint">جستجو در پنل…<kbd>Ctrl K</kbd></span></button>
                 <?php if (can('shop')): $an = notifs_unread('admin'); ?>
                 <div class="anb">
                     <button class="adm-ib anb-btn" id="anbBtn" type="button" aria-label="اعلان‌ها" title="اعلان‌ها"><?= icon('bell', 19) ?><em class="nav-badge anb-count" id="anbCount"<?= $an ? '' : ' hidden' ?>><?= fa_num((string) $an) ?></em></button>
@@ -178,11 +215,13 @@ window.NXA = <?= json_encode([
     'ajax' => url('admin/ajax.php'),
     'flashes' => $fl,
     'uploadLimit' => server_upload_limit(),
+    'cmd' => adm_cmd_items(),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="<?= e(asset('js/confirm.js')) ?>"></script>
 <script src="<?= e(asset('js/admin.js')) ?>"></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
+<script src="<?= e(asset('js/cmdk.js')) ?>" defer></script>
 <?php foreach ($scripts as $s): ?><script src="<?= e(asset('js/' . $s)) ?>"></script><?php endforeach; ?>
 <?= perf_foot() ?>
 </body>

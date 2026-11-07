@@ -605,4 +605,12 @@ return [
   PRIMARY KEY (`id`),
   UNIQUE KEY `u_pu` (`promo_id`, `member_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+"CREATE TABLE IF NOT EXISTS `bookmarks` (
+  `member_id` INT UNSIGNED NOT NULL,
+  `post_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`member_id`, `post_id`),
+  KEY `k_bm_post` (`post_id`),
+  KEY `k_bm_member` (`member_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 ];

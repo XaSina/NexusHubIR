@@ -868,6 +868,48 @@
         };
         tick(); setInterval(tick, 1000);
     }
+    /* ---------- Saved posts (🔖) ---------- */
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-bm]');
+        if (!btn) return;
+        e.preventDefault(); e.stopPropagation();
+        if (btn._busy) return;
+        var id = btn.dataset.bm, all = $$('[data-bm="' + id + '"]'), was = btn.classList.contains('on');
+        var paint = function (on) {
+            all.forEach(function (b) {
+                b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                b.title = on ? 'برداشتن از ذخیره‌شده‌ها' : 'ذخیره برای بعد';
+                var t = b.querySelector('.bm-t'); if (t) t.textContent = on ? t.dataset.on : t.dataset.off;
+            });
+        };
+        btn._busy = true; paint(!was);                                   // feels instant; rolled back on error
+        if (!was) { btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop'); }
+        api('api/bookmark', { post_id: id }).then(function (j) {
+            btn._busy = false;
+            if (!j.ok) {
+                paint(was); toast(j.error || 'خطا');
+                if (j.login) setTimeout(function () { location.href = j.login; }, 900);
+                return;
+            }
+            paint(j.saved); toast(j.msg);
+            var grid = $('#bkGrid');
+            if (grid && !j.saved) {                                          // on «ذخیره‌شده‌ها» the card leaves the list
+                var card = btn.closest('.pcard');
+                if (card) {
+                    card.classList.add('bk-out');
+                    setTimeout(function () {
+                        card.parentNode.removeChild(card);
+                        if (!grid.querySelector('.pcard')) {
+                            grid.style.display = 'none';
+                            var em = $('.bk-empty'); if (em) { em.hidden = false; em.classList.add('in'); }
+                            var pg = $('.pagination'); if (pg) pg.style.display = 'none';
+                        }
+                    }, 320);
+                }
+            }
+            $$('[data-saved-count]').forEach(function (c) { c.textContent = faDigits(j.count); c.hidden = !j.count; });
+        }).catch(function () { btn._busy = false; paint(was); toast('خطا در ارتباط'); });
+    });
 })();
 
 /* required fields / checkboxes: a themed bubble with the panel's text instead of the browser's English popup */

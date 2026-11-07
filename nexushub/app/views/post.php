@@ -41,6 +41,7 @@ $commentsOn = setting_on('comments_enabled') && $post['allow_comments'];
                 <span><?= icon('sparkle', 15) ?> <?= fa_num((string) reading_time((string) $post['content'])) ?> دقیقه مطالعه</span>
                 <span><?= icon('eye', 15) ?> <?= fa_short_num((int) $post['views'] + 1) ?> بازدید</span>
                 <?php if ($commentsOn): ?><a href="#comments"><?= icon('comment', 15) ?> <?= fa_num((string) $commentCount) ?> نظر</a><?php endif; ?>
+                <?= bookmark_btn((int) $post['id'], 'bm-btn bm-pill', true) ?>
             </div>
         </div>
     </header>

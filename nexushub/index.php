@@ -521,6 +521,17 @@ switch ($seg[0] ?? '') {
         }
         break;
 
+    /* ======================= Saved posts (members) ======================= */
+    case 'saved':
+        if (!bookmarks_on()) not_found();
+        $member = current_member();
+        if (!$member) { $_SESSION['after_login'] = 'saved'; redirect('auth'); }
+        header('Cache-Control: no-store');
+        $per = 12; $total = bookmarks_count((int) $member['id']); $pg = paginate($total, $per, $page);
+        $posts = rows(POST_SELECT . ' JOIN bookmarks b ON b.post_id = p.id AND b.member_id = ? WHERE ' . pub_where() . ' ORDER BY b.created_at DESC LIMIT ' . $per . ' OFFSET ' . $pg['offset'], [(int) $member['id']]);
+        page_out('saved', ['posts' => $posts, 'pg' => $pg, 'total' => $total, 'bodyClass' => 'page-list page-saved'], ['title' => 'ذخیره‌شده‌های من | ' . setting('site_title'), 'noindex' => true]);
+        break;
+
     /* ======================= Lucky wheel ======================= */
     case 'wheel':
         if (!setting_on('footer_wheel_link') && !current_user()) { http_response_code(410); page_out('section_closed', ['what' => 'گردونه شانس', 'icon' => '🎡'], ['title' => 'گردونه شانس | ' . setting('site_title'), 'noindex' => true]); break; }

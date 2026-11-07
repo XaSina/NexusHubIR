@@ -254,6 +254,7 @@ $jsCfg['cart'] = $cartN;
                 <?php if ($shopOn && setting_on('shop_in_footer')): ?><li><a href="<?= e(url('shop')) ?>">🛍️ <?= e(setting('shop_menu_label', 'فروشگاه')) ?></a></li><?php if (setting_on('shop_support_on')): ?><li><a href="<?= e(url('support')) ?>">پشتیبانی فروشگاه</a></li><?php endif; ?><?php endif; ?>
                 <?php foreach ($pages as $p): if (!$p['show_in_footer']) continue; ?><li><a href="<?= e(url('page/' . rawurlencode($p['slug']))) ?>"><?= e($p['title']) ?></a></li><?php endforeach; ?>
                 <?php if (setting_on('link_prizes_footer')): ?><li><a href="<?= e(url('prizes')) ?>">🎁 جایزه‌های من</a></li><?php endif; ?>
+                <?php if (bookmarks_on() && setting_on('link_saved_footer')): ?><li><a href="<?= e(url('saved')) ?>">🔖 ذخیره‌شده‌های من</a></li><?php endif; ?>
                 <?php if (setting_on('link_notifs_footer')): ?><li><a href="<?= e(url('notifications')) ?>">🔔 اعلان‌های من</a></li><?php endif; ?>
                 <li><a href="<?= e(url('contact')) ?>">تماس با ما</a></li>
             </ul>
@@ -311,6 +312,7 @@ $jsCfg['cart'] = $cartN;
                 <a href="<?= e(menu_link((string) ($m['url'] ?? '/'))) ?>" style="--i:<?= $i ?><?= $dc ? ';--c:' . e($dc['color']) : '' ?>"<?= $dc ? ' class="dn-cat"' : ($ds ? ' class="dn-shop"' : '') ?>><span><?php if ($dc): ?><i class="dn-ic"><?= e($dc['icon']) ?></i><?php elseif ($ds): ?><i class="dn-ic"><?= icon('bag', 16) ?></i><?php endif; ?><?= e($m['title'] ?? '') ?><?php if ($ds && $cartN): ?> <em class="dn-badge"><?= fa_num((string) $cartN) ?> در سبد</em><?php endif; ?></span> <?= icon('chevron-left', 16) ?></a>
             <?php endforeach; ?>
             <?php if ($me && setting_on('link_prizes_drawer')): ?><a href="<?= e(url('prizes')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic">🎁</i>جایزه‌های من</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
+            <?php if ($me && bookmarks_on() && setting_on('link_saved_drawer')): $svN = bookmarks_count((int) $me['id']); ?><a href="<?= e(url('saved')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic">🔖</i>ذخیره‌شده‌ها<em class="dn-count" data-saved-count<?= $svN ? '' : ' hidden' ?>><?= fa_num((string) $svN) ?></em></span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
             <?php if ($me && setting_on('link_notifs_drawer')): ?><a href="<?= e(url('notifications')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic"><?= icon('bell', 16) ?></i>اعلان‌های من</span> <?= icon('chevron-left', 16) ?></a><?php endif; ?>
             <?php if ($me && $shopOn): ?>
                 <a href="<?= e(url('orders')) ?>" style="--i:<?= count($drawerItems) ?>"><span><i class="dn-ic"><?= icon('box', 16) ?></i>سفارش‌های من</span> <?= icon('chevron-left', 16) ?></a>

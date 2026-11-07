@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 14;   // v14: hidden panel entrance by fingerprint
+const NX_DB_VERSION = 15;   // v15: members' saved posts
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
@@ -155,6 +155,51 @@ function invite_pending(): string
 {
     $c = (string) ($_SESSION['invite']['code'] ?? ($_COOKIE['nx_inv'] ?? ''));
     return preg_match('~^[A-Za-z0-9-]{3,20}$~', $c) ? strtoupper($c) : '';
+}
+
+/* ---------- saved posts (bookmarks) ---------- */
+function bookmarks_on(): bool { return setting_on('bookmarks_on'); }
+
+function bookmark_has(int $memberId, int $postId): bool
+{
+    try { return (bool) val('SELECT 1 FROM bookmarks WHERE member_id = ? AND post_id = ?', [$memberId, $postId]); } catch (Throwable $e) { return false; }
+}
+
+/** saves or un-saves a post; returns the new state */
+function bookmark_toggle(int $memberId, int $postId): bool
+{
+    if (bookmark_has($memberId, $postId)) { q('DELETE FROM bookmarks WHERE member_id = ? AND post_id = ?', [$memberId, $postId]); return false; }
+    if ((int) val('SELECT COUNT(*) FROM bookmarks WHERE member_id = ?', [$memberId]) >= 500) {            // keep the list sane
+        q('DELETE FROM bookmarks WHERE member_id = ? ORDER BY created_at ASC LIMIT 1', [$memberId]);
+    }
+    q('INSERT IGNORE INTO bookmarks (member_id, post_id, created_at) VALUES (?, ?, ?)', [$memberId, $postId, now()]);
+    return true;
+}
+
+/** ids the signed-in member saved (loaded once per page) */
+function member_saved_ids(): array
+{
+    static $ids = null;
+    if ($ids !== null) return $ids;
+    $ids = [];
+    if (!bookmarks_on() || !($m = current_member())) return $ids;
+    try { foreach (rows('SELECT post_id FROM bookmarks WHERE member_id = ?', [(int) $m['id']]) as $r) $ids[(int) $r['post_id']] = true; } catch (Throwable $e) { }
+    return $ids;
+}
+
+/** the little save button on cards and posts */
+function bookmark_btn(int $postId, string $cls = 'bm-btn', bool $label = false): string
+{
+    if (!bookmarks_on()) return '';
+    $on = isset(member_saved_ids()[$postId]);
+    $svg = '<svg class="bm-ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1Z"/></svg>';
+    return '<button type="button" class="' . e($cls) . ($on ? ' on' : '') . '" data-bm="' . $postId . '" aria-pressed="' . ($on ? 'true' : 'false') . '" title="' . ($on ? 'برداشتن از ذخیره‌شده‌ها' : 'ذخیره برای بعد') . '" aria-label="ذخیره خبر">'
+        . $svg . ($label ? '<span class="bm-t" data-on="ذخیره شد" data-off="ذخیره">' . ($on ? 'ذخیره شد' : 'ذخیره') . '</span>' : '') . '</button>';
+}
+
+function bookmarks_count(int $memberId): int
+{
+    try { return (int) val('SELECT COUNT(*) FROM bookmarks b JOIN posts p ON p.id = b.post_id WHERE b.member_id = ? AND ' . pub_where(), [$memberId]); } catch (Throwable $e) { return 0; }
 }
 
 function member_full_name(array $m): string

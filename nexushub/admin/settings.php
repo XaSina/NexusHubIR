@@ -3,7 +3,7 @@ require __DIR__ . '/inc/boot.php';
 require_cap('*');
 
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
-    'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list',
+    'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list', 'bookmarks_on', 'link_saved_drawer', 'link_saved_footer',
     'tg_bot_token', 'tg_chat_id', 'tg_autopost', 'tg_template',
     'ad_label', 'post_middle_paragraph', 'maintenance', 'maintenance_text', 'head_code', 'footer_code', 'verify_files', 'og_image', 'google_verify', 'robots_extra', 'seo_home_title', 'seo_site_name', 'seo_index_authors', 'seo_https', 'indexnow_on', 'news_sitemap_on', 'seo_alt_names'];
 
@@ -105,6 +105,12 @@ adm_head('تنظیمات', 'settings');
             <div class="card-head"><h3>🔥 واکنش‌ها (ری‌اکشن شبیه تلگرام)</h3></div>
             <?= f_switch('reactions_enabled', 'نمایش واکنش‌ها زیر خبر', setting_on('reactions_enabled')) ?>
             <?= f_text('reactions_list', 'ایموجی‌ها (با ویرگول جدا کنید)', $s['reactions_list'], ['hint' => 'حداکثر ۱۰ ایموجی. مثال: 🔥,❤️,😂,😮,😭,👍']) ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>🔖 ذخیره‌ی خبر برای بعد</h3><small class="muted">اعضا روی هر خبر «ذخیره» می‌زنن و توی صفحه‌ی «ذخیره‌شده‌ها» پیداش می‌کنن</small></div>
+            <?= f_switch('bookmarks_on', 'دکمه‌ی ذخیره روی اخبار', setting_on('bookmarks_on'), 'برای مهمان‌ها دکمه‌ی خبر هست و با زدنش می‌ره صفحه‌ی ورود؛ روی کارت‌ها فقط برای اعضای واردشده') ?>
+            <?= f_switch('link_saved_drawer', 'لینک «ذخیره‌شده‌ها» در منوی گوشی', setting_on('link_saved_drawer')) ?>
+            <?= f_switch('link_saved_footer', 'لینک «ذخیره‌شده‌ها» در فوتر', setting_on('link_saved_footer')) ?>
         </div>
     </div>
 </div>

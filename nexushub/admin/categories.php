@@ -60,6 +60,7 @@ adm_head('دسته‌بندی‌ها', 'categories');
                     <span class="cat-dot" style="--c:<?= e($k['color']) ?>"><?= e($k['icon']) ?></span>
                     <b><?= e($k['name']) ?> <small class="muted ltr">/<?= e($k['slug']) ?></small></b>
                     <span class="badge"><?= fa_num((string) $k['cnt']) ?> خبر</span>
+                    <div class="si-acts">
                     <form method="post" class="cat-places"><?= csrf_field() ?><input type="hidden" name="cid" value="<?= (int) $k['id'] ?>">
                         <?php foreach (['show_in_header' => ['🖥️', 'منوی کامپیوتر'], 'show_in_mobile' => ['📱', 'منوی موبایل'], 'show_in_footer' => ['⬇️', 'فوتر'], 'show_on_home' => ['🏠', 'بلوک صفحه اصلی']] as $col => [$ic, $lbl]): ?>
                             <button class="cp<?= $k[$col] ? ' on' : '' ?>" name="toggle" value="<?= $col ?>" title="<?= e($lbl) ?>: <?= $k[$col] ? 'روشن — برای خاموش کردن کلیک کنید' : 'خاموش — برای روشن کردن کلیک کنید' ?>"><?= $ic ?></button>
@@ -67,6 +68,7 @@ adm_head('دسته‌بندی‌ها', 'categories');
                     </form>
                     <a class="adm-ib" href="?edit=<?= (int) $k['id'] ?>" title="ویرایش"><?= adm_icon('edit', 16) ?></a>
                     <form method="post" style="display:inline"><?= csrf_field() ?><button class="adm-ib" name="delete_id" value="<?= (int) $k['id'] ?>" data-confirm="دسته «<?= e($k['name']) ?>» حذف شود؟"><?= adm_icon('trash', 16) ?></button></form>
+                    </div>
                 </div>
             <?php endforeach; ?>
             <?php if (!$cats): ?><div class="empty-state"><span>📁</span>هنوز دسته‌ای ساخته نشده.</div><?php endif; ?>
