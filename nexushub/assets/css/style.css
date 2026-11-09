@@ -1692,3 +1692,16 @@ html.perf-off .nx-invalid { animation: none; }
     .bk-hero .ph-inner > .btn { margin-inline-start: 0; width: 100%; justify-content: center; }
     .bm-pill { margin-inline-start: 0; }
 }
+
+/* ---------- touch UX: no iPhone zoom on fields, comfortable tap targets ---------- */
+@media (pointer: coarse), (max-width: 768px) {
+    input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]), select, textarea { font-size: max(16px, 1em) !important; }
+    .announce-close { min-width: 34px; min-height: 34px; place-items: center; }
+    .announce-text { padding-block: 5px; }
+    .pc-more { padding-block: 6px; }
+    .chip { min-height: 32px; }
+    summary { min-height: 34px; padding-block: 5px; }
+    .nx-more { min-height: 34px; }
+}
+/* keyboard focus ring in the theme colour (mouse and touch never see it) */
+:where(a, button, summary, [role=button], [tabindex]):focus-visible { outline: 2px solid rgba(var(--primary-rgb), .9); outline-offset: 3px; }

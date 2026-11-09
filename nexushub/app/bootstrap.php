@@ -48,6 +48,7 @@ require NX_APP . '/wheel.php';
 require NX_APP . '/prizes.php';
 require NX_APP . '/promos.php';
 require NX_APP . '/security.php';
+require NX_APP . '/reports.php';
 
 nx_session_start();
 security_headers();

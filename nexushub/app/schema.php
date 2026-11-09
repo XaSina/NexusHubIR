@@ -613,4 +613,10 @@ return [
   KEY `k_bm_post` (`post_id`),
   KEY `k_bm_member` (`member_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+"CREATE TABLE IF NOT EXISTS `sales_months` (
+  `ym` CHAR(7) NOT NULL,
+  `data` MEDIUMTEXT NOT NULL,
+  `closed_at` DATETIME NOT NULL,
+  PRIMARY KEY (`ym`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 ];

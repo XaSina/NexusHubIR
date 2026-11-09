@@ -57,3 +57,4 @@ html.perf-safe .mkt-it, html.perf-safe .pg-num, html.perf-safe .pg-btn, html.per
 html.perf-safe .rate-chip, html.perf-safe .react.mine { background: color-mix(in srgb, rgb(var(--surface-rgb)) 84%, var(--primary)) !important; }
 html.perf-safe .sh-grid { display: none !important; }
 html.perf-safe .sh-orbs { opacity: .6; }
+@media (pointer: coarse) { .pf-tab { width: 34px; } }

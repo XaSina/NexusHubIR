@@ -1,31 +1,41 @@
 <?php
 require __DIR__ . '/inc/boot.php';
 require_cap('*');
+require_once NX_APP . '/projectdoc.php';
 
 if (is_post()) {
     csrf_check();
     $act = $_POST['act'] ?? '';
     if ($act === 'download') {
-        @set_time_limit(300);
-        $tables = array_map(fn($r) => array_values($r)[0], rows('SHOW TABLES'));
         $name = 'nexushub-backup-' . jdate('Y-m-d', null, false) . '-' . date('His') . '.sql';
         header('Content-Type: application/sql; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $name . '"');
-        echo "-- NEXUS | HUB backup\n-- " . jdate('Y/m/d H:i', null, false) . "\nSET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\n\n";
-        $pdo = db();
-        foreach ($tables as $t) {
-            $create = row('SHOW CREATE TABLE `' . str_replace('`', '', $t) . '`');
-            echo "DROP TABLE IF EXISTS `$t`;\n" . array_values($create)[1] . ";\n\n";
-            $st = $pdo->query("SELECT * FROM `$t`");
-            $batch = [];
-            while ($r = $st->fetch(PDO::FETCH_NUM)) {
-                $batch[] = '(' . implode(',', array_map(fn($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), $r)) . ')';
-                if (count($batch) >= 100) { echo "INSERT INTO `$t` VALUES\n" . implode(",\n", $batch) . ";\n"; $batch = []; }
-            }
-            if ($batch) echo "INSERT INTO `$t` VALUES\n" . implode(",\n", $batch) . ";\n";
-            echo "\n";
+        $out = fopen('php://output', 'w');
+        sql_dump_to($out);
+        exit;
+    }
+    if ($act === 'project' || $act === 'readme') {
+        $o = ['db' => !empty($_POST['x_db']), 'uploads' => !empty($_POST['x_uploads']), 'safe' => !empty($_POST['x_safe'])];
+        save_settings(['export_db' => $o['db'] ? '1' : '0', 'export_uploads' => $o['uploads'] ? '1' : '0', 'export_safe' => $o['safe'] ? '1' : '0']);
+        if ($act === 'readme') {
+            header('Content-Type: text/markdown; charset=utf-8');
+            header('Content-Disposition: attachment; filename="README.md"');
+            echo project_readme($o);
+            exit;
         }
-        echo "SET FOREIGN_KEY_CHECKS=1;\n";
+        try {
+            $zip = project_export_zip($o);
+        } catch (Throwable $e) {
+            flash('ساخت فایل ZIP ممکن نشد: ' . $e->getMessage(), 'error');
+            redirect('admin/backup.php');
+        }
+        $name = 'nexushub-project-' . jdate('Y-m-d', null, false) . ($o['safe'] ? '-safe' : '-full') . '.zip';
+        while (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $name . '"');
+        header('Content-Length: ' . filesize($zip));
+        readfile($zip);
+        @unlink($zip);
         exit;
     }
     if ($act === 'clear_stats') { q('DELETE FROM stats_daily'); flash('آمار بازدید روزانه پاک شد.'); }
@@ -42,8 +52,49 @@ if (is_post()) {
 }
 $dbSize = (float) val('SELECT COALESCE(SUM(data_length + index_length), 0) FROM information_schema.TABLES WHERE table_schema = DATABASE()');
 $upSize = (int) val('SELECT COALESCE(SUM(size),0) FROM media');
+$exDb = setting_on('export_db'); $exSafe = setting_on('export_safe'); $exUp = setting_on('export_uploads');
 adm_head('پشتیبان‌گیری و ابزارها', 'backup');
 ?>
+<form method="post" class="card pex">
+    <?= csrf_field() ?>
+    <div class="pex-head">
+        <span class="pex-ic">📦</span>
+        <div>
+            <h3>دانلود کل پروژه در یک فایل ZIP</h3>
+            <p class="muted small">همه‌ی فایل‌های سایت + فایل <b class="ltr">README.md</b> که توضیح می‌ده سایت چطور ساخته شده، کجاها رو می‌شه تغییر داد و به چی نباید دست زد؛ برای انتقال سایت یا دادن به یه برنامه‌نویس یا هوش مصنوعی.</p>
+        </div>
+    </div>
+    <div class="pex-grid">
+        <div class="pex-readme">
+            <div class="pex-file"><span>📄</span><b class="ltr">README.md</b><small>خودکار، همیشه داخل ZIP</small></div>
+            <ul>
+                <li><i>#</i> How it was built <small>— نسخه، تاریخ، محتوای ZIP</small></li>
+                <li><i>##</i> Built with <small>— فناوری‌ها</small></li>
+                <li><i>##</i> Folder map &amp; database <small>— نقشه‌ی فایل‌ها و جدول‌ها</small></li>
+                <li><i>##</i> Instructions <small>— نصب و قوانین کدنویسی</small></li>
+                <li class="ok"><i>##</i> To change it ✅ <small>— جاهای امن برای تغییر</small></li>
+                <li class="no"><i>##</i> Never touch ❌ <small>— چیزهایی که نباید دست بخوره</small></li>
+                <li><i>##</i> Prompt <small>— متن آماده برای هوش مصنوعی</small></li>
+            </ul>
+        </div>
+        <div class="pex-opts">
+            <?= f_switch('x_safe', '🛡️ نسخه‌ی امن برای اشتراک‌گذاری', $exSafe, 'بدون رمزها، توکن ربات، لینک مخفی پنل، config.php و اطلاعات شخصی اعضا و سفارش‌ها — برای دادن به هوش مصنوعی یا برنامه‌نویس همین رو روشن بذار') ?>
+            <?= f_switch('x_db', '🗄️ همراه دیتابیس (SQL)', $exDb, 'ساختار همه‌ی جدول‌ها + محتوا (در نسخه‌ی امن، داده‌های شخصی حذف می‌شن)') ?>
+            <?= f_switch('x_uploads', '🖼️ همراه عکس‌ها و فایل‌های آپلودی', $exUp, 'حجم فعلی: ' . fa_num(number_format($upSize / 1048576, 1)) . ' مگابایت — اگه فقط برای هوش مصنوعی می‌خوای خاموش بمونه سبک‌تره') ?>
+            <div class="pex-btns">
+                <button class="abtn abtn-primary" name="act" value="project">⬇️ دانلود ZIP کامل پروژه</button>
+                <button class="abtn abtn-ghost" name="act" value="readme">📄 فقط README.md</button>
+            </div>
+            <p class="pex-warn small" data-safe-off<?= $exSafe ? ' hidden' : '' ?>>⚠️ نسخه‌ی کامل شامل رمز دیتابیس و اطلاعات اعضاست؛ فقط برای پشتیبان شخصی خودت نگهش دار و به کسی نده.</p>
+        </div>
+    </div>
+</form>
+<script>
+document.addEventListener('change', function (e) {
+    if (e.target.name !== 'x_safe' || e.target.type !== 'checkbox') return;
+    var w = document.querySelector('[data-safe-off]'); if (w) w.hidden = e.target.checked;
+});
+</script>
 <div class="grid g2">
     <div class="card">
         <div class="card-head"><h3><?= adm_icon('database', 20) ?> پشتیبان پایگاه داده</h3></div>

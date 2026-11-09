@@ -64,11 +64,13 @@ function adm_nav_build(): array
     $openT = (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'");
     try { $raffleReq = (int) val("SELECT COUNT(*) FROM raffle_requests WHERE status = 'pending'"); } catch (Throwable $e) { $raffleReq = 0; }
     $wheelTodo = 0;
+    try { if (can('shop')) sales_close_months(); } catch (Throwable $e) { }
     try { prizes_expire_due(); $prizeTodo = (int) val("SELECT COUNT(*) FROM prizes WHERE status = 'pending'"); } catch (Throwable $e) { $prizeTodo = 0; }
     return [
         ['داشبورد', 'index.php', 'dashboard', null, 'dashboard', 0],
         ['سفارش‌ها', 'orders.php', 'orders', 'shop', 'orders', $toReview],
         ['محصولات فروشگاه', 'products.php', 'bag', 'shop', 'products', 0],
+        ['گزارش فروش ماهانه', 'reports.php', 'chart', 'shop', 'reports', 0],
         ['تیکت‌های پشتیبانی', 'tickets.php', 'ticket', 'shop', 'tickets', $openT],
         ['تنظیمات فروشگاه', 'shop-settings.php', 'shopset', '*', 'shop-settings', 0],
         ['همه اخبار', 'posts.php', 'posts', 'posts', 'posts', 0],
@@ -96,7 +98,7 @@ function adm_nav_build(): array
 /** pages and quick actions for the command palette (only what this user may open) */
 function adm_cmd_items(): array
 {
-    static $emo = ['dashboard' => '📊', 'orders' => '🧾', 'products' => '🛍️', 'tickets' => '🎫', 'shop-settings' => '⚙️', 'posts' => '📰', 'post-new' => '✍️', 'categories' => '🗂️',
+    static $emo = ['dashboard' => '📊', 'orders' => '🧾', 'reports' => '📈', 'products' => '🛍️', 'tickets' => '🎫', 'shop-settings' => '⚙️', 'posts' => '📰', 'post-new' => '✍️', 'categories' => '🗂️',
         'comments' => '💬', 'media' => '🖼️', 'stories' => '⭕', 'ads' => '📢', 'raffles' => '🎁', 'wheels' => '🎡', 'prizes' => '🏆', 'promos' => '🏷️', 'appearance' => '🎨',
         'pages' => '📄', 'messages' => '✉️', 'members' => '👥', 'users' => '🛡️', 'settings' => '🔧', 'security' => '🔒', 'backup' => '💾'];
     $out = [];

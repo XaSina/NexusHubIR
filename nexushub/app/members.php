@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 15;   // v15: members' saved posts
+const NX_DB_VERSION = 16;   // v16: monthly sales report (closed months)
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
