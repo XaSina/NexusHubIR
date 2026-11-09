@@ -129,7 +129,7 @@ h2, h3, h4 { margin: 0 0 .6em; line-height: 1.5; }
 .b-info { color: var(--info); background: rgba(61,187,255,.1); border-color: rgba(61,187,255,.3); }
 .b-muted { color: var(--a-muted); }
 .b-hot { color: #fff; background: var(--grad); border: 0; }
-.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .tabs a, .tabs button { padding: 8px 16px; border-radius: 12px; font-size: .86rem; font-weight: 700; color: var(--a-muted); background: var(--a-surface2); border: 1px solid var(--a-line); transition: .25s; }
 .tabs a:hover, .tabs button:hover { color: var(--a-text); }
 .tabs a.active, .tabs button.active { color: #fff; background: var(--grad); border-color: transparent; box-shadow: 0 6px 18px -6px rgba(var(--primary-rgb), .8); }
@@ -1823,3 +1823,18 @@ html.perf-lite .srp-state.is-live i, html.perf-off .srp-state.is-live i { animat
 }
 /* keyboard focus ring in the theme colour (mouse and touch never see it) */
 :where(a, button, summary, [role=button], [tabindex]):focus-visible { outline: 2px solid rgba(var(--primary-rgb), .9); outline-offset: 3px; }
+
+/* sidebar widget settings (appearance → home layout) */
+.sb-more { border: 1px solid var(--a-line); border-radius: 14px; background: var(--a-surface2); padding: 0 14px; }
+.sb-more + .sb-more { margin-top: 10px; }
+.sb-more > summary { cursor: pointer; font-weight: 800; font-size: .9rem; padding: 12px 0; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sb-more > summary::-webkit-details-marker { display: none; }
+.sb-more > summary::after { content: "▾"; color: var(--a-muted); transition: transform .2s; }
+.sb-more[open] > summary::after { transform: rotate(180deg); }
+.sb-more[open] { padding-bottom: 12px; }
+.home-hub-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.home-hub-links a { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--a-surface2); border: 1px solid var(--a-line); transition: border-color .2s, transform .2s; }
+.home-hub-links a:hover { border-color: rgba(var(--primary-rgb), .5); transform: translateY(-2px); }
+.home-hub-links span { grid-row: 1 / 3; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; font-size: 1.15rem; background: rgba(var(--primary-rgb), .1); border: 1px solid rgba(var(--primary-rgb), .25); }
+.home-hub-links b { font-size: .88rem; }
+.home-hub-links small { color: var(--a-muted); font-size: .72rem; line-height: 1.6; }

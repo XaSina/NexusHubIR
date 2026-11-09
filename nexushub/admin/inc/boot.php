@@ -84,6 +84,7 @@ function adm_nav_build(): array
         ['گردونه شانس', 'wheels.php', 'wheel', '*', 'wheels', $wheelTodo],
         ['جایزه‌ها و برنده‌ها', 'prizes.php', 'gift', '*', 'prizes', $prizeTodo],
         ['کدهای تخفیف', 'promos.php', 'percent', '*', 'promos', 0],
+        ['صفحه اصلی سایت', 'appearance.php?tab=layout', 'star', '*', 'home', 0],
         ['ظاهر سایت', 'appearance.php', 'palette', '*', 'appearance', 0],
         ['صفحات', 'pages.php', 'pages', 'pages', 'pages', 0],
         ['پیام‌ها', 'messages.php', 'inbox', 'messages', 'messages', $unread],
@@ -99,7 +100,7 @@ function adm_nav_build(): array
 function adm_cmd_items(): array
 {
     static $emo = ['dashboard' => '📊', 'orders' => '🧾', 'reports' => '📈', 'products' => '🛍️', 'tickets' => '🎫', 'shop-settings' => '⚙️', 'posts' => '📰', 'post-new' => '✍️', 'categories' => '🗂️',
-        'comments' => '💬', 'media' => '🖼️', 'stories' => '⭕', 'ads' => '📢', 'raffles' => '🎁', 'wheels' => '🎡', 'prizes' => '🏆', 'promos' => '🏷️', 'appearance' => '🎨',
+        'comments' => '💬', 'media' => '🖼️', 'stories' => '⭕', 'ads' => '📢', 'raffles' => '🎁', 'wheels' => '🎡', 'prizes' => '🏆', 'promos' => '🏷️', 'appearance' => '🎨', 'home' => '🏠',
         'pages' => '📄', 'messages' => '✉️', 'members' => '👥', 'users' => '🛡️', 'settings' => '🔧', 'security' => '🔒', 'backup' => '💾'];
     $out = [];
     foreach (adm_nav() as [$label, $href, $ic, $cap, $key, $badge]) {

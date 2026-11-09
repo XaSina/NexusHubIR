@@ -242,6 +242,8 @@ function project_readme(array $o = []): string
     $L[] = '## To change it ✅ (safe places)';
     $L[] = '';
     $L[] = '- **Texts, colours, menus, home sections, footer, SEO, ads, themes** → from the panel first (Appearance, Settings, Shop settings). No code needed.';
+    $L[] = '- **Home page & sidebar** → Panel → «صفحه اصلی سایت» (`admin/appearance.php?tab=layout`): section order/switches (`home_sections`), section titles & counts (`home_*`), sidebar widgets order/switches (`sidebar_widgets`, rendered by `app/views/partials/sidebar.php`) and their texts (`sb_*`). Header/top-bar switches: `hdr_*`, `topbar_*`.';
+    $L[] = '- **Ads** → one ad can be shown in several places: column `ads.places` (comma list, `position` = first place). Wide places wrap their boxes in `.nxp-row` (two per row); see `ad_slot()` in `app/ads.php`.';
     $L[] = '- **A new public page** → add a `case \'name\':` in `index.php` + a view in `app/views/name.php`.';
     $L[] = '- **A new panel page** → copy a small page like `admin/promos.php`, then add it to `adm_nav()` in `admin/inc/boot.php` (label, file, icon, capability, key).';
     $L[] = '- **A new setting** → add the key + default to `default_settings()`; show it in a panel form with `f_text()` / `f_switch()`; add the key to that page\'s save list.';

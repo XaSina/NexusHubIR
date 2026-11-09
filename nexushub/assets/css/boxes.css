@@ -371,3 +371,22 @@ html.perf-off .nx-strip { transition: none; }
     .nxp-fmt-card .nxp-btn { width: 100%; }
     .nxp-fmt-card .nxp-title { overflow-wrap: anywhere; }
 }
+
+/* ---------- wide places: boxes side by side, compact and centred ---------- */
+.nxp-row { display: flex; flex-wrap: wrap; gap: 18px; margin: 26px 0; }
+.nxp-row > .nxp-slot { flex: 1 1 440px; min-width: 0; margin: 0; }
+.nxp-row > .nxp-slot > .nxp { height: 100%; }
+.nxp-row > .nxp-slot.nxp-rotate > .nxp { height: auto; }
+.nxp-row:empty { display: none; }
+/* the title may take two lines instead of being cut */
+.rfx-title { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: clip; }
+/* alone in a very wide bar: picture, text and button stay together in the middle */
+@container rfx (min-width: 900px) {
+    .rfx .rfx-in { justify-content: center; gap: 28px; padding: 16px 28px; }
+    .rfx-body { flex: 0 1 auto; max-width: 560px; }
+    .rfx-art { width: 84px; height: 84px; }
+}
+@container nxpc (min-width: 900px) {
+    .nxp-fmt-card .nxp-inner { justify-content: center; gap: 28px; padding: 18px 28px; }
+    .nxp-fmt-card .nxp-content { flex: 0 1 auto; max-width: 620px; }
+}

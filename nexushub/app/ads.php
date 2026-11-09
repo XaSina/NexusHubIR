@@ -11,11 +11,19 @@ function active_ads(string $position): array
         try {
             $n = now();
             $list = rows('SELECT * FROM ads WHERE is_active = 1 AND (start_at IS NULL OR start_at <= ?) AND (end_at IS NULL OR end_at >= ?) ORDER BY priority DESC, id DESC', [$n, $n]);
-            foreach ($list as $a) $all[$a['position']][] = $a;
+            foreach ($list as $a) foreach (ad_places_of($a) as $p) $all[$p][] = $a + ['_slot' => $p];
         } catch (Throwable $e) {
         }
     }
     return $all[$position] ?? [];
+}
+
+/** every place an ad is shown in */
+function ad_places_of(array $a): array
+{
+    $l = array_values(array_unique(array_filter(array_map('trim', explode(',', (string) ($a['places'] ?? ''))))));
+    if (!$l && !empty($a['position'])) $l = [(string) $a['position']];
+    return array_values(array_intersect($l, array_keys(ad_positions())));
 }
 
 /** خروجی HTML جایگاه تبلیغ */
@@ -43,6 +51,14 @@ function top_strip(string $key, string $icon, string $text, string $href = '', s
 function ad_slot(string $position): string
 {
     if ($position === 'header_top') return top_strips();
+    $html = ad_slot_inner($position);
+    // wide places: several boxes sit side by side (two per row) instead of a stack of long empty bars
+    if ($html !== '' && !in_array($position, ['sidebar', 'popup', 'floating'], true)) return '<div class="nxp-row nxp-row-' . e($position) . '">' . $html . '</div>';
+    return $html;
+}
+
+function ad_slot_inner(string $position): string
+{
     $shop = shop_banner_slot($position) . raffle_slot($position) . wheel_slot($position) . promo_slot($position);   // the shop banner and running raffles can sit in any of these places too
     $ads = active_ads($position);
     if (!$ads) return $shop;

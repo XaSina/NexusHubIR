@@ -115,6 +115,8 @@
         };
         btns.forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); show(b.dataset.tab); }); });
         var saved = null; try { saved = sessionStorage.getItem(key); } catch (e) {}
+        var want = new URLSearchParams(location.search).get('tab');               // a link can open a given tab (?tab=layout)
+        if (want) saved = want;
         show(saved && btns.some(function (b) { return b.dataset.tab === saved; }) ? saved : btns[0].dataset.tab);
     });
 

@@ -114,6 +114,7 @@ return [
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(190) NOT NULL,
   `position` VARCHAR(40) NOT NULL,
+  `places` VARCHAR(500) NULL,
   `format` VARCHAR(20) NOT NULL DEFAULT 'card',
   `theme` VARCHAR(30) NOT NULL DEFAULT 'neon',
   `accent` VARCHAR(20) NOT NULL DEFAULT '#ff1f3d',

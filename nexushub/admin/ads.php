@@ -19,8 +19,10 @@ if (is_post()) {
 
 $positions = ad_positions();
 $pos = (string) ($_GET['pos'] ?? '');
-$list = $pos && isset($positions[$pos]) ? rows('SELECT * FROM ads WHERE position = ? ORDER BY is_active DESC, priority DESC, id DESC', [$pos]) : rows('SELECT * FROM ads ORDER BY is_active DESC, priority DESC, id DESC');
-$byPos = array_column(rows('SELECT position, COUNT(*) c FROM ads GROUP BY position'), 'c', 'position');
+$all = rows('SELECT * FROM ads ORDER BY is_active DESC, priority DESC, id DESC');
+$byPos = [];
+foreach ($all as $x) foreach (ad_places_of($x) as $pp) $byPos[$pp] = ($byPos[$pp] ?? 0) + 1;
+$list = $pos && isset($positions[$pos]) ? array_values(array_filter($all, fn($x) => in_array($pos, ad_places_of($x), true))) : $all;
 $tot = row('SELECT COALESCE(SUM(impressions),0) i, COALESCE(SUM(clicks),0) c, SUM(is_active) a, COUNT(*) n FROM ads');
 
 adm_head('مدیریت تبلیغات', 'ads');
@@ -53,7 +55,7 @@ adm_head('مدیریت تبلیغات', 'ads');
                         <?= $live ? '<span class="badge b-ok">● در حال نمایش</span>' : ($a['is_active'] ? '<span class="badge b-warn">خارج از بازه زمانی</span>' : '<span class="badge b-muted">غیرفعال</span>') ?>
                     </div>
                     <div class="row-flex" style="gap:6px">
-                        <span class="badge"><?= e($positions[$a['position']]['name'] ?? $a['position']) ?></span>
+                        <?php foreach (ad_places_of($a) as $pp): ?><span class="badge">📍 <?= e($positions[$pp]['name'] ?? $pp) ?></span><?php endforeach; ?>
                         <span class="badge b-info"><?= e(ad_themes()[$a['theme']]['name'] ?? $a['theme']) ?></span>
                         <?php if ($a['device'] !== 'all'): ?><span class="badge"><?= $a['device'] === 'mobile' ? '📱 موبایل' : '🖥 دسکتاپ' ?></span><?php endif; ?>
                     </div>

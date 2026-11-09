@@ -6,8 +6,10 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'auth_logo_style', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
-    'latest_mode', 'latest_count', 'latest_hours', 'latest_since', 'theme_decor', 'decor_density', 'decor_admin',
-    'brand_sub', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_cta_btn', 'vmsg_check', 'vmsg_field', 'vmsg_email', 'vmsg_short', 'footer_made', 'tgblock_eyebrow', 'tgblock_title', 'tgblock_text', 'tgblock_btn', 'tgblock_group_btn', 'contact_style', 'contact_icons_title', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
+    'latest_mode', 'latest_count', 'latest_hours', 'latest_since',
+    'home_latest_title', 'home_latest_more', 'home_latest_btn', 'home_cat_count', 'home_trend_title', 'home_trend_count', 'home_shop_count',
+    'sidebar_widgets', 'sb_trend_title', 'sb_trend_count', 'sb_tg_title', 'sb_tg_text', 'sb_tg_btn', 'sb_tags_title', 'sb_tags_count', 'theme_decor', 'decor_density', 'decor_admin',
+    'brand_sub', 'topbar_on', 'topbar_date_on', 'topbar_social_on', 'hdr_search_on', 'hdr_login_on', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_cta_btn', 'vmsg_check', 'vmsg_field', 'vmsg_email', 'vmsg_short', 'footer_made', 'tgblock_eyebrow', 'tgblock_title', 'tgblock_text', 'tgblock_btn', 'tgblock_group_btn', 'contact_style', 'contact_icons_title', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
 
 if (is_post()) {
     csrf_check();
@@ -55,6 +57,19 @@ if (is_post()) {
     // a label left empty falls back to its default
     foreach (['hdr_tg_label', 'hdr_login_label', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'vmsg_check', 'vmsg_field', 'vmsg_email', 'vmsg_short'] as $tk)
         if (isset($save[$tk]) && trim($save[$tk]) === '') $save[$tk] = default_settings()[$tk];
+    // home texts & counts, sidebar widgets
+    foreach (['home_cat_count' => [3, 20], 'home_trend_count' => [2, 12], 'home_shop_count' => [2, 12], 'sb_trend_count' => [3, 10], 'sb_tags_count' => [4, 40]] as $nk => [$mn, $mx])
+        if (isset($save[$nk])) $save[$nk] = (string) max($mn, min($mx, (int) en_num($save[$nk])));
+    foreach (['home_latest_title', 'home_latest_more', 'home_latest_btn', 'home_trend_title', 'sb_trend_title', 'sb_tg_title', 'sb_tg_btn', 'sb_tags_title'] as $tk)
+        if (isset($save[$tk])) $save[$tk] = mb_substr(str_replace(["\r", "\n"], ' ', $save[$tk]), 0, 80);
+    if (isset($save['sb_tg_text'])) $save['sb_tg_text'] = mb_substr($save['sb_tg_text'], 0, 300);
+    foreach (['home_latest_title', 'home_trend_title', 'sb_trend_title', 'sb_tg_btn', 'sb_tags_title'] as $tk)
+        if (isset($save[$tk]) && trim($save[$tk]) === '') $save[$tk] = default_settings()[$tk];
+    if (isset($save['sidebar_widgets'])) {
+        $sw = json_decode($save['sidebar_widgets'], true); $okw = [];
+        if (is_array($sw)) foreach ($sw as $w) if (is_array($w) && isset(sidebar_widget_names()[$w['key'] ?? ''])) $okw[] = ['key' => $w['key'], 'on' => !empty($w['on']) ? 1 : 0];
+        if ($okw) $save['sidebar_widgets'] = json_encode($okw); else unset($save['sidebar_widgets']);
+    }
     foreach (['home_sections', 'menu'] as $jk) {
         if (isset($save[$jk])) {
             $j = json_decode($save[$jk], true);
@@ -74,7 +89,7 @@ $known = array_column($sections, 'key');
 foreach (home_section_names() as $k => $n) if (!in_array($k, $known, true)) $sections[] = ['key' => $k, 'on' => 0];
 $menu = setting_json('menu');
 
-adm_head('ظاهر سایت', 'appearance');
+adm_head('ظاهر سایت', ($_GET['tab'] ?? '') === 'layout' ? 'home' : 'appearance');
 ?>
 <form method="post" id="apForm">
 <?= csrf_field() ?>
@@ -141,7 +156,20 @@ adm_head('ظاهر سایت', 'appearance');
 </div>
 
 <div data-pane="layout">
-    <div class="card">
+    <div class="card home-hub">
+        <div class="card-head"><h3>🏠 همه‌ی تنظیمات صفحه اصلی</h3><span class="muted small">چیدمان، عنوان‌ها و سایدبار همین‌جاست؛ بقیه‌ی بخش‌ها از این میان‌برها</span></div>
+        <div class="home-hub-links">
+            <a href="<?= e(url('admin/ads.php')) ?>"><span>📢</span><b>تبلیغات</b><small>بالای هدر، زیر اسلایدر، وسط، سایدبار…</small></a>
+            <a href="<?= e(url('admin/categories.php')) ?>"><span>🗂️</span><b>بلوک دسته‌ها</b><small>کدوم دسته روی صفحه اصلی بیاد (🏠)</small></a>
+            <a href="<?= e(url('admin/stories.php')) ?>"><span>⭕</span><b>استوری‌ها</b><small>دایره‌های بالای صفحه</small></a>
+            <a href="<?= e(url('admin/shop-settings.php')) ?>"><span>🛍️</span><b>بنر فروشگاه</b><small>بنر و جاهای نمایشش</small></a>
+            <a href="<?= e(url('admin/raffles.php')) ?>"><span>🎁</span><b>باکس قرعه‌کشی</b><small>داخل هر قرعه‌کشی ← جای نمایش</small></a>
+            <a href="<?= e(url('admin/wheels.php')) ?>"><span>🎡</span><b>باکس گردونه</b><small>داخل هر گردونه ← جای نمایش</small></a>
+            <a href="<?= e(url('admin/promos.php')) ?>"><span>🏷️</span><b>باکس کد تخفیف</b><small>داخل هر کد ← جای نمایش</small></a>
+            <a href="<?= e(url('admin/posts.php')) ?>"><span>⭐</span><b>خبرهای ویژه و فوری</b><small>تیک «ویژه» = بخش بالا، «فوری» = نوار فوری</small></a>
+        </div>
+    </div>
+    <div class="card mt">
         <div class="card-head"><h3>🖼️ سبک بخش ویژه (بالای صفحه اصلی)</h3></div>
         <div class="opt-grid">
             <?php foreach (['magazine' => ['مجله‌ای', '۱ خبر بزرگ + ۴ خبر کوچک'], 'slider' => ['اسلایدر', 'اسلایدر تمام عرض با افکت Ken Burns'], 'grid' => ['سه‌تایی', '۳ کارت بزرگ کنار هم']] as $k => [$n, $d]): ?>
@@ -194,6 +222,57 @@ adm_head('ظاهر سایت', 'appearance');
             <?= f_switch('show_ticker', 'نوار اخبار فوری متحرک', setting_on('show_ticker'), 'اخبار با تیک «فوری» نمایش داده می‌شوند') ?>
             <?= f_text('ticker_label', 'برچسب نوار', $s['ticker_label']) ?>
             <?= f_range('ticker_speed', '⏱️ سرعت نوار فوری: هر دور عبور چند ثانیه طول بکشد (عدد بیشتر = آرام‌تر)', $s['ticker_speed'], 5, 180, ' ثانیه') ?>
+        </div>
+    </div>
+    <div class="grid g2 mt">
+        <div class="card">
+            <div class="card-head"><h3>🧱 عنوان و تعداد بخش‌های صفحه اصلی</h3><span class="muted small">خالی گذاشتن دکمه‌ها = دکمه نمایش داده نمی‌شه</span></div>
+            <div class="grid g2">
+                <?= f_text('home_latest_title', 'عنوان «آخرین اخبار»', (string) $s['home_latest_title']) ?>
+                <?= f_text('home_latest_more', 'لینک کنار عنوان', (string) $s['home_latest_more'], ['placeholder' => 'همه اخبار']) ?>
+            </div>
+            <?= f_text('home_latest_btn', 'دکمه‌ی زیر آخرین اخبار', (string) $s['home_latest_btn'], ['placeholder' => 'مشاهده اخبار بیشتر']) ?>
+            <div class="grid g2">
+                <?= f_text('home_trend_title', 'عنوان «پربازدیدترین‌ها»', (string) $s['home_trend_title']) ?>
+                <?= f_text('home_trend_count', 'تعداد پربازدیدترین‌ها', (string) $s['home_trend_count'], ['type' => 'number', 'ltr' => true, 'min' => 2, 'max' => 12]) ?>
+            </div>
+            <div class="grid g2">
+                <?= f_text('home_cat_count', 'تعداد خبر هر بلوک دسته', (string) $s['home_cat_count'], ['type' => 'number', 'ltr' => true, 'min' => 3, 'max' => 20, 'hint' => 'کدوم دسته‌ها بیان: دسته‌بندی‌ها ← 🏠']) ?>
+                <?= f_text('home_shop_count', 'تعداد محصول در بخش فروشگاه', (string) $s['home_shop_count'], ['type' => 'number', 'ltr' => true, 'min' => 2, 'max' => 12]) ?>
+            </div>
+            <p class="muted small">متن‌های بخش «دعوت به کانال تلگرام» در زبانه‌ی «✍️ متن‌ها و بخش‌ها» هستن.</p>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>📚 سایدبار</h3><span class="muted small">کنار آخرین اخبار، صفحه‌ی خبر، آرشیو و صفحه‌ها — بکش یا با فلش جابجا کن</span></div>
+            <input type="hidden" name="sidebar_widgets" id="sbInput">
+            <div class="sortable" id="sbList">
+                <?php foreach (sidebar_widgets() as $wd): ?>
+                    <div class="sort-item" draggable="true" data-key="<?= e($wd['key']) ?>">
+                        <span class="sort-handle">⋮⋮</span><b><?= e(sidebar_widget_names()[$wd['key']]) ?></b>
+                        <span class="mv"><button type="button" class="adm-ib" data-mv="up" style="width:30px;height:30px">▲</button><button type="button" class="adm-ib" data-mv="down" style="width:30px;height:30px">▼</button></span>
+                        <input type="checkbox" class="sw" <?= !empty($wd['on']) ? 'checked' : '' ?> aria-label="نمایش <?= e(sidebar_widget_names()[$wd['key']]) ?>">
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <p class="muted small">همه رو خاموش کنی، ستون کناری کلاً حذف می‌شه و اخبار تمام‌عرض می‌شن.</p>
+            <details class="sb-more mt"><summary>🔥 داغ‌ترین‌ها</summary>
+                <div class="grid g2">
+                    <?= f_text('sb_trend_title', 'عنوان', (string) $s['sb_trend_title']) ?>
+                    <?= f_text('sb_trend_count', 'تعداد خبر', (string) $s['sb_trend_count'], ['type' => 'number', 'ltr' => true, 'min' => 3, 'max' => 10, 'hint' => 'بازه‌ی «داغ» از تنظیمات ← روزهای پربازدید']) ?>
+                </div>
+            </details>
+            <details class="sb-more"><summary>✈️ کارت عضویت در کانال</summary>
+                <?= f_text('sb_tg_title', 'عنوان کارت', (string) $s['sb_tg_title'], ['placeholder' => (string) setting('site_title'), 'hint' => 'خالی = نام سایت. لینک کانال از زبانه‌ی «فوتر و شبکه‌ها» خونده می‌شه']) ?>
+                <?= f_textarea('sb_tg_text', 'متن کارت', (string) $s['sb_tg_text'], ['rows' => 2, 'placeholder' => (string) setting('site_tagline'), 'hint' => 'خالی = شعار سایت']) ?>
+                <?= f_text('sb_tg_btn', 'متن دکمه', (string) $s['sb_tg_btn']) ?>
+            </details>
+            <details class="sb-more"><summary>🏷️ برچسب‌های داغ</summary>
+                <div class="grid g2">
+                    <?= f_text('sb_tags_title', 'عنوان', (string) $s['sb_tags_title']) ?>
+                    <?= f_text('sb_tags_count', 'تعداد برچسب', (string) $s['sb_tags_count'], ['type' => 'number', 'ltr' => true, 'min' => 4, 'max' => 40]) ?>
+                </div>
+            </details>
+            <p class="muted small mt">تبلیغ‌های سایدبار از «تبلیغات» ساخته می‌شن (جای «سایدبار»).</p>
         </div>
     </div>
 </div>
@@ -298,6 +377,14 @@ adm_head('ظاهر سایت', 'appearance');
             <div class="card-head"><h3>🏷️ هدر سایت</h3></div>
             <?= f_text('brand_sub', 'زیرنویس کنار لوگو', $s['brand_sub'], ['ltr' => true, 'placeholder' => 'Gaming · Tech · News']) ?>
             <?= f_switch('hdr_tg_on', 'دکمه‌ی تلگرام در هدر', setting_on('hdr_tg_on'), 'دکمه‌ی رنگی «عضویت در کانال» بالای سایت') ?>
+            <?= f_switch('hdr_login_on', 'دکمه‌ی «ورود | ثبت‌نام» در هدر', setting_on('hdr_login_on'), 'خاموش باشه، صفحه‌ی ورود هنوز از منوی گوشی و لینک‌ها در دسترسه') ?>
+            <?= f_switch('hdr_search_on', 'دکمه‌ی جستجو در هدر', setting_on('hdr_search_on')) ?>
+            <?= f_switch('topbar_on', 'نوار باریک بالای هدر', setting_on('topbar_on'), 'تاریخ، ساعت، تعداد آنلاین و آیکون شبکه‌ها') ?>
+            <div class="grid g2">
+                <?= f_switch('topbar_date_on', 'تاریخ و ساعت', setting_on('topbar_date_on')) ?>
+                <?= f_switch('topbar_social_on', 'آیکون شبکه‌های اجتماعی', setting_on('topbar_social_on')) ?>
+            </div>
+            <p class="muted small">نمایش تعداد آنلاین‌ها از زبانه‌ی «🏷️ لوگو و هدر» روشن و خاموش می‌شه.</p>
             <?= f_text('hdr_tg_label', 'متن دکمه‌ی تلگرام', $s['hdr_tg_label']) ?>
             <?= f_text('hdr_login_label', 'متن دکمه‌ی ورود (برای مهمان‌ها)', $s['hdr_login_label']) ?>
         </div>
@@ -399,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('apForm');
     var secList = document.getElementById('secList'), menuList = document.getElementById('menuList');
     NXA.sortable(secList); NXA.sortable(menuList);
+    var sbList = document.getElementById('sbList'); if (sbList) NXA.sortable(sbList);
     function row(t, u) {
         var d = document.createElement('div'); d.className = 'sort-item menu-row'; d.draggable = true;
         d.innerHTML = '<span class="sort-handle">⋮⋮</span><input placeholder="عنوان"><input placeholder="/category/game" dir="ltr"><button type="button" class="adm-ib" data-del>✕</button>';
@@ -409,6 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-quick]').forEach(function (b) { b.addEventListener('click', function () { var p = b.dataset.quick.split('|'); row(p[0], p[1]); }); });
     menuList.addEventListener('click', function (e) { if (e.target.closest('[data-del]')) e.target.closest('.sort-item').remove(); });
     form.addEventListener('submit', function () {
+        if (sbList) document.getElementById('sbInput').value = JSON.stringify([].map.call(sbList.querySelectorAll('.sort-item'), function (i) { return { key: i.dataset.key, on: i.querySelector('.sw').checked ? 1 : 0 }; }));
         document.getElementById('secInput').value = JSON.stringify([].map.call(secList.querySelectorAll('.sort-item'), function (i) { return { key: i.dataset.key, on: i.querySelector('.sw').checked ? 1 : 0 }; }));
         document.getElementById('menuInput').value = JSON.stringify([].map.call(menuList.querySelectorAll('.sort-item'), function (i) { var x = i.querySelectorAll('input'); return { title: x[0].value.trim(), url: x[1].value.trim() }; }).filter(function (m) { return m.title && m.url; }));
     });

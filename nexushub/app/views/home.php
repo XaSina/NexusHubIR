@@ -101,14 +101,14 @@ case 'latest':
 <section class="container layout-2col home-latest">
     <div class="col-main">
         <div class="sec-head" data-reveal>
-            <h2 class="sec-title"><span class="sec-icon"><?= icon('bolt', 20) ?></span> آخرین اخبار</h2>
-            <a class="sec-more" href="<?= e(url('archive')) ?>">همه اخبار <?= icon('arrow-left', 16) ?></a>
+            <h2 class="sec-title"><span class="sec-icon"><?= icon('bolt', 20) ?></span> <?= e(setting('home_latest_title') ?: 'آخرین اخبار') ?></h2>
+            <?php if (setting('home_latest_more') !== ''): ?><a class="sec-more" href="<?= e(url('archive')) ?>"><?= e(setting('home_latest_more')) ?> <?= icon('arrow-left', 16) ?></a><?php endif; ?>
         </div>
         <?php if ($latest): ?>
             <div class="grid-cards">
                 <?php foreach ($latest as $i => $p) partial('card', ['p' => $p, 'i' => $i]); ?>
             </div>
-            <div class="center mt"><a class="btn btn-ghost btn-glow" href="<?= e(url('archive')) ?>">مشاهده اخبار بیشتر <?= icon('arrow-left', 16) ?></a></div>
+            <?php if (setting('home_latest_btn') !== ''): ?><div class="center mt"><a class="btn btn-ghost btn-glow" href="<?= e(url('archive')) ?>"><?= e(setting('home_latest_btn')) ?> <?= icon('arrow-left', 16) ?></a></div><?php endif; ?>
         <?php else: ?>
             <div class="empty glass"><span>📰</span><p>هنوز خبری منتشر نشده است.</p></div>
         <?php endif; ?>
@@ -120,7 +120,7 @@ case 'latest':
 case 'categories':
     foreach ($cats as $ci => $c):
         if (!$c['show_on_home'] || !$c['cnt']) continue;
-        $cp = get_posts(['category_id' => $c['id'], 'limit' => 6]); ?>
+        $cp = get_posts(['category_id' => $c['id'], 'limit' => max(3, min(20, (int) setting('home_cat_count', 6)))]); ?>
 <section class="container cat-block" style="--c:<?= e($c['color']) ?>">
     <div class="sec-head" data-reveal>
         <h2 class="sec-title"><span class="sec-icon emoji"><?= e($c['icon']) ?></span> <?= e($c['name']) ?></h2>
@@ -139,14 +139,16 @@ case 'categories':
 
 case 'trending':
     $since = date('Y-m-d H:i:s', strtotime('-' . max(1, (int) setting('trending_days', 30)) . ' days'));
-    $tr = get_posts(['order' => 'views', 'limit' => 4, 'since' => $since]);
-    if (count($tr) < 4) $tr = get_posts(['order' => 'views', 'limit' => 4]);
+    $tn = max(2, min(12, (int) setting('home_trend_count', 4)));
+    $tr = get_posts(['order' => 'views', 'limit' => $tn, 'since' => $since]);
+    if (count($tr) < $tn) $tr = get_posts(['order' => 'views', 'limit' => $tn]);
     if (!$tr) break; ?>
 <section class="container trending">
     <div class="sec-head" data-reveal>
-        <h2 class="sec-title"><span class="sec-icon"><?= icon('trend', 20) ?></span> پربازدیدترین‌ها</h2>
+        <h2 class="sec-title"><span class="sec-icon"><?= icon('trend', 20) ?></span> <?= e(setting('home_trend_title') ?: 'پربازدیدترین‌ها') ?></h2>
     </div>
-    <div class="trend-grid">
+    <?php $tc = count($tr); $tcols = ($tc % 3 === 0 && $tc % 4 !== 0) ? 3 : min(4, $tc); ?>
+    <div class="trend-grid" style="--cols:<?= $tcols ?>">
         <?php foreach ($tr as $i => $p): ?>
             <a class="trend-item glass tilt" href="<?= e(post_url($p)) ?>" data-reveal style="--d:<?= $i ?>">
                 <span class="trend-num"><?= fa_num((string) ($i + 1)) ?></span>
@@ -181,12 +183,13 @@ case 'telegram': if (!$tgLink) break; ?>
 
 case 'shop':
     if (!shop_on()) break;
-    $shopItems = shop_products(['featured' => 1, 'limit' => 4]);
-    if (count($shopItems) < 4) $shopItems = array_merge($shopItems, array_filter(shop_products(['limit' => 8]), fn($x) => !$x['is_featured']));
-    $shopItems = array_slice($shopItems, 0, 4);
+    $sn = max(2, min(12, (int) setting('home_shop_count', 4)));
+    $shopItems = shop_products(['featured' => 1, 'limit' => $sn]);
+    if (count($shopItems) < $sn) $shopItems = array_merge($shopItems, array_filter(shop_products(['limit' => $sn * 2]), fn($x) => !$x['is_featured']));
+    $shopItems = array_slice($shopItems, 0, $sn);
     if (!$shopItems && !setting_on('shop_banner_on')) break; ?>
 <section class="container home-shop">
-    <?php if (setting_on('shop_banner_on') && in_array('home_shop', array_map('trim', explode(',', (string) setting('shop_banner_places'))), true)): ?><div class="nxp-slot shop-promo" data-reveal><?= render_ad(shop_banner_ad(), true) ?></div><?php endif; ?>
+    <?= ad_slot('home_shop') ?>
     <?php if ($shopItems): ?>
     <div class="sec-head" data-reveal>
         <h2 class="sec-title"><span class="sec-icon"><?= icon('bag', 20) ?></span> <?= e(setting('shop_title')) ?></h2>

@@ -21,6 +21,11 @@ function default_settings(): array
         // site texts & section switches (Appearance > Texts)
         'brand_sub' => 'Gaming · Tech · News',
         'hdr_tg_on' => '1',
+        'topbar_on' => '1',
+        'topbar_date_on' => '1',
+        'topbar_social_on' => '1',
+        'hdr_search_on' => '1',
+        'hdr_login_on' => '1',
         'hdr_tg_label' => 'عضویت در کانال',
         'hdr_login_label' => 'ورود | ثبت‌نام',
         'footer_cats_title' => 'دسته‌بندی‌ها',
@@ -117,6 +122,22 @@ function default_settings(): array
         'announce_text' => '🎰 قرعه‌کشی ویژه شروع شد! برای شرکت به کانال تلگرام NEXUS بپیوندید 🧸',
         'announce_link' => 'https://t.me/NexusHubIR',
         'announce_style' => 'pinned', // pinned | gradient | glitch
+        // home page texts & counts, sidebar widgets
+        'home_latest_title' => 'آخرین اخبار',
+        'home_latest_more' => 'همه اخبار',
+        'home_latest_btn' => 'مشاهده اخبار بیشتر',
+        'home_cat_count' => '6',
+        'home_trend_title' => 'پربازدیدترین‌ها',
+        'home_trend_count' => '4',
+        'home_shop_count' => '4',
+        'sidebar_widgets' => json_encode([['key' => 'trend', 'on' => 1], ['key' => 'ads', 'on' => 1], ['key' => 'telegram', 'on' => 1], ['key' => 'tags', 'on' => 1]]),
+        'sb_trend_title' => 'داغ‌ترین‌ها',
+        'sb_trend_count' => '5',
+        'sb_tg_title' => '',
+        'sb_tg_text' => '',
+        'sb_tg_btn' => 'عضویت در کانال',
+        'sb_tags_title' => 'برچسب‌های داغ',
+        'sb_tags_count' => '16',
         'home_sections' => json_encode([
             ['key' => 'hero', 'on' => 1],
             ['key' => 'latest', 'on' => 1],
@@ -363,6 +384,21 @@ function ad_formats(): array
         'image' => 'بنر تصویری',
         'html' => 'کد HTML / اسکریپت (یکتانت، گوگل و ...)',
     ];
+}
+
+function sidebar_widget_names(): array
+{
+    return ['trend' => '🔥 داغ‌ترین‌ها (پربازدید)', 'ads' => '📢 تبلیغات و باکس‌های سایدبار', 'telegram' => '✈️ کارت «عضویت در کانال»', 'tags' => '🏷️ برچسب‌های داغ'];
+}
+
+/** sidebar widgets in the saved order, with any new widget added at the end (switched on) */
+function sidebar_widgets(): array
+{
+    $l = setting_json('sidebar_widgets') ?: json_decode(default_settings()['sidebar_widgets'], true);
+    $names = sidebar_widget_names(); $out = []; $seen = [];
+    foreach ((array) $l as $w) if (is_array($w) && isset($names[$w['key'] ?? '']) && !isset($seen[$w['key']])) { $out[] = ['key' => $w['key'], 'on' => !empty($w['on']) ? 1 : 0]; $seen[$w['key']] = 1; }
+    foreach ($names as $k => $n) if (!isset($seen[$k])) $out[] = ['key' => $k, 'on' => 1];
+    return $out;
 }
 
 function home_section_names(): array

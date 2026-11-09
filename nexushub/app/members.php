@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 16;   // v16: monthly sales report (closed months)
+const NX_DB_VERSION = 17;   // v17: one ad can show in several places
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
@@ -75,6 +75,12 @@ function nx_migrate(): void
         if ($own !== '' && setting_on('admin_gate_on')) save_settings(['admin_gate_hash' => hash('sha256', $own)]);    // keep a link the owner already uses
         else save_settings(['admin_gate_hash' => '15b38d4cd2c8968b5b986394aeda319deadd3a470e324365a69cf798920e4e82', 'admin_gate_on' => '1']);
         save_settings(['admin_gate_key' => '']);                                            // the address itself is never stored
+    }
+    if ($v < 17) {
+        // v17: an ad can be shown in several places (`places`, comma list); `position` stays the first one
+        $ac = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ads'"), 'COLUMN_NAME');
+        if ($ac && !in_array('places', $ac, true)) db()->exec("ALTER TABLE `ads` ADD COLUMN `places` VARCHAR(500) NULL AFTER `position`");
+        q("UPDATE ads SET places = position WHERE places IS NULL OR places = ''");
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

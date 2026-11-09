@@ -6,7 +6,7 @@ $id = (int) ($_GET['id'] ?? 0);
 $a = $id ? row('SELECT * FROM ads WHERE id = ?', [$id]) : null;
 if ($id && !$a) { flash('تبلیغ یافت نشد.', 'error'); redirect('admin/ads.php'); }
 $a = $a ?: [
-    'id' => 0, 'title' => '', 'position' => (string) ($_GET['pos'] ?? 'home_top'), 'format' => 'card', 'theme' => 'neon', 'accent' => theme_colors()['primary'],
+    'id' => 0, 'title' => '', 'position' => (string) ($_GET['pos'] ?? 'home_top'), 'places' => (string) ($_GET['pos'] ?? 'home_top'), 'format' => 'card', 'theme' => 'neon', 'accent' => theme_colors()['primary'],
     'image' => '', 'link' => '', 'html' => '', 'heading' => '', 'body' => '', 'button_text' => 'مشاهده', 'emoji' => '🔥', 'badge' => '',
     'device' => 'all', 'countdown' => 0, 'new_tab' => 1, 'popup_delay' => 4, 'popup_freq' => 12, 'priority' => 0, 'is_active' => 1, 'start_at' => null, 'end_at' => null,
 ];
@@ -19,7 +19,7 @@ if (is_post()) {
     $end = trim((string) ($_POST['end_at'] ?? ''));
     $data = [
         'title' => mb_substr(trim((string) $_POST['title']), 0, 190) ?: 'تبلیغ بدون نام',
-        'position' => isset($positions[$_POST['position'] ?? '']) ? $_POST['position'] : 'home_top',
+        'places' => implode(',', array_values(array_intersect(array_keys($positions), (array) ($_POST['places'] ?? [])))) ?: 'home_top',
         'format' => in_array($_POST['format'] ?? '', ['card', 'image', 'html'], true) ? $_POST['format'] : 'card',
         'theme' => isset($themes[$_POST['theme'] ?? '']) ? $_POST['theme'] : 'neon',
         'accent' => valid_hex((string) ($_POST['accent'] ?? ''), '#ff1f3d'),
@@ -41,6 +41,7 @@ if (is_post()) {
         'start_at' => $start !== '' ? jalali_to_datetime($start) : null,
         'end_at' => $end !== '' ? jalali_to_datetime($end) : null,
     ];
+    $data['position'] = explode(',', $data['places'])[0];
     if ($data['countdown'] && !$data['end_at']) flash('برای نمایش شمارش معکوس، تاریخ پایان را تعیین کنید.', 'warn');
     if ($a['id']) { update('ads', $data, (int) $a['id']); flash('تبلیغ ذخیره شد ✅'); $nid = (int) $a['id']; }
     else { $data['created_at'] = now(); $nid = insert('ads', $data); flash('تبلیغ جدید ساخته شد 🎉'); }
@@ -106,9 +107,10 @@ adm_head($a['id'] ? 'ویرایش تبلیغ' : 'تبلیغ جدید', 'ads');
             <div class="card">
                 <div class="card-head"><h3><?= adm_icon('ads', 20) ?> تنظیمات</h3></div>
                 <?= f_text('title', 'نام تبلیغ (داخلی)', (string) $a['title'], ['required' => true, 'placeholder' => 'مثلاً: بنر قرعه‌کشی آبان']) ?>
-                <label class="af"><span class="af-label">جایگاه نمایش</span>
-                    <select name="position" id="adPos">
-                        <?php foreach ($positions as $k => $p): ?><option value="<?= e($k) ?>" <?= $a['position'] === $k ? 'selected' : '' ?>><?= e($p['name']) ?> — <?= "\u{2066}" . e($p['size']) . "\u{2069}" ?></option><?php endforeach; ?>
+                <?php $myPlaces = ad_places_of($a); ?>
+                <label class="af"><span class="af-label">جاهای نمایش <small class="muted">(می‌تونی چند جا انتخاب کنی)</small></span>
+                    <select name="places[]" id="adPos" multiple data-multi data-placeholder="یه جا انتخاب کن">
+                        <?php foreach ($positions as $k => $p): ?><option value="<?= e($k) ?>" <?= in_array($k, $myPlaces, true) ? 'selected' : '' ?>><?= e($p['name']) ?> — <?= "\u{2066}" . e($p['size']) . "\u{2069}" ?></option><?php endforeach; ?>
                     </select>
                     <small class="af-hint" id="posHint"></small>
                 </label>
@@ -149,8 +151,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function fmt() {
         var f = form.querySelector('[name=format]:checked').value;
         document.querySelectorAll('[data-fmt]').forEach(function (el) { el.hidden = el.dataset.fmt.split(' ').indexOf(f) < 0; });
-        document.getElementById('popupOpts').hidden = pos.value !== 'popup';
-        document.getElementById('posHint').textContent = hints[pos.value] || '';
+        var sel = [].filter.call(pos.options, function (o) { return o.selected; }).map(function (o) { return o.value; });
+        document.getElementById('popupOpts').hidden = sel.indexOf('popup') < 0;
+        document.getElementById('posHint').textContent = sel.length === 1 ? (hints[sel[0]] || '') : (sel.length ? 'این تبلیغ در ' + sel.length.toLocaleString('fa-IR') + ' جا نمایش داده می‌شه' : 'حداقل یه جا انتخاب کن');
     }
     function refresh() {
         clearTimeout(t);

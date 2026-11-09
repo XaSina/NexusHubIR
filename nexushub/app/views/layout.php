@@ -147,17 +147,19 @@ $jsCfg['cart'] = $cartN;
 </div>
 <?php endif; ?>
 
+<?php if (setting_on('topbar_on')): ?>
 <div class="topbar">
     <div class="container topbar-inner">
-        <span class="tb-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?> <b class="tb-clock" id="liveClock"><?= jdate('H:i') ?></b></span>
+        <?php if (setting_on('topbar_date_on')): ?><span class="tb-date"><?= icon('calendar', 15) ?> <?= jdate('l j F Y') ?> <b class="tb-clock" id="liveClock"><?= jdate('H:i') ?></b></span><?php endif; ?>
         <?php if (setting_on('show_online')): [$onl] = online_count(); ?><span class="tb-online" title="کاربران آنلاین در ۵ دقیقه اخیر"><i></i><b id="nxOnline"><?= fa_num((string) max(1, $onl)) ?></b> نفر آنلاین</span><?php endif; ?>
-        <span class="tb-social">
+        <?php if (setting_on('topbar_social_on')): ?><span class="tb-social">
             <?php foreach (social_links() as $s): ?>
                 <a href="<?= e($s['url']) ?>" target="_blank" rel="noopener" title="<?= e($s['label']) ?>"><?= icon($s['icon'], 15) ?></a>
             <?php endforeach; ?>
-        </span>
+        </span><?php endif; ?>
     </div>
 </div>
+<?php endif; ?>
 
 <header class="site-header" id="siteHeader">
     <div class="container">
@@ -178,7 +180,7 @@ $jsCfg['cart'] = $cartN;
                 <?php endforeach; ?>
             </nav>
             <div class="header-actions">
-                <button class="icon-btn" id="searchOpen" aria-label="جستجو"><?= icon('search') ?></button>
+                <?php if (setting_on('hdr_search_on')): ?><button class="icon-btn" id="searchOpen" aria-label="جستجو"><?= icon('search') ?></button><?php endif; ?>
                 <?php if ($shopOn && ($cartN || str_contains((string) $bodyClass, 'page-shop'))): ?><a class="icon-btn cart-btn" id="cartBtn" href="<?= e(url('cart')) ?>" aria-label="سبد خرید"><?= icon('cart') ?><em class="hb-count" id="cartCount"<?= $cartN ? '' : ' hidden' ?>><?= fa_num((string) $cartN) ?></em></a><?php endif; ?>
                 <?php if ($me): $nUnread = notifs_unread('m:' . $me['id']); ?>
                 <div class="nb-wrap">
@@ -194,7 +196,7 @@ $jsCfg['cart'] = $cartN;
                     <a class="btn-account is-in" href="<?= e(url('account')) ?>" data-warp title="حساب کاربری">
                         <span class="ba-avatar"><?= e(mb_substr($me['first_name'], 0, 1)) ?></span><span class="ba-text"><small>حساب کاربری</small><b><?= e($me['first_name']) ?></b></span>
                     </a>
-                <?php else: ?>
+                <?php elseif (setting_on('hdr_login_on')): ?>
                     <a class="btn-account" href="<?= e(url('auth')) ?>" data-warp title="ورود / ثبت‌نام"><?= icon('user', 18) ?><span><?= e(setting('hdr_login_label')) ?></span></a>
                 <?php endif; ?>
                 <button class="icon-btn burger" id="menuOpen" aria-label="منو"><?= icon('menu') ?></button>
