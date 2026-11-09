@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('appearance');
 
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
     'auth_logo_style', 'auth_skin', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',

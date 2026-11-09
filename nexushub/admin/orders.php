@@ -3,7 +3,7 @@
  * فروشگاه — سفارش‌ها
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('orders');
 shop_expire_due();
 
 $S = order_statuses();

@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('prizes');
 prizes_expire_due();
 
 if (is_post()) {

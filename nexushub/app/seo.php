@@ -68,17 +68,36 @@ function seo_jsonld(array $meta, string $title, string $desc, string $image, str
 
     if (!empty($meta['product'])) {
         $p = $meta['product'];
-        $from = function_exists('product_from_price') ? product_from_price($p) : null;
+        $purl = site_url('shop/' . rawurlencode($p['slug']));
+        $prices = [];
+        if (function_exists('product_variants')) foreach (product_variants((int) $p['id']) as $v) { $pr = variant_price($p, $v); if ($pr) $prices[] = $pr; }
+        $imgs = [];
+        foreach (array_merge([(string) $p['image']], function_exists('product_gallery') ? product_gallery($p) : []) as $im) if ($im !== '' && !str_ends_with(strtolower($im), '.svg')) $imgs[] = site_url($im);
+        $avail = ($p['status'] ?? '') === 'soldout' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock';
+        $offer = null;
+        if ($prices) {
+            $base = ['priceCurrency' => 'IRR', 'availability' => $avail, 'itemCondition' => 'https://schema.org/NewCondition', 'url' => $purl,
+                'priceValidUntil' => date('Y-m-d', strtotime('+30 days')), 'seller' => ['@id' => site_url('#org')]];
+            $offer = count($prices) > 1
+                ? ['@type' => 'AggregateOffer', 'lowPrice' => (string) (min($prices) * 10), 'highPrice' => (string) (max($prices) * 10), 'offerCount' => count($prices)] + $base   // prices are kept in toman
+                : ['@type' => 'Offer', 'price' => (string) ($prices[0] * 10)] + $base;
+        }
+        $props = [];
+        foreach (function_exists('product_specs') ? array_slice(product_specs($p), 0, 20) : [] as [$k, $v]) $props[] = ['@type' => 'PropertyValue', 'name' => $k, 'value' => $v];
         $graph[] = array_filter([
-            '@type' => 'Product', '@id' => site_url('shop/' . rawurlencode($p['slug'])) . '#product', 'name' => $p['title'],
-            'description' => $desc, 'image' => $image ? [$image] : null, 'sku' => 'NX-' . $p['id'], 'category' => $p['cat_name'] ?? null,
+            '@type' => 'Product', '@id' => $purl . '#product', 'url' => $purl, 'name' => $p['title'],
+            'description' => $desc, 'image' => $imgs ?: ($image ? [$image] : null), 'sku' => 'NX-' . $p['id'], 'mpn' => 'NX-' . $p['id'], 'category' => $p['cat_name'] ?? null,
             'brand' => ['@type' => 'Brand', 'name' => (string) setting('site_title')],
-            'offers' => $from !== null ? [
-                '@type' => 'Offer', 'url' => site_url('shop/' . rawurlencode($p['slug'])), 'priceCurrency' => 'IRR', 'price' => (string) ($from * 10),   // prices are kept in toman
-                'availability' => ($p['status'] ?? '') === 'soldout' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-                'seller' => ['@id' => site_url('#org')],
-            ] : null,
+            'keywords' => trim((string) ($p['seo_keywords'] ?? '')) ?: null,
+            'additionalProperty' => $props ?: null,
+            'offers' => $offer,
         ], fn($v) => $v !== null && $v !== '');
+    }
+
+    if (!empty($meta['itemlist'])) {
+        $items = [];
+        foreach (array_slice(array_values($meta['itemlist']), 0, 30) as $i => $pp) $items[] = ['@type' => 'ListItem', 'position' => $i + 1, 'url' => site_url('shop/' . rawurlencode($pp['slug'])), 'name' => $pp['title']];
+        if ($items) $graph[] = ['@type' => 'ItemList', 'name' => (string) setting('shop_title'), 'numberOfItems' => count($items), 'itemListElement' => $items];
     }
 
     if (!empty($meta['crumbs'])) {

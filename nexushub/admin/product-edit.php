@@ -4,7 +4,7 @@
  * بسته‌ها (قیمت تومانی، دلاری یا تونی)، مقدار دلخواه، اطلاعات دریافتی از مشتری
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('products');
 
 $id = (int) ($_GET['id'] ?? 0);
 $types = product_types();
@@ -36,6 +36,8 @@ if (is_post()) {
         'max_qty' => max(0, (int) en_num((string) ($_POST['max_qty'] ?? '0'))),
         'delivery' => isset(delivery_types()[$_POST['delivery'] ?? '']) ? $_POST['delivery'] : 'manual',
         'ship_extra' => max(0, (int) ($num($_POST['ship_extra'] ?? '') ?? 0)),
+        'seo_title' => $in('seo_title', 190) ?: null, 'seo_desc' => $in('seo_desc', 320) ?: null,
+        'seo_keywords' => implode('، ', array_slice(array_values(array_unique(array_filter(array_map('trim', preg_split('~[,،\n]+~u', $in('seo_keywords', 600))), fn($x) => $x !== ''))), 0, 15)) ?: null,
     ];
     if ($d['max_qty'] && $d['max_qty'] < $d['min_qty']) $d['max_qty'] = $d['min_qty'];
     // codes: one per line, duplicates removed · link: free text
@@ -108,6 +110,7 @@ if (is_post()) {
             $keep[] = (int) $vid;
         }
         q('DELETE FROM product_variants WHERE product_id = ?' . ($keep ? ' AND id NOT IN (' . implode(',', $keep) . ')' : ''), [$p['id']]);
+        if ($d['status'] !== 'draft' && function_exists('indexnow_ping')) { try { indexnow_ping([site_url('shop/' . rawurlencode($d['slug']))]); } catch (Throwable $e) {} }
         flash('محصول ذخیره شد ✅');
         redirect('admin/product-edit.php?id=' . $p['id']);
     }
@@ -197,14 +200,14 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
         </div>
 
         <div class="card mt">
-            <div class="card-head"><h3>🔢 تعداد و واحد</h3><span class="muted small">مثلاً «۲ رأس»، «۳ کیلو»، «۱ عدد»</span></div>
+            <div class="card-head"><h3>🔢 تعداد و واحد</h3><span class="muted small">مثلاً «۱ عدد»، «۳ ماه»، «۲ اکانت»</span></div>
             <div class="grid g3">
                 <?= f_text('unit', 'واحد شمارش', product_unit($p), ['placeholder' => 'عدد', 'attrs' => 'id="pUnit" list="unitList"']) ?>
                 <?= f_text('min_qty', 'حداقل در هر سفارش', (string) max(1, (int) $p['min_qty']), ['type' => 'number', 'ltr' => true, 'min' => 1]) ?>
                 <?= f_text('max_qty', 'حداکثر در هر سفارش', (int) $p['max_qty'] ? (string) (int) $p['max_qty'] : '', ['type' => 'number', 'ltr' => true, 'min' => 0, 'placeholder' => 'نامحدود (۹۹)']) ?>
             </div>
-            <datalist id="unitList"><?php foreach (['عدد', 'بسته', 'جعبه', 'کیلو', 'گرم', 'لیتر', 'متر', 'جفت', 'رأس', 'قطعه', 'نفر', 'ساعت', 'روز', 'ماه', 'جلسه', 'TON', 'استارز'] as $uu): ?><option value="<?= e($uu) ?>"><?php endforeach; ?></datalist>
-            <div class="unit-chips"><?php foreach (['عدد', 'کیلو', 'گرم', 'لیتر', 'متر', 'رأس', 'بسته', 'نفر', 'ساعت'] as $uu): ?><button type="button" class="abtn abtn-ghost abtn-xs" data-unit="<?= e($uu) ?>"><?= e($uu) ?></button><?php endforeach; ?></div>
+            <datalist id="unitList"><?php foreach (['عدد', 'اکانت', 'لایسنس', 'کد', 'ماه', 'روز', 'ساعت', 'گیگ', 'بسته', 'جلسه', 'نفر', 'TON', 'استارز'] as $uu): ?><option value="<?= e($uu) ?>"><?php endforeach; ?></datalist>
+            <div class="unit-chips"><?php foreach (['عدد', 'اکانت', 'لایسنس', 'ماه', 'گیگ', 'بسته', 'استارز'] as $uu): ?><button type="button" class="abtn abtn-ghost abtn-xs" data-unit="<?= e($uu) ?>"><?= e($uu) ?></button><?php endforeach; ?></div>
         </div>
 
         <div class="card mt">
@@ -227,7 +230,7 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
             <div class="dv-panel" data-dv="link">
                 <label class="af"><span class="af-label">لینک دانلود یا متن تحویل</span>
                     <textarea name="delivery_data_link" rows="4" dir="auto" placeholder="https://… لینک دانلود&#10;رمز فایل: 1234"><?= $dmode === 'link' ? e((string) $p['delivery_data']) : '' ?></textarea>
-                    <small class="af-hint">بعد از تایید فیش، همین متن به خریدار نشون داده می‌شه (برای فایل، اول توی کتابخانه رسانه یا هر جای دیگه آپلود کن و لینکش رو اینجا بذار).</small></label>
+                    <small class="af-hint">بعد از تایید فیش برای خریدار نشون داده می‌شه؛ هر لینک خودش به یه «دکمه‌ی دانلود» تبدیل می‌شه. (فایل رو اول توی کتابخانه رسانه یا هر جای دیگه آپلود کن و لینکش رو اینجا بذار — هر لینک توی یه خط.)</small></label>
             </div>
         </div>
 
@@ -264,10 +267,23 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
 
         <div class="card mt">
             <div class="card-head"><h3>📋 مشخصات</h3><button type="button" class="abtn abtn-ghost abtn-sm" id="addSpec" data-nofb><?= adm_icon('plus', 16) ?> ردیف جدید</button></div>
-            <p class="muted small">مثلاً وزن: ۵۰۰ گرم · جنس: پنبه · نژاد: هلشتاین · گارانتی: ۱۸ ماه — زیر توضیحات محصول به‌صورت جدول نشون داده می‌شه.</p>
+            <p class="muted small">مثلاً مدت: ۳ ماهه · حجم: ۵۰ گیگ · نسخه: Pro · گارانتی: ۱۸ ماه — زیر توضیحات محصول به‌صورت جدول نشون داده می‌شه.</p>
             <div class="spec-rows" id="specRows">
-                <?php foreach ($specs as [$sk, $sv]): ?><div class="spec-r"><input data-s="k" value="<?= e($sk) ?>" placeholder="عنوان"><input data-s="v" value="<?= e($sv) ?>" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف"><?= adm_icon('trash', 15) ?></button></div><?php endforeach; ?>
+                <?php foreach ($specs as [$sk, $sv]): ?><div class="spec-r"><input class="input" data-s="k" value="<?= e($sk) ?>" placeholder="عنوان"><input class="input" data-s="v" value="<?= e($sv) ?>" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف"><?= adm_icon('trash', 15) ?></button></div><?php endforeach; ?>
             </div>
+        </div>
+        <div class="card mt">
+            <div class="card-head"><h3>🔎 سئو و نمایش در گوگل</h3><span class="muted small">خالی بذاری، از نام و توضیح کوتاه ساخته می‌شه</span></div>
+            <div class="gsnip" id="gSnip" aria-hidden="true">
+                <div class="gsnip-url"><span class="gsnip-fav"><?= e(mb_substr((string) setting('site_title'), 0, 1)) ?></span><span><b><?= e((string) setting('site_title')) ?></b><small dir="ltr"><?= e(preg_replace('~^https?://~', '', site_url('shop/'))) ?><i id="gSlug"><?= e($p['slug'] ?? '') ?></i></small></span></div>
+                <div class="gsnip-t" id="gTitle"></div>
+                <div class="gsnip-d" id="gDesc"></div>
+            </div>
+            <div class="grid g2 mt-s">
+                <label class="af"><span class="af-label">عنوان در گوگل <em class="cnt" data-cnt="seo_title" data-max="60"></em></span><input name="seo_title" value="<?= e((string) ($p['seo_title'] ?? '')) ?>" maxlength="190" placeholder="مثلاً خرید پریمیوم تلگرام ۳ ماهه — تحویل فوری"></label>
+                <label class="af"><span class="af-label">کلمات کلیدی</span><input name="seo_keywords" value="<?= e((string) ($p['seo_keywords'] ?? '')) ?>" maxlength="600" placeholder="خرید پریمیوم تلگرام، پریمیوم ارزان، …"><small class="af-hint">با «،» جدا کن · چیزی که مردم توی گوگل سرچ می‌کنن</small></label>
+            </div>
+            <label class="af"><span class="af-label">توضیح در گوگل <em class="cnt" data-cnt="seo_desc" data-max="160"></em></span><textarea name="seo_desc" rows="2" maxlength="320" placeholder="یه جمله‌ی جذاب ۱۲۰ تا ۱۶۰ حرفی: چی می‌فروشی، چرا از تو بخرن (تحویل فوری، پشتیبانی، قیمت)"><?= e((string) ($p['seo_desc'] ?? '')) ?></textarea></label>
         </div>
     </div>
 
@@ -360,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var sRows = document.getElementById('specRows');
     document.getElementById('addSpec').addEventListener('click', function () {
         var r = document.createElement('div'); r.className = 'spec-r';
-        r.innerHTML = '<input data-s="k" placeholder="عنوان"><input data-s="v" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف">✕</button>';
+        r.innerHTML = '<input class="input" data-s="k" placeholder="عنوان"><input class="input" data-s="v" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف">✕</button>';
         sRows.appendChild(r); r.querySelector('input').focus();
     });
     sRows.addEventListener('click', function (e) { var b = e.target.closest('[data-sdel]'); if (b) b.closest('.spec-r').remove(); });
@@ -368,5 +384,22 @@ document.addEventListener('DOMContentLoaded', function () {
         [].forEach.call(sRows.querySelectorAll('.spec-r'), function (r, i) { r.querySelector('[data-s=k]').name = 'spec[' + i + '][k]'; r.querySelector('[data-s=v]').name = 'spec[' + i + '][v]'; });
     });
 });
+
+    // Google preview for the SEO card
+    (function () {
+        var f = document.getElementById('prodForm'); if (!f || !document.getElementById('gSnip')) return;
+        var q = function (n) { return f.querySelector('[name=' + n + ']'); };
+        function strip(h) { var d = document.createElement('div'); d.innerHTML = h || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+        function paint() {
+            var t = (q('seo_title').value || q('title').value || 'نام محصول').trim();
+            var site = <?= json_encode((string) setting('shop_title'), JSON_UNESCAPED_UNICODE) ?>;
+            document.getElementById('gTitle').textContent = (t.length > 62 ? t.slice(0, 60) + '…' : t) + (q('seo_title').value ? '' : ' | ' + site);
+            var dsc = (q('seo_desc').value || (q('subtitle') ? q('subtitle').value : '') || strip(q('description') ? q('description').value : '') || 'توضیحی برای این محصول نوشته نشده').trim();
+            document.getElementById('gDesc').textContent = dsc.length > 160 ? dsc.slice(0, 158) + '…' : dsc;
+            document.getElementById('gSlug').textContent = (q('slug') && q('slug').value) || '';
+            [].forEach.call(f.querySelectorAll('.cnt'), function (c) { var n = (q(c.dataset.cnt).value || '').length, m = +c.dataset.max; c.textContent = n + ' / ' + m; c.className = 'cnt' + (n > m ? ' over' : n >= m * .6 ? ' ok' : ''); });
+        }
+        f.addEventListener('input', paint); paint();
+    })();
 </script>
 <?php adm_foot(['shop-admin.js']); ?>

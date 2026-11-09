@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('raffles');
 
 $id = (int) ($_GET['id'] ?? 0);
 $r = row('SELECT * FROM raffles WHERE id = ?', [$id]);

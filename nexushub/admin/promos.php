@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('promos');
 
 $edit = (int) ($_GET['edit'] ?? 0);
 $P = $edit ? row('SELECT * FROM promo_codes WHERE id = ?', [$edit]) : null;
@@ -95,7 +95,7 @@ adm_head('کدهای تخفیف', 'promos');
         <label class="af"><span class="af-label">کد (انگلیسی و عدد)</span><span class="pmx-codein"><input name="code" id="pmCode" value="<?= e((string) $P['code']) ?>" dir="ltr" maxlength="30" placeholder="NEXUS20" required><button type="button" class="abtn abtn-sm" id="pmGen">🎲 بساز</button></span></label>
         <?= f_text('title', 'عنوان (اختیاری — روی کادر سایت)', (string) $P['title'], ['placeholder' => 'مثلاً تخفیف یلدایی']) ?>
         <div>
-            <?= f_text('max_uses', 'چند نفر بتونن استفاده کنن؟ (به کاربر نشون داده نمی‌شه)', (string) (int) $P['max_uses'], ['type' => 'number', 'min' => 0, 'hint' => '۰ = بدون سقف · هر نفر فقط یک بار']) ?>
+            <?= f_text('max_uses', 'سقف تعداد استفاده', (string) (int) $P['max_uses'], ['type' => 'number', 'min' => 0, 'hint' => '۰ = بدون سقف · هر نفر یک بار · به خریدار نشون داده نمی‌شه']) ?>
             <div class="rf-quick" data-for="max_uses"><?php foreach ([0 => 'بدون سقف', 10 => '۱۰', 50 => '۵۰', 100 => '۱۰۰', 500 => '۵۰۰'] as $v => $t): ?><button type="button" data-v="<?= $v ?>"><?= $t ?></button><?php endforeach; ?></div>
         </div>
         <?= f_jdate('starts_at', 'شروع (اختیاری)', $P['starts_at'] ?: null, 'خالی = از همین الان') ?>
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         [].forEach.call(gal.querySelectorAll('.pmx-code code'), function (x) { x.textContent = c; });
         var pct = q('.pmx-dsc [data-f=pct]'); if (pct && pct.value) [].forEach.call(gal.querySelectorAll('.rfx-prize'), function (x) { x.textContent = x.textContent.replace(/[\d۰-۹.]+\s*٪|[\d۰-۹.]+\s*%/, (window.NXA && NXA.fa ? NXA.fa(pct.value) : pct.value) + '٪'); });
         var ac = q('[name=box_accent]');
-        if (ac && /^#[0-9a-f]{6}$/i.test(ac.value)) { var v = ac.value, rgb = [1, 3, 5].map(function (i) { return parseInt(v.substr(i, 2), 16); }).join(','); [].forEach.call(gal.querySelectorAll('.rfx'), function (x) { x.style.setProperty('--nxp', v); x.style.setProperty('--nxp-rgb', rgb); }); }
+        if (ac && /^#[0-9a-f]{6}$/i.test(ac.value)) { var v = ac.value, rgb = [1, 3, 5].map(function (i) { return parseInt(v.substr(i, 2), 16); }).join(','); [].forEach.call(gal.querySelectorAll('.rfx'), function (x) { x.style.setProperty('--nxp', v); x.style.setProperty('--nxp-rgb', rgb); x.style.setProperty('--nxp-on', (function (c) { var l = c.split(',').map(function (n) { n /= 255; return n <= .03928 ? n / 12.92 : Math.pow((n + .055) / 1.055, 2.4); }); return .2126 * l[0] + .7152 * l[1] + .0722 * l[2] > .4 ? '#0b0d12' : '#fff'; })(rgb)); }); }
     }
     if (form) { form.addEventListener('input', live); form.addEventListener('change', live); }
     var all = q('#pmAll'); if (all) all.addEventListener('change', function () { [].forEach.call(document.querySelectorAll('[name="members[]"]'), function (c) { c.checked = all.checked; }); });

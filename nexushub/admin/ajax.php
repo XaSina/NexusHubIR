@@ -14,7 +14,7 @@ switch ($_POST['action'] ?? '') {
         json_out(upload_image($_FILES['file']));
 
     case 'upload_story':
-        if (!can('*')) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
+        if (!can('stories')) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
         if (empty($_FILES['file'])) json_out(['ok' => false, 'error' => 'فایلی ارسال نشد (شاید حجم فایل از حد مجاز سرور بیشتر است).'], 422);
         json_out(upload_story_media($_FILES['file']));
 
@@ -33,35 +33,35 @@ switch ($_POST['action'] ?? '') {
             foreach (rows("SELECT id, title, status, published_at FROM posts WHERE title LIKE ?$own ORDER BY id DESC LIMIT 6", [$like]) as $r)
                 $add('اخبار', '📰', (string) $r['title'], $r['status'] === 'published' ? 'منتشر شده' : ($r['status'] === 'scheduled' ? 'زمان‌بندی' : 'پیش‌نویس'), 'post-edit.php?id=' . $r['id']);
         });
-        if (can('shop')) {
-            $try(function () use ($like, $add) {
+        {
+            if (can('orders')) $try(function () use ($like, $add) {
                 foreach (rows("SELECT o.id, o.code, o.status, o.total, m.first_name, m.last_name FROM orders o LEFT JOIN members m ON m.id = o.member_id
                     WHERE o.code LIKE ? OR o.receipt_ref LIKE ? OR CONCAT(m.first_name, ' ', m.last_name) LIKE ? OR m.phone LIKE ? ORDER BY o.id DESC LIMIT 6", [$like, $like, $like, $like]) as $r)
                     $add('سفارش‌ها', '🧾', 'سفارش ' . $r['code'], trim($r['first_name'] . ' ' . $r['last_name']) . ' · ' . fa_num(number_format((int) $r['total'])) . ' ت', 'order-view.php?id=' . $r['id']);
             });
-            $try(function () use ($like, $add) {
+            if (can('products')) $try(function () use ($like, $add) {
                 foreach (rows('SELECT id, title FROM products WHERE title LIKE ? ORDER BY id DESC LIMIT 5', [$like]) as $r)
                     $add('محصولات', '🛍️', (string) $r['title'], 'ویرایش محصول', 'product-edit.php?id=' . $r['id']);
             });
-            $try(function () use ($like, $add) {
+            if (can('tickets')) $try(function () use ($like, $add) {
                 foreach (rows('SELECT id, code, subject, status FROM tickets WHERE subject LIKE ? OR code LIKE ? ORDER BY id DESC LIMIT 4', [$like, $like]) as $r)
                     $add('تیکت‌ها', '🎫', (string) $r['subject'], 'تیکت ' . $r['code'] . ($r['status'] === 'open' ? ' · باز' : ''), 'ticket-view.php?id=' . $r['id']);
             });
         }
-        if (can('*')) {
-            $try(function () use ($like, $add) {
+        {
+            if (can('members')) $try(function () use ($like, $add) {
                 foreach (rows("SELECT id, member_code, first_name, last_name, phone, username FROM members
                     WHERE CONCAT(first_name, ' ', last_name) LIKE ? OR phone LIKE ? OR member_code LIKE ? OR username LIKE ? OR email LIKE ? ORDER BY id DESC LIMIT 6", [$like, $like, $like, $like, $like]) as $r)
                     $add('اعضا', '👤', trim($r['first_name'] . ' ' . $r['last_name']), fa_num((string) $r['phone']) . ' · ' . $r['member_code'], 'member-view.php?id=' . $r['id']);
             });
-            $try(function () use ($like, $add) {
+            if (can('promos')) $try(function () use ($like, $add) {
                 foreach (rows('SELECT id, code, pct FROM promo_codes WHERE code LIKE ? OR title LIKE ? ORDER BY id DESC LIMIT 4', [$like, $like]) as $r)
                     $add('کدهای تخفیف', '🏷️', (string) $r['code'], fa_num(rtrim(rtrim((string) $r['pct'], '0'), '.')) . '٪ تخفیف', 'promos.php');
             });
-            $try(function () use ($like, $add) {
-                foreach (rows('SELECT id, title, status FROM raffles WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
+            if (can('raffles') || can('wheels')) $try(function () use ($like, $add) {
+                if (can('raffles')) foreach (rows('SELECT id, title, status FROM raffles WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
                     $add('قرعه‌کشی', '🎁', (string) $r['title'], 'مدیریت قرعه‌کشی', 'raffle-view.php?id=' . $r['id']);
-                foreach (rows('SELECT id, title FROM wheels WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
+                if (can('wheels')) foreach (rows('SELECT id, title FROM wheels WHERE title LIKE ? ORDER BY id DESC LIMIT 4', [$like]) as $r)
                     $add('گردونه شانس', '🎡', (string) $r['title'], 'مدیریت گردونه', 'wheel-view.php?id=' . $r['id']);
             });
         }
@@ -74,7 +74,7 @@ switch ($_POST['action'] ?? '') {
     case 'upload_chunk':
         // kind: post (news video, 500 MB) | story (story video, 100 MB)
         $kind = (string) ($_POST['kind'] ?? 'post');
-        if ($kind === 'story' ? !can('*') : !(can('posts') || can('media'))) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
+        if ($kind === 'story' ? !can('stories') : !(can('posts') || can('media'))) json_out(['ok' => false, 'error' => 'دسترسی ندارید.'], 403);
         if (empty($_FILES['chunk'])) json_out(['ok' => false, 'error' => 'قطعه‌ای دریافت نشد.'], 422);
         @set_time_limit(120);
         json_out(upload_chunk($_FILES['chunk'], (string) ($_POST['uid'] ?? ''), (int) ($_POST['index'] ?? -1), (int) ($_POST['total'] ?? 0),
@@ -94,7 +94,7 @@ switch ($_POST['action'] ?? '') {
         ]);
 
     case 'ad_preview':
-        if (!can('*')) json_out(['ok' => false], 403);
+        if (!can('ads')) json_out(['ok' => false], 403);
         $a = [
             'id' => 0, 'title' => (string) input('title'), 'format' => (string) input('format'), 'theme' => (string) input('theme'),
             'accent' => (string) input('accent'), 'image' => (string) input('image'), 'link' => (string) input('link'),
@@ -108,7 +108,7 @@ switch ($_POST['action'] ?? '') {
         json_out(['ok' => true, 'html' => $html]);
 
     case 'telegram_test':
-        if (!can('*')) json_out(['ok' => false], 403);
+        if (!can('settings')) json_out(['ok' => false], 403);
         $r = telegram_api('getMe', []);
         if (!empty($r['ok'])) {
             $chat = telegram_api('getChat', ['chat_id' => (string) setting('tg_chat_id')]);
@@ -125,7 +125,7 @@ switch ($_POST['action'] ?? '') {
             'review' => (int) val("SELECT COUNT(*) FROM orders WHERE status IN ('reviewing','approved')"), 'tickets' => (int) val("SELECT COUNT(*) FROM tickets WHERE status = 'open'")]);
 
     case 'rates_test':
-        if (!can('*')) json_out(['ok' => false], 403);
+        if (!can('shop_settings')) json_out(['ok' => false], 403);
         $lines = [];
         $logT = []; [$ton] = fetch_ton_usd($logT);
         foreach ($logT as [$n, $ok, $v, $ms]) $lines[] = ($ok ? '✅ ' : '❌ ') . 'TON — ' . $n . ($ok ? ': $' . number_format((float) $v, 3) : ': پاسخ نداد') . ' (' . fa_num((string) $ms) . 'ms)';
@@ -136,7 +136,7 @@ switch ($_POST['action'] ?? '') {
         json_out(['ok' => true, 'lines' => $lines, 'ton' => $r['ton'], 'usd' => $r['usd'], 'ton_src' => $r['ton_src'], 'usd_src' => $r['usd_src']]);
 
     case 'market_test':   // checks every price source on its own, then refreshes the board
-        if (!can('*')) json_out(['ok' => false], 403);
+        if (!can('shop_settings')) json_out(['ok' => false], 403);
         $sel = market_selected(); $A = market_assets();
         $coins = array_values(array_unique(array_merge(array_filter($sel, fn($k) => ($A[$k][3] ?? '') === 'coin'), array_intersect($sel, ['gold18', 'ounce']) ? ['paxg'] : [])));
         $lines = [];

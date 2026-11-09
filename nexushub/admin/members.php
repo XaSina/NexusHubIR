@@ -3,7 +3,7 @@
  * مدیریت اعضای سایت (کاربرانی که از سایت ثبت‌نام کرده‌اند)
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('members');
 
 $qs = trim((string) ($_GET['q'] ?? ''));
 $status = (string) ($_GET['status'] ?? '');

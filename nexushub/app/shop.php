@@ -852,3 +852,29 @@ function order_auto_deliver(array $o): bool
     }
     return $lines && !$manual;
 }
+
+
+/**
+ * What the buyer receives, ready to show: plain text stays text, every http(s) link becomes a download / open button
+ * (so a file link is one tap, not a long address to copy).
+ */
+function delivery_html(string $txt): string
+{
+    $out = [];
+    foreach (preg_split('/\R/u', trim($txt)) as $line) {
+        if (trim($line) === '') { $out[] = '<span class="dlv-gap"></span>'; continue; }
+        $parts = preg_split('~(https?://[^\s<>"\']+)~iu', $line, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $html = ''; $btns = '';
+        foreach ($parts as $i => $part) {
+            if ($i % 2 === 0) { $html .= e($part); continue; }
+            $url = rtrim($part, '.,،;)');
+            $file = (bool) preg_match('~\.(zip|rar|7z|pdf|apk|exe|msi|dmg|iso|mp4|mkv|mp3|epub|docx?|xlsx?|pptx?|psd|ai|jpg|png)(\?|$)~i', parse_url($url, PHP_URL_PATH) . '?');
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            $btns .= '<a class="btn btn-primary dlv-btn" href="' . e($url) . '" target="_blank" rel="noopener nofollow">' . icon($file ? 'download' : 'external', 17)
+                . '<span>' . ($file ? 'دانلود فایل' : 'باز کردن لینک') . '</span><small dir="ltr">' . e(preg_replace('/^www\./', '', $host)) . '</small></a>';
+        }
+        $html = trim(preg_replace('/[\s:：-]+$/u', '', $html));
+        $out[] = '<div class="dlv-line">' . ($html !== '' ? '<span class="dlv-t">' . $html . '</span>' : '') . $btns . '</div>';
+    }
+    return implode('', $out);
+}

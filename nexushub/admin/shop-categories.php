@@ -3,7 +3,7 @@
  * فروشگاه — دسته‌بندی‌ها
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('products');
 
 $edit = (int) ($_GET['edit'] ?? 0);
 $c = $edit ? row('SELECT * FROM shop_categories WHERE id = ?', [$edit]) : null;

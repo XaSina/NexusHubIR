@@ -26,7 +26,7 @@
     background: rgba(var(--text-rgb), .04); border: 1px solid var(--line); animation: lwIn .6s cubic-bezier(.16,1,.3,1) both; }
 .lw-last-i span { font-size: 1.3rem; text-align: center; }
 .lw-last-i b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lw-last-i code { direction: ltr; padding: 3px 8px; border-radius: 8px; font-size: .8rem; background: rgba(255,255,255,.08); border: 1px dashed rgba(255,255,255,.3); }
+.lw-last-i code { direction: ltr; padding: 3px 8px; border-radius: 8px; font-size: .8rem; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.3); }
 .lw-last-i small { color: var(--muted); font-size: .72rem; }
 .lw-last-i.k-prize { border-color: rgba(255,210,63,.45); background: linear-gradient(100deg, rgba(255,210,63,.14), transparent 70%), rgba(var(--text-rgb), .03); }
 .lw-last-i.k-again { border-color: rgba(var(--primary-rgb), .4); }
@@ -73,7 +73,7 @@ html.perf-safe .lw-spin::after { display: none; }
 .lw-page .rf-side { gap: 20px; }
 .lw-rules { gap: 12px; }
 .lw-rule { padding: 12px; }
-.lw-claimnote { margin-top: 12px; padding: 10px 12px; border-radius: 14px; font-size: .8rem; line-height: 1.9; color: var(--muted); background: rgba(255,210,63,.07); border: 1px dashed rgba(255,210,63,.35); }
+.lw-claimnote { margin-top: 12px; padding: 10px 12px; border-radius: 14px; font-size: .8rem; line-height: 1.9; color: var(--muted); background: rgba(255,210,63,.07); border: 1px solid rgba(255,210,63,.35); }
 .lw-claimnote b { color: var(--text); }
 .lw-win em { font-style: normal; font-size: .66rem; margin-top: 2px; }
 .lw-win em.wait { color: #ffb02e; } .lw-win em.ok { color: #3ddc84; } .lw-win em.over { color: var(--muted); }
@@ -124,3 +124,7 @@ html.perf-safe .lw-spin::after { display: none; }
 .lw-last-i.k-discount { border-color: rgba(61,220,132,.45); }
 @media (max-width: 860px) { .lw-grid { grid-template-columns: minmax(0, 1fr); } .lw-head { flex-wrap: wrap; } .lw-head-end { width: 100%; justify-content: center; } }
 @media (max-width: 480px) { .lw-head { padding: 12px; gap: 10px; } .lw-head-art { width: 52px; height: 52px; border-radius: 14px; } .lw-head-t h1 { font-size: 1.1rem; } }
+
+/* ===== light themes: darker status colours (generated) ===== */
+html.theme-light .lw-win em.wait { color: #a16207; }
+html.theme-light .lw-win.k-discount b { color: #15803d; }

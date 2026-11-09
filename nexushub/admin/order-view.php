@@ -3,7 +3,7 @@
  * فروشگاه — جزئیات سفارش، بررسی فیش، تایید / رد / انجام
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('orders');
 shop_expire_due();
 
 $o = row('SELECT * FROM orders WHERE id = ?', [(int) ($_GET['id'] ?? 0)]);

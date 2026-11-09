@@ -3,7 +3,7 @@
  * مشاهده و ویرایش اطلاعات یک عضو سایت
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('members');
 
 $id = (int) ($_GET['id'] ?? 0);
 $m = row('SELECT * FROM members WHERE id = ?', [$id]);

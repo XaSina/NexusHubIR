@@ -3,7 +3,7 @@
  * فروشگاه — فهرست محصولات
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('products');
 
 if (is_post()) {
     csrf_check();

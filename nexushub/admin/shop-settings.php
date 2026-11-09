@@ -3,14 +3,15 @@
  * فروشگاه — تنظیمات (پرداخت، قیمت دلار/تون، منو، بنر، اعلان‌ها)
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('shop_settings');
 
 $keys = ['shop_enabled', 'shop_title', 'shop_tagline', 'shop_notice', 'shop_terms', 'shop_support_on',
     'shop_card_number', 'shop_card_name', 'shop_card_bank', 'shop_pay_minutes',
     'shop_usd_mode', 'shop_usd_rate', 'shop_ton_mode', 'shop_ton_usd', 'shop_margin', 'shop_round',
     'shop_in_header', 'shop_in_mobile', 'shop_in_footer', 'shop_menu_label',
     'shop_banner_on', 'shop_banner_title', 'shop_banner_text', 'shop_banner_btn', 'shop_banner_emoji', 'shop_banner_badge', 'shop_banner_style', 'shop_banner_accent', 'shop_banner_image',
-    'shop_tg_admin_chat', 'shop_tickers_on', 'ship_free_over', 'ship_track_url', 'ship_note', 'ship_postcode_req'];
+    'shop_tg_admin_chat', 'shop_tickers_on', 'ship_free_over', 'ship_track_url', 'ship_note', 'ship_postcode_req',
+    'shop_seo_title', 'shop_seo_desc', 'shop_seo_keywords', 'shop_seo_image'];
 
 if (is_post()) {
     csrf_check();
@@ -61,6 +62,7 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
     <button type="button" data-tab="price">💎 قیمت دلار و تون</button>
     <button type="button" data-tab="menu">📢 منو و بنر</button>
     <button type="button" data-tab="ship">🚚 ارسال</button>
+    <button type="button" data-tab="seo">🔎 سئو و گوگل</button>
     <button type="button" data-tab="notify">🔔 اعلان‌ها</button>
 </div>
 
@@ -226,7 +228,7 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
             <input type="hidden" name="ship_methods" id="shipMIn">
             <div class="shipm-list" id="shipMList">
                 <?php foreach (ship_methods() as $sm): ?>
-                <div class="shipm-r"><input data-k="name" value="<?= e($sm['name']) ?>" placeholder="نام روش (مثلاً پست پیشتاز)"><input data-k="cost" value="<?= (int) $sm['cost'] ?>" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input data-k="days" value="<?= e($sm['days']) ?>" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف"><?= adm_icon('trash', 15) ?></button></div>
+                <div class="shipm-r"><input class="input" data-k="name" value="<?= e($sm['name']) ?>" placeholder="نام روش (مثلاً پست پیشتاز)"><input class="input" data-k="cost" value="<?= (int) $sm['cost'] ?>" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input class="input" data-k="days" value="<?= e($sm['days']) ?>" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف"><?= adm_icon('trash', 15) ?></button></div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -236,6 +238,38 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
             <?= f_switch('ship_postcode_req', 'کد پستی اجباری باشد', setting_on('ship_postcode_req')) ?>
             <?= f_text('ship_track_url', 'آدرس پیگیری مرسوله', (string) $s['ship_track_url'], ['ltr' => true, 'hint' => '{code} جای کد رهگیری قرار می‌گیره؛ خالی = فقط خود کد نشون داده می‌شه']) ?>
             <?= f_textarea('ship_note', 'توضیح زیر روش‌های ارسال (اختیاری)', (string) $s['ship_note'], ['rows' => 2, 'placeholder' => 'مثلاً: سفارش‌ها هر روز ساعت ۱۴ تحویل پست می‌شن']) ?>
+        </div>
+    </div>
+</div>
+
+<div data-pane="seo">
+    <div class="grid g2">
+        <div class="card">
+            <div class="card-head"><h3>🔎 سئوی صفحه‌ی فروشگاه</h3></div>
+            <?= f_text('shop_seo_title', 'عنوان فروشگاه در گوگل', (string) $s['shop_seo_title'], ['placeholder' => 'مثلاً خرید پریمیوم تلگرام، استارز و گیفت کارت | NEXUS', 'hint' => '۵۰ تا ۶۰ حرف · خالی = «نام فروشگاه | نام سایت»']) ?>
+            <?= f_textarea('shop_seo_desc', 'توضیح فروشگاه در گوگل', (string) $s['shop_seo_desc'], ['rows' => 3, 'placeholder' => 'مثلاً خرید فوری پریمیوم تلگرام، استارز، تون و اکانت‌های بازی با تحویل خودکار و پشتیبانی ۲۴ ساعته.', 'hint' => '۱۲۰ تا ۱۶۰ حرف · خالی = شعار فروشگاه']) ?>
+            <?= f_text('shop_seo_keywords', 'کلمات کلیدی فروشگاه', (string) $s['shop_seo_keywords'], ['placeholder' => 'خرید پریمیوم تلگرام، خرید استارز، گیفت کارت', 'hint' => 'با «،» جدا کن · محصولی که کلمه‌ی خودش رو نداره از این‌ها استفاده می‌کنه']) ?>
+            <?= f_image('shop_seo_image', 'تصویر اشتراک‌گذاری فروشگاه (اختیاری)', (string) $s['shop_seo_image'] ?: null, 'وقتی لینک فروشگاه رو توی تلگرام / واتساپ می‌فرستی همین عکس نشون داده می‌شه (۱۲۰۰×۶۳۰)') ?>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>🚀 فروشگاه چطور توی گوگل میاد؟</h3></div>
+            <div class="seo-auto">
+                <b>این‌ها خودکار انجام می‌شه ✅</b>
+                <ul>
+                    <li>همه‌ی محصولات توی <a href="<?= e(site_url('sitemap.xml')) ?>" target="_blank" rel="noopener" dir="ltr">sitemap.xml</a> هستن (با عکس و تاریخ آخرین تغییر).</li>
+                    <li>هر محصول «اسکیمای محصول» داره: قیمت، موجودی، عکس‌ها و مشخصات — گوگل می‌تونه قیمت رو کنار نتیجه نشون بده.</li>
+                    <li>با هر بار ذخیره‌ی محصول، به موتورهای جستجو خبر داده می‌شه (IndexNow).</li>
+                    <li>آدرس هر محصول کوتاه و فارسیه؛ مثلاً <b>shop/پریمیوم-تلگرام</b> — گوگل کلمه‌های داخل آدرس رو هم می‌خونه.</li>
+                </ul>
+            </div>
+            <ol class="seo-steps">
+                <li><b>Google Search Console</b> رو باز کن و سایتت رو اضافه کن (یه بار برای کل سایت کافیه).<br><a class="abtn abtn-ghost abtn-sm" href="https://search.google.com/search-console" target="_blank" rel="noopener">باز کردن سرچ کنسول ↗</a></li>
+                <li>روش تأیید «HTML tag» رو بزن، کدِ داخل <code>content="…"</code> رو کپی کن و توی <a href="settings.php">تنظیمات ← عمومی و سئو</a> بخش «کد تأیید گوگل» بذار.</li>
+                <li>از منوی <b>Sitemaps</b> این آدرس رو ثبت کن:<br><code class="seo-copy" dir="ltr" data-copy="<?= e(site_url('sitemap.xml')) ?>" data-copy-msg="کپی شد ✅"><?= e(site_url('sitemap.xml')) ?></code></li>
+                <li>آدرس فروشگاه رو بالای سرچ کنسول (URL Inspection) بزن و «Request Indexing» رو بزن:<br><code class="seo-copy" dir="ltr" data-copy="<?= e(site_url('shop')) ?>" data-copy-msg="کپی شد ✅"><?= e(site_url('shop')) ?></code></li>
+                <li>برای هر محصول، کارت «🔎 سئو و نمایش در گوگل» رو پر کن: عنوانی که مردم سرچ می‌کنن (مثلاً «خرید پریمیوم تلگرام ۳ ماهه») + یه توضیح جذاب + عکس واقعی.</li>
+                <li>صبور باش: معمولاً ۳ روز تا ۲ هفته طول می‌کشه تا صفحه‌ها بیان؛ بالا اومدن توی کلمه‌های پررقابت با محتوای خوب، لینک از کانال/سایت‌های دیگه و نظرات خریدارها کم‌کم اتفاق می‌افته.</li>
+            </ol>
         </div>
     </div>
 </div>
@@ -269,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sml) {
         document.getElementById('addShipM').addEventListener('click', function () {
             var r = document.createElement('div'); r.className = 'shipm-r';
-            r.innerHTML = '<input data-k="name" placeholder="نام روش (مثلاً پست پیشتاز)"><input data-k="cost" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input data-k="days" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف">✕</button>';
+            r.innerHTML = '<input class="input" data-k="name" placeholder="نام روش (مثلاً پست پیشتاز)"><input class="input" data-k="cost" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input class="input" data-k="days" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف">✕</button>';
             sml.appendChild(r); r.querySelector('input').focus();
         });
         sml.addEventListener('click', function (e) { var b = e.target.closest('[data-shipdel]'); if (b) b.closest('.shipm-r').remove(); });

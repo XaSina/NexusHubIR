@@ -203,6 +203,7 @@ function default_settings(): array
         // فروشگاه
         'shop_enabled' => '1',
         'shop_title' => 'فروشگاه NEXUS',
+        'shop_seo_title' => '', 'shop_seo_desc' => '', 'shop_seo_keywords' => '', 'shop_seo_image' => '',
         'shop_tagline' => 'پریمیوم تلگرام، استارز، تون و هر چیزی که لازم داری — سریع، امن و با پشتیبانی واقعی',
         'shop_card_number' => '6219861939982061',
         'shop_card_name' => 'مهدیه عباس زاده',
@@ -257,9 +258,6 @@ function product_types(): array
         'course' => ['name' => 'دوره آموزشی', 'icon' => '🎓', 'color' => '#0ea5e9', 'fields' => [], 'delivery' => 'link', 'unit' => 'عدد', 'desc' => 'لینک دسترسی بعد از خرید'],
         'physical' => ['name' => 'کالای فیزیکی', 'icon' => '📦', 'color' => '#f97316', 'fields' => [], 'delivery' => 'ship', 'unit' => 'عدد', 'desc' => 'ارسال پستی با آدرس مشتری'],
         'fashion' => ['name' => 'پوشاک و کفش', 'icon' => '👕', 'color' => '#ec4899', 'fields' => [['key' => 'size', 'label' => 'سایز', 'type' => 'select', 'required' => 1, 'options' => 'S,M,L,XL,XXL']], 'delivery' => 'ship', 'unit' => 'عدد', 'desc' => 'با انتخاب سایز و رنگ'],
-        'food' => ['name' => 'خوراکی', 'icon' => '🍯', 'color' => '#eab308', 'fields' => [], 'delivery' => 'ship', 'unit' => 'کیلو', 'desc' => 'عسل، زعفران، خشکبار…'],
-        'livestock' => ['name' => 'دام و طیور', 'icon' => '🐄', 'color' => '#84cc16', 'fields' => [], 'delivery' => 'ship', 'unit' => 'رأس', 'desc' => 'گاو، گوسفند، مرغ…'],
-        'ticket' => ['name' => 'بلیت / رزرو', 'icon' => '🎟️', 'color' => '#14b8a6', 'fields' => [['key' => 'date', 'label' => 'تاریخ مورد نظر', 'type' => 'text', 'required' => 1, 'placeholder' => 'مثلاً ۱۴۰۵/۰۹/۲۰']], 'delivery' => 'manual', 'unit' => 'نفر', 'desc' => 'رزرو نوبت، بلیت رویداد…'],
         'service' => ['name' => 'خدمات', 'icon' => '🛠️', 'color' => '#3dbbff', 'fields' => [['key' => 'details', 'label' => 'توضیح کار', 'type' => 'textarea', 'required' => 0, 'placeholder' => '']], 'delivery' => 'manual', 'unit' => 'ساعت', 'desc' => 'طراحی، تعمیر، مشاوره…'],
         'other' => ['name' => 'سایر', 'icon' => '🛍️', 'color' => '#ff7a3d', 'fields' => [], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'هر چیز دیگه‌ای'],
     ];
@@ -369,6 +367,8 @@ function card_styles(): array
         'glass' => ['شیشه‌ای', 'مات و شفاف با بلور'], 'solid' => ['توپر', 'سبک و سریع‌تر'], 'outline' => ['خطی', 'فقط حاشیه'],
         'neon' => ['نئونی', 'درخشش رنگی دور کارت'], 'gradient' => ['حاشیه گرادیانی', 'حاشیه‌ی رنگین براق'], 'holo' => ['هولوگرافیک', 'برق رنگین‌کمانی روی کارت'],
         'cyber' => ['سایبری', 'گوشه‌های بریده‌ی HUD'], 'elevated' => ['سه‌بعدی', 'سایه‌ی عمیق و برجسته'], 'frost' => ['یخی مات', 'بلور غلیظ و نرم'],
+        'bento' => ['بنتو', 'کاشی‌های نرم با نوار رنگی بالا'], 'aurora' => ['لبه‌ی شفق', 'حاشیه‌ی رنگین‌کمانی ملایم'],
+        'minimal' => ['مینیمال', 'بی‌حاشیه، تمیز و آرام'], 'duo' => ['دوتونه', 'ته‌رنگ دو رنگ تم روی کارت'],
     ];
 }
 

@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('settings');
 
 $keys = ['site_title', 'site_tagline', 'site_description', 'meta_keywords', 'contact_email', 'posts_per_page', 'archive_per_page', 'trending_days',
     'members_register', 'comments_enabled', 'comments_moderation', 'reactions_enabled', 'reactions_list', 'bookmarks_on', 'link_saved_drawer', 'link_saved_footer',

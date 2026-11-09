@@ -3,7 +3,7 @@
  * فروشگاه — گفتگوی تیکت و پاسخ
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('tickets');
 
 $t = row('SELECT * FROM tickets WHERE id = ?', [(int) ($_GET['id'] ?? 0)]);
 if (!$t) { flash('تیکت یافت نشد.', 'error'); redirect('admin/tickets.php'); }

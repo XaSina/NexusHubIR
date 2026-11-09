@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('raffles');
 
 if (is_post()) {
     csrf_check();

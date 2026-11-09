@@ -123,7 +123,7 @@
 .nxp-popup-box .nxp-thumb { width: 100%; height: auto; aspect-ratio: 16/9; }
 .nxp-popup-box .nxp-countdown { justify-content: center; }
 @keyframes popIn { from { opacity: 0; transform: scale(.8) translateY(30px); } }
-.nxp-close { position: absolute; z-index: 10; top: -12px; right: -12px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .3s; }
+.nxp-close { position: absolute; z-index: 10; top: -12px; right: -12px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: var(--on-primary, #fff); box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .3s; }
 .nxp-close:hover { transform: rotate(90deg); }
 .nxp-floating { position: fixed; z-index: 70; bottom: 16px; right: 50%; transform: translateX(50%); width: min(760px, calc(100% - 100px)); animation: floatIn .7s var(--ease); }
 .nxp-floating .nxp-inner { padding: 12px 18px; }
@@ -245,7 +245,7 @@
     .rfx-prize { font-size: .95rem; }
     .rfx-prog { max-width: 380px; }
     .rfx-bar { height: 8px; }
-    .rfx-side { flex-direction: row; gap: 18px; padding-right: 22px; border-right: 1px dashed rgba(var(--nxp-rgb), .3); }
+    .rfx-side { flex-direction: row; gap: 18px; padding-right: 22px; border-right: 1px solid rgba(var(--nxp-rgb), .3); }
     .rfx-cd b { min-width: 48px; padding: 7px 4px; font-size: 1.2rem; border-radius: 12px; }
     .rfx-cd small { font-size: .66rem; }
     .rfx-cta { padding: 13px 22px; font-size: .95rem; border-radius: 14px; }
@@ -255,7 +255,7 @@
     .rfx-art { width: 60px; height: 60px; border-radius: 15px; }
     .rfx-emoji { font-size: 1.9rem; }
     .rfx-prog { max-width: none; }
-    .rfx-side { flex: 1 1 100%; flex-direction: row; justify-content: space-between; padding-top: 10px; border-top: 1px dashed rgba(var(--nxp-rgb), .3); }
+    .rfx-side { flex: 1 1 100%; flex-direction: row; justify-content: space-between; padding-top: 10px; border-top: 1px solid rgba(var(--nxp-rgb), .3); }
 }
 @container rfx (max-width: 300px) {
     .rfx-side { flex-direction: column; align-items: stretch; }
@@ -274,7 +274,7 @@ html.perf-safe .rfx-art-wheel .rfx-mini { animation: none; }
 
 /* promo box: the code + copy */
 .pmx-code { display: inline-flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 12px; cursor: pointer; font: inherit; color: var(--text);
-    background: rgba(var(--nxp-rgb), .1); border: 1.5px dashed rgba(var(--nxp-rgb), .6); transition: transform .25s, background .25s; }
+    background: rgba(var(--nxp-rgb), .1); border: 1.5px solid rgba(var(--nxp-rgb), .6); transition: transform .25s, background .25s; }
 .pmx-code code { font-weight: 900; letter-spacing: 1px; font-size: .95rem; }
 .pmx-code span { padding: 5px 10px; border-radius: 9px; font-size: .74rem; font-weight: 800; color: #fff; background: var(--nxp); }
 .pmx-code:hover { transform: translateY(-2px); background: rgba(var(--nxp-rgb), .18); }
@@ -313,7 +313,7 @@ html.perf-calm .nx-strip::after { animation: none; }
 html.perf-off .nx-strip { transition: none; }
 
 /* =====================================================================
-   Boxes v2 — cleaner hierarchy, no dashed lines, one button shape
+   Boxes v2 — cleaner hierarchy, no solid lines, one button shape
    (ads, raffle, lucky wheel and discount-code boxes, on the site and in the panel previews)
    ===================================================================== */
 .nxp { border-radius: 20px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 18px 40px -28px rgba(0, 0, 0, .9); }
@@ -360,7 +360,7 @@ html.perf-off .nx-strip { transition: none; }
 .pmx-code code { font-size: 1rem; letter-spacing: 2px; }
 .pmx-code span { padding: 7px 12px; border-radius: 10px; color: var(--nxp-on, #fff); }
 /* text on accent-coloured buttons follows the accent's brightness */
-.nxp-btn, .rfx-cta { color: var(--nxp-on, #fff); }
+.nxp-btn, .rfx-cta, .nxp-ribbon { color: var(--nxp-on, #fff); }
 .rfx-is-done .rfx-cta { color: #1a0d00; }
 
 /* ad card in a narrow spot (phone, sidebar, panel gallery): picture on top, then the heading row, full-width button */
@@ -395,3 +395,8 @@ html.perf-off .nx-strip { transition: none; }
     .nxp-row.nxp-half { justify-content: center; }
     .nxp-row.nxp-half > .nxp-slot { flex: 0 1 calc(50% - 9px); }
 }
+
+/* light site themes: the dark box designs keep light text, the light ones get a readable accent */
+html.theme-light .nxp-theme-glitch, html.theme-light .nxp-theme-holo, html.theme-light .nxp-theme-aurora, html.theme-light .nxp-theme-fire {
+    --text: #f4f4f7; --text-rgb: 244,244,247; --muted: #b8b8c6; --line: rgba(255,255,255,.12); color: #f4f4f7; }
+html.theme-light .nxp-theme-neon .nxp-title, html.theme-light .nxp-theme-glass .nxp-title, html.theme-light .nxp-theme-spotlight .nxp-title, html.theme-light .nxp-theme-minimal .nxp-title { color: color-mix(in srgb, var(--nxp) 62%, #0b0d12); }

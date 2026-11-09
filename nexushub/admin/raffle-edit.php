@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('raffles');
 
 $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
 $r = $id ? row('SELECT * FROM raffles WHERE id = ?', [$id]) : null;
@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $$('.rfx-prize', g).forEach(function (x) { x.innerHTML = ''; x.appendChild(document.createTextNode('🎁 ' + p)); if (n > 1) { var e = document.createElement('em'); e.textContent = ' + ' + NXA.fa(n - 1) + ' جایزه'; x.appendChild(e); } });
         $$('.rfx-emoji', g).forEach(function (x) { x.textContent = em; });
         var ac = document.querySelector('[name=box_accent]');
-        if (ac && /^#[0-9a-f]{6}$/i.test(ac.value)) { var v = ac.value, rgb = [1, 3, 5].map(function (i) { return parseInt(v.substr(i, 2), 16); }).join(','); $$('.rfx', g).forEach(function (x) { x.style.setProperty('--nxp', v); x.style.setProperty('--nxp-rgb', rgb); }); }
+        if (ac && /^#[0-9a-f]{6}$/i.test(ac.value)) { var v = ac.value, rgb = [1, 3, 5].map(function (i) { return parseInt(v.substr(i, 2), 16); }).join(','); $$('.rfx', g).forEach(function (x) { x.style.setProperty('--nxp', v); x.style.setProperty('--nxp-rgb', rgb); x.style.setProperty('--nxp-on', (function (c) { var l = c.split(',').map(function (n) { n /= 255; return n <= .03928 ? n / 12.92 : Math.pow((n + .055) / 1.055, 2.4); }); return .2126 * l[0] + .7152 * l[1] + .0722 * l[2] > .4 ? '#0b0d12' : '#fff'; })(rgb)); }); }
         var img = document.querySelector('[name=image]'), url = img && img.closest('[data-image-field]') ? (img.closest('[data-image-field]').querySelector('.img-pick img') || {}).src : '';
         $$('.rfx-art', g).forEach(function (a) {
             var has = img && img.value && url, cur = a.querySelector('img');

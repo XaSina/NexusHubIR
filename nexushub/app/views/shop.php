@@ -58,7 +58,7 @@ $member = current_member();
 <nav class="container shop-cats h-scroll" aria-label="دسته‌های فروشگاه">
     <a href="<?= e(url('shop')) ?>" class="<?= !$curCat ? 'active' : '' ?>">✨ همه</a>
     <?php foreach ($scats as $c): ?>
-        <a href="<?= e(url('shop?cat=' . rawurlencode($c['slug']))) ?>" class="<?= $curCat && $curCat['id'] == $c['id'] ? 'active' : '' ?>" style="--c:<?= e($c['color']) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a>
+        <a href="<?= e(url('shop?cat=' . rawurlencode($c['slug']))) ?>" class="<?= $curCat && $curCat['id'] == $c['id'] ? 'active' : '' ?>" style="--c:<?= e($c['color']) ?>;--c-on:<?= ink_on((string) $c['color'], .3) ?>"><?= e($c['icon']) ?> <?= e($c['name']) ?></a>
     <?php endforeach; ?>
 </nav>
 <?php endif; ?>

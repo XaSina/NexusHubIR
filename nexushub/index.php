@@ -277,8 +277,13 @@ switch ($seg[0] ?? '') {
             foreach ($scats as $c) if ($c['slug'] === $catSlug) $curCat = $c;
             $qstr = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 80);
             $products = shop_products(['category_id' => $curCat['id'] ?? 0, 'search' => $qstr]);
+            $shopTitle = trim((string) setting('shop_seo_title')) ?: setting('shop_title') . ' | ' . setting('site_title');
             page_out('shop', ['products' => $products, 'scats' => $scats, 'curCat' => $curCat, 'q' => $qstr, 'bodyClass' => 'page-shop'], [
-                'title' => setting('shop_title') . ' | ' . setting('site_title'), 'description' => setting('shop_tagline'),
+                'title' => $curCat ? 'خرید ' . $curCat['name'] . ' | ' . setting('shop_title') : $shopTitle,
+                'description' => trim((string) setting('shop_seo_desc')) ?: setting('shop_tagline'),
+                'keywords' => trim((string) setting('shop_seo_keywords')),
+                'image' => setting('shop_seo_image') ? site_url((string) setting('shop_seo_image')) : '',
+                'itemlist' => $qstr === '' ? $products : [],
                 'url' => site_url('shop') . ($curCat ? '?cat=' . rawurlencode($curCat['slug']) : ''), 'noindex' => $qstr !== '',
                 'crumbs' => [['خانه', site_url('')], [setting('shop_title'), site_url('shop')]],
             ]);
@@ -299,8 +304,10 @@ switch ($seg[0] ?? '') {
             }
         }
         page_out('product', ['product' => $product, 'formErr' => $formErr, 'formMsg' => $formMsg, 'old' => $_POST, 'bodyClass' => 'page-shop page-product'], [
-            'title' => $product['title'] . ' | ' . setting('shop_title'), 'description' => $product['subtitle'] ?: str_excerpt((string) $product['description']),
-            'image' => $product['image'] && !str_ends_with(strtolower((string) $product['image']), '.svg') ? site_url($product['image']) : '',
+            'title' => trim((string) ($product['seo_title'] ?? '')) ?: $product['title'] . ' | ' . setting('shop_title'),
+            'description' => trim((string) ($product['seo_desc'] ?? '')) ?: ($product['subtitle'] ?: str_excerpt((string) $product['description'])),
+            'keywords' => trim((string) ($product['seo_keywords'] ?? '')) ?: trim((string) setting('shop_seo_keywords')),
+            'image' => (function ($p) { foreach (array_merge([(string) $p['image']], product_gallery($p)) as $im) if ($im !== '' && !str_ends_with(strtolower($im), '.svg')) return site_url($im); return ''; })($product),
             'url' => site_url('shop/' . rawurlencode($product['slug'])), 'product' => $product,
             'crumbs' => [['خانه', site_url('')], [setting('shop_title'), site_url('shop')], [$product['title'], site_url('shop/' . rawurlencode($product['slug']))]],
         ]);

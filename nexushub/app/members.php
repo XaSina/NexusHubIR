@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 18;   // v18: universal shop (shipping, auto delivery, gallery, specs, units)
+const NX_DB_VERSION = 19;   // v19: product SEO fields + custom panel roles (per-user permissions)
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
@@ -94,6 +94,16 @@ function nx_migrate(): void
             'gallery' => 'TEXT NULL', 'specs' => 'TEXT NULL']);
         $add('orders', ['ship_cost' => 'BIGINT UNSIGNED NOT NULL DEFAULT 0', 'ship_info' => 'TEXT NULL', 'tracking' => 'VARCHAR(120) NULL']);
         $add('order_items', ['delivered' => 'TEXT NULL']);
+    }
+    if ($v < 19) {
+        // v19: per-product SEO (title / description / keywords for Google) and hand-picked panel permissions for a «custom» role
+        $add = function (string $t, array $cols) {
+            $have = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", [$t]), 'COLUMN_NAME');
+            if (!$have) return;
+            foreach ($cols as $c => $def) if (!in_array($c, $have, true)) db()->exec("ALTER TABLE `$t` ADD COLUMN `$c` $def");
+        };
+        $add('products', ['seo_title' => 'VARCHAR(190) NULL', 'seo_desc' => 'VARCHAR(320) NULL', 'seo_keywords' => 'VARCHAR(300) NULL']);
+        $add('users', ['perms' => 'TEXT NULL']);
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

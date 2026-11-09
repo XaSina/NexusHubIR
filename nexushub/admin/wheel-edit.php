@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('wheels');
 
 $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
 $w = $id ? row('SELECT * FROM wheels WHERE id = ?', [$id]) : null;

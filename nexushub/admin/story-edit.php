@@ -3,7 +3,7 @@
  * ساخت / ویرایش استوری (چند اسلاید عکس یا ویدیو)
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('stories');
 
 $id = (int) ($_GET['id'] ?? 0);
 $st = $id ? row('SELECT * FROM stories WHERE id = ?', [$id]) : null;

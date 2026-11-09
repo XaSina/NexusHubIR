@@ -5,16 +5,56 @@
 
 function role_names(): array
 {
-    return ['admin' => 'مدیر کل', 'editor' => 'سردبیر', 'author' => 'نویسنده'];
+    return ['admin' => 'مدیر کل', 'editor' => 'سردبیر', 'author' => 'نویسنده', 'custom' => 'دسترسی دستی (انتخابی)'];
+}
+
+/** every section of the panel that can be ticked for a «custom» user, grouped for the checklist */
+function perm_groups(): array
+{
+    return [
+        '📰 محتوا' => [
+            'posts' => 'نوشتن و ویرایش خبرهای خودش', 'edit_others' => 'ویرایش و حذف خبرهای بقیه', 'categories' => 'دسته‌بندی‌های اخبار',
+            'comments' => 'تأیید و حذف نظرات', 'media' => 'کتابخانه رسانه و آپلود', 'stories' => 'استوری‌ها', 'pages' => 'صفحه‌ها (درباره ما، قوانین…)', 'messages' => 'پیام‌های تماس با ما',
+        ],
+        '🛍️ فروشگاه' => [
+            'orders' => 'سفارش‌ها (تأیید فیش، تحویل، رهگیری)', 'products' => 'محصولات و دسته‌های فروشگاه', 'tickets' => 'تیکت‌های پشتیبانی',
+            'reports' => 'گزارش فروش ماهانه', 'shop_settings' => 'تنظیمات فروشگاه (پرداخت، ارسال، سئو…)',
+        ],
+        '🎁 بازاریابی' => [
+            'promos' => 'کدهای تخفیف', 'raffles' => 'قرعه‌کشی‌ها', 'wheels' => 'گردونه‌های شانس', 'prizes' => 'جایزه‌ها و برنده‌ها', 'ads' => 'تبلیغات',
+        ],
+        '⚙️ سایت و مدیریت' => [
+            'members' => 'اعضای سایت', 'appearance' => 'ظاهر سایت و صفحه اصلی', 'settings' => 'تنظیمات کلی سایت', 'security' => 'امنیت و لینک ورود پنل',
+            'backup' => 'پشتیبان‌گیری و دانلود فایل‌ها', 'users' => 'کاربران پنل (فقط غیر از مدیر کل)',
+        ],
+    ];
+}
+
+function perm_list(): array
+{
+    return array_merge(...array_values(perm_groups()));
 }
 
 function role_caps(): array
 {
     return [
         'admin' => ['*'],
-        'editor' => ['posts', 'edit_others', 'categories', 'comments', 'media', 'pages', 'messages', 'shop'],
+        'editor' => ['posts', 'edit_others', 'categories', 'comments', 'media', 'pages', 'messages', 'orders', 'products', 'tickets', 'reports'],
         'author' => ['posts', 'media'],
     ];
+}
+
+/** what a panel user may do: the role's set, or the hand-picked list of a «custom» user */
+function user_caps(?array $u): array
+{
+    if (!$u) return [];
+    if (($u['role'] ?? '') === 'custom') {
+        $p = json_decode((string) ($u['perms'] ?? ''), true);
+        $caps = array_values(array_intersect(is_array($p) ? $p : [], array_keys(perm_list())));
+    } else $caps = role_caps()[$u['role']] ?? [];
+    // «shop» = can see any part of the shop (bell, nav group, month close)
+    if (array_intersect(['orders', 'products', 'tickets', 'reports', 'shop_settings'], $caps)) $caps[] = 'shop';
+    return $caps;
 }
 
 function current_user(): ?array
@@ -41,7 +81,7 @@ function can(string $cap): bool
 {
     $u = current_user();
     if (!$u) return false;
-    $caps = role_caps()[$u['role']] ?? [];
+    $caps = user_caps($u);
     return in_array('*', $caps, true) || in_array($cap, $caps, true);
 }
 

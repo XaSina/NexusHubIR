@@ -45,6 +45,14 @@ function save_settings(array $data): void
     settings_all(true);
 }
 
+/** readable text colour on top of a colour: dark ink on light colours (sky blue, white, yellow), white otherwise */
+function ink_on(string $hex, float $cut = 0.4): string
+{
+    $lin = function (int $v): float { $v /= 255; return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4; };
+    [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($hex)));
+    return (0.2126 * $lin($r) + 0.7152 * $lin($g) + 0.0722 * $lin($b)) > $cut ? '#14151a' : '#fff';
+}
+
 function hex_to_rgb(string $hex): string
 {
     $hex = ltrim($hex, '#');
@@ -93,11 +101,11 @@ function theme_css_vars(): string
         '--secondary' => $c['secondary'],
         '--secondary-rgb' => hex_to_rgb($c['secondary']),
         // text colour on primary-coloured buttons: dark on light themes (silver / white), white otherwise
-        '--on-primary' => (function ($h) { [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($h))); return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 165 ? '#14151a' : '#fff'; })((string) $c['primary']),
+        '--on-primary' => ink_on((string) $c['primary']),
         // background glows: a near-white secondary would show as a white halo, so they use the primary then
         '--glow2-rgb' => (function ($s, $p) { [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($s))); return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 170 ? hex_to_rgb($p) : hex_to_rgb($s); })((string) $c['secondary'], (string) $c['primary']),
         // text on primary→secondary gradients: dark when the gradient is light on average
-        '--on-grad' => (function ($a, $b2) { $l = fn($h) => (function ($v) { [$r, $g, $b] = array_map('intval', explode(',', $v)); return 0.299 * $r + 0.587 * $g + 0.114 * $b; })(hex_to_rgb($h)); return ($l($a) + $l($b2)) / 2 > 150 ? '#14151a' : '#fff'; })((string) $c['primary'], (string) $c['secondary']),
+        '--on-grad' => (ink_on((string) $c['primary']) !== '#fff' || ink_on((string) $c['secondary'], 0.55) !== '#fff') ? '#14151a' : '#fff',
         '--bg' => $c['bg'],
         '--bg-rgb' => hex_to_rgb($c['bg']),
         '--blur' => $blur . 'px',

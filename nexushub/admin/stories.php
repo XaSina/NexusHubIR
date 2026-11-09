@@ -3,7 +3,7 @@
  * مدیریت استوری‌ها
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('stories');
 
 function story_remaining(?string $exp): string
 {

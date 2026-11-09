@@ -75,7 +75,7 @@ $jsCfg['cart'] = $cartN;
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= e($title) ?></title>
 <meta name="description" content="<?= e(str_excerpt((string) $desc, 300)) ?>">
-<?php if (setting('meta_keywords')): ?><meta name="keywords" content="<?= e(setting('meta_keywords')) ?>"><?php endif; ?>
+<?php $kw = trim((string) ($meta['keywords'] ?? '')) ?: (string) setting('meta_keywords'); if ($kw !== ''): ?><meta name="keywords" content="<?= e($kw) ?>"><?php endif; ?>
 <?php if (!empty($meta['noindex'])): ?><meta name="robots" content="noindex,follow"><?php else: ?><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"><?php endif; ?>
 <meta name="theme-color" content="<?= e($colors['bg']) ?>">
 <?php if (setting('google_verify') !== ''): ?><meta name="google-site-verification" content="<?= e(setting('google_verify')) ?>"><?php endif; ?>
@@ -273,7 +273,7 @@ $jsCfg['cart'] = $cartN;
         </div>
         <?php endif; ?>
     </div>
-    <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('*'); ?>
+    <?php $tBadges = array_filter(array_map('trust_badge_html', trust_badges())); $tAdmin = can('appearance'); ?>
     <?php if ($tBadges || $tAdmin): ?>
     <div class="container f-trust glass"<?= $tAdmin ? ' data-admin' : '' ?>>
         <div class="f-trust-head"><span class="f-trust-ic"><?= icon('shield', 18) ?></span><b><?= e(setting('trust_title', 'نمادهای اعتماد')) ?></b></div>

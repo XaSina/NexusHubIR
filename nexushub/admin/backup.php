@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('backup');
 require_once NX_APP . '/projectdoc.php';
 
 if (is_post()) {

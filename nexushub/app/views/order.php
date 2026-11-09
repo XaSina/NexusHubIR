@@ -110,7 +110,7 @@ $steps = [
             <?php if (trim((string) $o['delivery']) !== ''): ?>
             <div class="delivery-box glass" data-reveal>
                 <h3><?= icon('box', 20) ?> اطلاعات تحویل سفارش</h3>
-                <pre dir="auto"><?= e($o['delivery']) ?></pre>
+                <div class="dlv-text" dir="auto"><?= delivery_html((string) $o['delivery']) ?></div>
                 <button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e($o['delivery']) ?>" data-copy-msg="کپی شد ✅"><?= icon('copy', 16) ?> کپی</button>
             </div>
             <?php endif; ?>
@@ -127,7 +127,7 @@ $steps = [
         <?php if ($st === 'approved' && trim((string) $o['delivery']) !== ''): ?>
             <div class="delivery-box glass" data-reveal>
                 <h3><?= icon('box', 20) ?> تحویل‌شده تا الان</h3>
-                <pre dir="auto"><?= e($o['delivery']) ?></pre>
+                <div class="dlv-text" dir="auto"><?= delivery_html((string) $o['delivery']) ?></div>
                 <button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e($o['delivery']) ?>" data-copy-msg="کپی شد ✅"><?= icon('copy', 16) ?> کپی</button>
             </div>
         <?php endif; ?>

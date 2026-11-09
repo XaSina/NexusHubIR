@@ -3,7 +3,7 @@
  * فروشگاه — تیکت‌های پشتیبانی
  */
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('tickets');
 
 $st = (string) ($_GET['status'] ?? 'open');
 $T = ticket_statuses();

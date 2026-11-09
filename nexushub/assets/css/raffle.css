@@ -99,7 +99,7 @@
 .rf-invite { display: flex; gap: 6px; margin-top: 8px; }
 .rf-invite input { flex: 1; min-width: 0; direction: ltr; font-size: .78rem; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--line); background: rgba(var(--text-rgb), .04); color: var(--text); }
 .rf-tickets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.rf-tickets span { padding: 4px 10px; border-radius: 10px; font-size: .8rem; font-weight: 800; background: rgba(var(--primary-rgb), .15); border: 1px dashed rgba(var(--primary-rgb), .6); direction: ltr; }
+.rf-tickets span { padding: 4px 10px; border-radius: 10px; font-size: .8rem; font-weight: 800; background: rgba(var(--primary-rgb), .15); border: 1px solid rgba(var(--primary-rgb), .6); direction: ltr; }
 .rf-price { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: rgba(var(--text-rgb), .04); border: 1px solid var(--line); }
 .rf-price b { font-size: 1.2rem; } .rf-price small { font-size: .74rem; color: var(--muted); }
 .rf-buy { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
@@ -107,10 +107,10 @@
 .rf-qty button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(var(--text-rgb), .05); color: var(--text); font-size: 1.3rem; cursor: pointer; }
 .rf-qty input { width: 90px; height: 44px; text-align: center; font: 800 1.2rem Vazirmatn, sans-serif; border-radius: 12px; border: 1px solid rgba(var(--primary-rgb), .5); background: transparent; color: var(--text); }
 .rf-total { text-align: center; font-size: .9rem; } .rf-total b { color: var(--primary); font-size: 1.15rem; }
-.rf-cardbox { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; border-radius: 14px; border: 1px dashed var(--line); text-align: center; }
+.rf-cardbox { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); text-align: center; }
 .rf-cardno { font-size: 1.15rem; letter-spacing: 1px; }
 .rf-file input { display: none; }
-.rf-file span { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; border: 1.5px dashed rgba(var(--primary-rgb), .5); cursor: pointer; font-size: .86rem; }
+.rf-file span { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; border: 1.5px solid rgba(var(--primary-rgb), .5); cursor: pointer; font-size: .86rem; }
 .rf-file.has span { border-style: solid; color: #3ddc84; border-color: rgba(61,220,132,.6); }
 .rf-req { display: flex; justify-content: space-between; font-size: .8rem; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .rf-how ul { margin: 0; padding-right: 18px; color: var(--muted); font-size: .86rem; line-height: 2; }
@@ -163,7 +163,7 @@ html.perf-safe .rf-replay::after { display: none; }
 /* finished raffles that only their winners may open */
 .rf-card-locked { cursor: default; opacity: .82; }
 .rf-card-locked:hover { translate: none; }
-.rf-lock { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: .8rem; color: var(--muted); background: rgba(var(--text-rgb), .05); border: 1px dashed rgba(var(--text-rgb), .2); align-self: flex-start; }
+.rf-lock { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: .8rem; color: var(--muted); background: rgba(var(--text-rgb), .05); border: 1px solid rgba(var(--text-rgb), .2); align-self: flex-start; }
 .rf-lockpage { max-width: 520px; margin: 30px auto; padding: 36px 26px; border-radius: calc(var(--radius) + 4px); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .rf-lockpage h1 { margin: 0; font-size: 1.4rem; }
 .rf-lockpage p { margin: 0; }
@@ -205,7 +205,7 @@ html.perf-safe .rf-replay::after { display: none; }
 .pzc-st { font-size: .7rem; font-weight: 800; padding: 3px 9px; border-radius: 10px; white-space: nowrap; }
 .pzc-st.st-warn { color: #ffb02e; background: rgba(255,176,46,.12); } .pzc-st.st-ok { color: #3ddc84; background: rgba(61,220,132,.12); }
 .pzc-st.st-info { color: #4fc3ff; background: rgba(79,195,255,.12); } .pzc-st.st-muted { color: var(--muted); background: rgba(var(--text-rgb), .06); }
-.pzc-disc { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 8px 10px; border-radius: 12px; font-size: .8rem; background: rgba(61,220,132,.08); border: 1px dashed rgba(61,220,132,.4); }
+.pzc-disc { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 8px 10px; border-radius: 12px; font-size: .8rem; background: rgba(61,220,132,.08); border: 1px solid rgba(61,220,132,.4); }
 .pzc-disc code { font-weight: 800; letter-spacing: .5px; font-size: .82rem; }
 .pzc-note { display: block; margin-top: 8px; color: var(--muted); font-size: .74rem; line-height: 1.8; }
 .pzc-claim { margin-top: 10px; } .pzc-claim small { color: var(--muted); font-size: .76rem; line-height: 1.8; display: block; }
@@ -265,3 +265,11 @@ html.perf-safe .rf-replay::after { display: none; }
 .rf-wheel-card .nxw { width: min(100%, 420px); margin-top: 12px; }
 .rf-act h3, .rf-how h3, .rf-people h3, .rf-desc h3 { font-size: .95rem; }
 .rf-how ul { font-size: .82rem; line-height: 1.9; }
+
+/* ===== light themes: darker status colours (generated) ===== */
+html.theme-light .rf-st-active { color: #15803d; }
+html.theme-light .rf-st-drawn { color: #a16207; }
+html.theme-light .rf-res .t b em { color: #15803d; }
+html.theme-light .rf-ok { color: #15803d; }
+html.theme-light .rf-file.has span { color: #15803d; }
+html.theme-light .pzc-st.st-warn { color: #a16207; }

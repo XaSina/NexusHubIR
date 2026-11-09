@@ -249,7 +249,7 @@ button { cursor: pointer; border: 0; background: none; }
 .au-avatar { position: relative; width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 1.6rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 0 30px rgba(var(--primary-rgb), .6); }
 .au-avatar::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--primary); border-left-color: rgba(var(--secondary-rgb), .7); animation: spin 2.2s linear infinite; }
 .au-hello h2 { font-size: 1.3rem; }
-.au-chip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px dashed rgba(255,255,255,.15); font-size: .9rem; }
+.au-chip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.15); font-size: .9rem; }
 .au-chip button { color: var(--primary); font-weight: 800; font-size: .82rem; }
 
 /* Strength */
@@ -915,7 +915,7 @@ button { cursor: pointer; border: 0; background: none; }
     transform: skewX(-18deg); animation: ctaShine 5s cubic-bezier(.65,0,.35,1) 1.6s infinite; }
 @keyframes ctaShine { 0%, 62% { transform: skewX(-18deg) translateX(0); } 100% { transform: skewX(-18deg) translateX(480%); } }
 .cta-label { position: relative; font-size: 1.06rem; font-weight: 900; color: #0b0b12; white-space: nowrap; transition: transform .45s cubic-bezier(.22,1,.36,1); }
-.cta-ic { position: relative; width: 44px; height: 44px; flex-shrink: 0; border-radius: 13px; overflow: hidden; display: grid; place-items: center; color: #fff;
+.cta-ic { position: relative; width: 44px; height: 44px; flex-shrink: 0; border-radius: 13px; overflow: hidden; display: grid; place-items: center; color: var(--on-primary, #fff);
     background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, var(--secondary)));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 6px 14px -6px rgba(var(--primary-rgb), .9); transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
 .cta-arrows { position: relative; width: 20px; height: 20px; }
@@ -939,7 +939,7 @@ button { cursor: pointer; border: 0; background: none; }
 .au-start.cta .cta-arrows svg:last-child { transform: translateX(170%); }
 .au-start.cta:hover .cta-arrows svg:first-child, .au-start.cta.fired .cta-arrows svg:first-child { transform: translateX(-170%); }
 .au-start.cta:hover .cta-arrows svg:last-child, .au-start.cta.fired .cta-arrows svg:last-child { transform: none; }
-.au-start.cta .cta-arrows svg { box-sizing: border-box; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; z-index: auto; color: #fff; }
+.au-start.cta .cta-arrows svg { box-sizing: border-box; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; z-index: auto; color: currentColor; }
 /* the waves stay below the button on short screens */
 .au-hz { height: 30vh; min-height: 170px; max-height: 340px; }
 @media (hover: none), (max-width: 900px) { .au-hz { height: 24vh; min-height: 150px; } }

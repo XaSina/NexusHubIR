@@ -46,7 +46,7 @@ $u = current_user();
         </div>
         <div class="row-flex">
             <a class="abtn abtn-primary" href="post-edit.php"><?= adm_icon('plus', 18) ?> انتشار خبر جدید</a>
-            <?php if (can('*')): ?><a class="abtn abtn-ghost" href="ad-edit.php"><?= adm_icon('ads', 18) ?> تبلیغ جدید</a><?php endif; ?>
+            <?php if (can('ads')): ?><a class="abtn abtn-ghost" href="ad-edit.php"><?= adm_icon('ads', 18) ?> تبلیغ جدید</a><?php endif; ?>
         </div>
     </div>
 </div>
@@ -108,20 +108,20 @@ $u = current_user();
             <div class="list-item"><div class="li-body"><b>تبلیغات فعال</b></div><span class="badge b-hot"><?= fa_num((string) $adsActive) ?></span></div>
             <div class="list-item"><div class="li-body"><b>CTR تبلیغات</b></div><span class="ctr"><?= fa_num($adImps ? number_format($adClicks / $adImps * 100, 2) : '0') ?>٪</span></div>
         </div>
-        <div class="card">
+        <?php if (can('members')): ?><div class="card">
             <div class="card-head"><h3><?= icon('user', 20) ?> اعضای جدید</h3><a class="abtn abtn-ghost abtn-sm" href="members.php">همه (<?= fa_num((string) $memTotal) ?>)</a></div>
             <?php if (!$newMembers): ?><p class="muted small">هنوز کسی ثبت‌نام نکرده.</p><?php endif; ?>
             <?php foreach ($newMembers as $nm): ?>
                 <a class="list-item" href="member-view.php?id=<?= (int) $nm['id'] ?>"><span class="avatar avatar-letter" style="width:34px;height:34px"><?= e(mb_substr($nm['first_name'], 0, 1)) ?></span><div class="li-body"><b><?= e(member_full_name($nm)) ?></b><p><span class="ltr"><?= e($nm['member_code']) ?></span> · <?= jago($nm['created_at']) ?></p></div></a>
             <?php endforeach; ?>
-        </div>
-        <div class="card">
+        </div><?php endif; ?>
+        <?php if (can('comments')): ?><div class="card">
             <div class="card-head"><h3><?= icon('comment', 20) ?> آخرین نظرات</h3><a class="abtn abtn-ghost abtn-sm" href="comments.php">همه</a></div>
             <?php if (!$comments): ?><p class="muted small">نظری ثبت نشده.</p><?php endif; ?>
             <?php foreach ($comments as $c): ?>
                 <div class="list-item"><span class="avatar avatar-letter" style="width:34px;height:34px"><?= e(mb_substr($c['name'], 0, 1)) ?></span><div class="li-body"><b><?= e($c['name']) ?> <?= status_badge($c['status']) ?></b><p><?= e($c['body']) ?></p><small class="muted"><?= e(mb_strimwidth((string) $c['post_title'], 0, 40, '…')) ?></small></div></div>
             <?php endforeach; ?>
-        </div>
+        </div><?php endif; ?>
     </div>
 </div>
 <script>

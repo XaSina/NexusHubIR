@@ -81,7 +81,7 @@
 @keyframes nxwShine { to { background-position: 200% 0; } }
 .nxw-winner .w-prize { margin-top: 6px; padding: 6px 12px; display: inline-block; border-radius: 12px; font-weight: 800; color: #ffd23f; background: rgba(255,210,63,.1); border: 1px solid rgba(255,210,63,.35); }
 .nxw-winner .w-code { margin-top: 10px; display: flex; gap: 6px; justify-content: center; direction: ltr; }
-.nxw-winner .w-code code { padding: 6px 12px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; background: rgba(255,255,255,.08); border: 1px dashed rgba(255,255,255,.35); color: #fff; }
+.nxw-winner .w-code code { padding: 6px 12px; border-radius: 10px; font-weight: 800; letter-spacing: 1px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.35); color: #fff; }
 /* full-screen confetti */
 .nxw-party { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 99990; pointer-events: none; }
 .theme-light .nxw-rim::before { background: linear-gradient(160deg, #2a2e4a, #0d0f1c 55%, #23263f); }

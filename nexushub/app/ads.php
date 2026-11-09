@@ -117,8 +117,7 @@ function top_strips(): string
 /** readable text colour on top of an accent (dark on light accents, white on dark ones) */
 function nxp_on(string $hex): string
 {
-    [$r, $g, $b] = array_map('intval', explode(',', hex_to_rgb($hex)));
-    return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 165 ? '#0b0d12' : '#fff';
+    return ink_on($hex) === '#fff' ? '#fff' : '#0b0d12';
 }
 
 /** the moving layers a theme draws behind an ad (embers, aurora, scan line …) */

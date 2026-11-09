@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('*');
+require_cap('ads');
 
 $id = (int) ($_GET['id'] ?? 0);
 $a = $id ? row('SELECT * FROM ads WHERE id = ?', [$id]) : null;

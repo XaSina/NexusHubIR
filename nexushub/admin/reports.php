@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/inc/boot.php';
-require_cap('shop');
+require_cap('reports');
 
 $doExport = false;
 if (is_post()) {
