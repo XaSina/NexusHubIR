@@ -124,6 +124,31 @@ $steps = [
         <?php else: ?>
             <div class="state-card glass"><h2><?= e($S[$st]['name'] ?? $st) ?></h2></div>
         <?php endif; ?>
+        <?php if ($st === 'approved' && trim((string) $o['delivery']) !== ''): ?>
+            <div class="delivery-box glass" data-reveal>
+                <h3><?= icon('box', 20) ?> تحویل‌شده تا الان</h3>
+                <pre dir="auto"><?= e($o['delivery']) ?></pre>
+                <button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e($o['delivery']) ?>" data-copy-msg="کپی شد ✅"><?= icon('copy', 16) ?> کپی</button>
+            </div>
+        <?php endif; ?>
+        <?php $si = json_decode((string) ($o['ship_info'] ?? ''), true); if (is_array($si) && $si): ?>
+            <div class="ship-box glass" data-reveal>
+                <h3>🚚 ارسال مرسوله</h3>
+                <div class="ship-rows">
+                    <span><small>گیرنده</small><b><?= e((string) ($si['name'] ?? '')) ?></b></span>
+                    <span><small>تماس</small><b dir="ltr"><?= e(fa_num((string) ($si['phone'] ?? ''))) ?></b></span>
+                    <span class="ship-wide"><small>آدرس</small><b><?= e(trim(($si['province'] ?? '') . '، ' . ($si['city'] ?? '') . '، ' . ($si['address'] ?? ''), '، ')) ?><?= !empty($si['postcode']) ? ' — کد پستی ' . e(fa_num((string) $si['postcode'])) : '' ?></b></span>
+                    <span><small>روش ارسال</small><b><?= e((string) ($si['method_name'] ?? '')) ?><?= !empty($si['days']) ? ' · ' . e($si['days']) : '' ?></b></span>
+                </div>
+                <?php if (trim((string) ($o['tracking'] ?? '')) !== ''): $tl = ship_track_link((string) $o['tracking']); ?>
+                    <div class="ship-track"><span>📦 کد رهگیری مرسوله</span><code dir="ltr"><?= e($o['tracking']) ?></code>
+                        <button type="button" class="btn btn-ghost btn-sm" data-copy="<?= e($o['tracking']) ?>" data-copy-msg="کد رهگیری کپی شد ✅"><?= icon('copy', 15) ?> کپی</button>
+                        <?php if ($tl): ?><a class="btn btn-primary btn-sm" href="<?= e($tl) ?>" target="_blank" rel="noopener">پیگیری مرسوله ↗</a><?php endif; ?></div>
+                <?php elseif (in_array($st, ['approved', 'completed'], true)): ?>
+                    <p class="muted small">بعد از تحویل به پست، کد رهگیری همین‌جا میاد و برات اعلان می‌فرستیم.</p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
         </div>
 
         <aside class="cart-sum glass" data-reveal>
@@ -138,6 +163,7 @@ $steps = [
                 </div>
             <?php endforeach; ?>
             <?php if ((int) ($o['discount'] ?? 0) > 0): ?><div class="cs-row cs-disc"><span>🏷️ تخفیف جایزه</span><b>− <?= money((int) $o['discount']) ?> <small>تومان</small></b></div><?php endif; ?>
+            <?php if ((int) ($o['ship_cost'] ?? 0) > 0): ?><div class="cs-row"><span>🚚 هزینه‌ی ارسال</span><b><?= money((int) $o['ship_cost']) ?> <small>تومان</small></b></div><?php endif; ?>
             <div class="cs-row cs-total"><span>جمع کل</span><b><?= money((int) $o['total']) ?> <small>تومان</small></b></div>
             <div class="cs-row"><span>تاریخ ثبت</span><b><?= jdate('j F Y — H:i', $o['created_at']) ?></b></div>
             <?php if ($o['receipt_ref']): ?><div class="cs-row"><span>شماره پیگیری</span><b dir="ltr"><?= e(fa_num($o['receipt_ref'])) ?></b></div><?php endif; ?>

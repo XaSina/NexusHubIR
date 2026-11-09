@@ -128,6 +128,7 @@ $jsCfg['cart'] = $cartN;
     <?php if ($bgEffect === 'nebula'): ?><div class="bg-nebula"><i></i><i></i><i></i></div><?php endif; ?>
     <?php if ($bgEffect === 'hex'): ?><div class="bg-hex"></div><?php endif; ?>
     <?php if ($bgEffect === 'aurora'): ?><div class="bg-aurora"></div><?php endif; ?>
+    <?php if (in_array($bgEffect, ['mesh', 'circuit', 'dots', 'beams', 'topo', 'spotlight'], true)): ?><div class="bg-x bg-<?= e($bgEffect) ?>"><i></i><i></i><i></i></div><?php endif; ?>
     <?php if (in_array($bgEffect, ['particles', 'matrix', 'stars', 'waves', 'bokeh', 'fireflies', 'embers', 'rain'], true)): ?><canvas id="bgCanvas"></canvas><?php endif; ?>
     <div class="bg-vignette"></div>
 </div>

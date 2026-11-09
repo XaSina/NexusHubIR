@@ -41,6 +41,12 @@ function default_settings(): array
         'link_prizes_drawer' => '1',
         'bookmarks_on' => '1',
         'sales_closed_upto' => '',
+        // shipping (physical products)
+        'ship_methods' => json_encode([['name' => 'پست پیشتاز', 'cost' => 70000, 'days' => '۳ تا ۵ روز کاری'], ['name' => 'تیپاکس', 'cost' => 120000, 'days' => '۱ تا ۲ روز کاری'], ['name' => 'پیک (فقط شهر خودمون)', 'cost' => 90000, 'days' => 'همان روز']], JSON_UNESCAPED_UNICODE),
+        'ship_free_over' => '0',
+        'ship_track_url' => 'https://tracking.post.ir/?id={code}',
+        'ship_note' => '',
+        'ship_postcode_req' => '1',
         'export_db' => '1',
         'export_safe' => '1',
         'export_uploads' => '0',
@@ -225,6 +231,7 @@ function default_settings(): array
         'shop_banner_image' => '',
         'shop_banner_badge' => 'جدید',
         'shop_support_on' => '1',
+        'auth_skin' => 'nebula',            // nebula | glass | neon | aurora | gold | paper — the sign-in box, fields and buttons
         'auth_logo_style' => 'particles',   // particles | laser | glass (صفحه ورود)
         'shop_tickers_on' => '1',
         'shop_tickers' => 'usd,gold18,btc,eth',
@@ -237,15 +244,47 @@ function default_settings(): array
 function product_types(): array
 {
     $tgUser = ['key' => 'tg_username', 'label' => 'آیدی تلگرام گیرنده', 'type' => 'username', 'required' => 1, 'placeholder' => '@username'];
+    // delivery: manual (you deliver by hand) · ship (sent by post, the address is taken) · codes (a code from the pool goes out by itself) · link (a link / text goes out by itself)
     return [
-        'premium' => ['name' => 'پریمیوم تلگرام', 'icon' => '⭐', 'color' => '#a855f7', 'fields' => [$tgUser]],
-        'stars' => ['name' => 'استارز تلگرام', 'icon' => '🌟', 'color' => '#ffc53d', 'fields' => [$tgUser]],
-        'ton' => ['name' => 'تون (TON)', 'icon' => '💎', 'color' => '#0098ea', 'fields' => [['key' => 'wallet', 'label' => 'آدرس کیف پول TON', 'type' => 'text', 'required' => 1, 'placeholder' => 'UQ... یا EQ...']]],
-        'giftcard' => ['name' => 'گیفت کارت', 'icon' => '🎁', 'color' => '#ff3d8b', 'fields' => []],
-        'game' => ['name' => 'بازی / آیتم گیم', 'icon' => '🎮', 'color' => '#ff1f3d', 'fields' => [['key' => 'account', 'label' => 'ایمیل یا آیدی اکانت', 'type' => 'text', 'required' => 1, 'placeholder' => '']]],
-        'account' => ['name' => 'اکانت / اشتراک', 'icon' => '🔑', 'color' => '#1de9b6', 'fields' => []],
-        'service' => ['name' => 'خدمات', 'icon' => '🛠️', 'color' => '#3dbbff', 'fields' => []],
-        'other' => ['name' => 'سایر', 'icon' => '🛍️', 'color' => '#ff7a3d', 'fields' => []],
+        'premium' => ['name' => 'پریمیوم تلگرام', 'icon' => '⭐', 'color' => '#a855f7', 'fields' => [$tgUser], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'فعال‌سازی روی آیدی مشتری'],
+        'stars' => ['name' => 'استارز تلگرام', 'icon' => '🌟', 'color' => '#ffc53d', 'fields' => [$tgUser], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'هر تعداد، با قیمت لحظه‌ای'],
+        'ton' => ['name' => 'تون (TON)', 'icon' => '💎', 'color' => '#0098ea', 'fields' => [['key' => 'wallet', 'label' => 'آدرس کیف پول TON', 'type' => 'text', 'required' => 1, 'placeholder' => 'UQ... یا EQ...']], 'delivery' => 'manual', 'unit' => 'TON', 'desc' => 'واریز به کیف پول مشتری'],
+        'giftcard' => ['name' => 'گیفت کارت', 'icon' => '🎁', 'color' => '#ff3d8b', 'fields' => [], 'delivery' => 'codes', 'unit' => 'عدد', 'desc' => 'کد خودکار بعد از تایید پرداخت'],
+        'license' => ['name' => 'لایسنس / کد فعال‌سازی', 'icon' => '🔑', 'color' => '#1de9b6', 'fields' => [], 'delivery' => 'codes', 'unit' => 'عدد', 'desc' => 'ویندوز، آنتی‌ویروس، نرم‌افزار…'],
+        'game' => ['name' => 'بازی / آیتم گیم', 'icon' => '🎮', 'color' => '#ff1f3d', 'fields' => [['key' => 'account', 'label' => 'ایمیل یا آیدی اکانت', 'type' => 'text', 'required' => 1, 'placeholder' => '']], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'سی‌پی، یوسی، جم، اکانت…'],
+        'account' => ['name' => 'اکانت / اشتراک', 'icon' => '🪪', 'color' => '#22c55e', 'fields' => [], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'اسپاتیفای، نتفلیکس، VPN…'],
+        'digital' => ['name' => 'فایل دانلودی', 'icon' => '📥', 'color' => '#6366f1', 'fields' => [], 'delivery' => 'link', 'unit' => 'عدد', 'desc' => 'کتاب، قالب، پریست، موزیک…'],
+        'course' => ['name' => 'دوره آموزشی', 'icon' => '🎓', 'color' => '#0ea5e9', 'fields' => [], 'delivery' => 'link', 'unit' => 'عدد', 'desc' => 'لینک دسترسی بعد از خرید'],
+        'physical' => ['name' => 'کالای فیزیکی', 'icon' => '📦', 'color' => '#f97316', 'fields' => [], 'delivery' => 'ship', 'unit' => 'عدد', 'desc' => 'ارسال پستی با آدرس مشتری'],
+        'fashion' => ['name' => 'پوشاک و کفش', 'icon' => '👕', 'color' => '#ec4899', 'fields' => [['key' => 'size', 'label' => 'سایز', 'type' => 'select', 'required' => 1, 'options' => 'S,M,L,XL,XXL']], 'delivery' => 'ship', 'unit' => 'عدد', 'desc' => 'با انتخاب سایز و رنگ'],
+        'food' => ['name' => 'خوراکی', 'icon' => '🍯', 'color' => '#eab308', 'fields' => [], 'delivery' => 'ship', 'unit' => 'کیلو', 'desc' => 'عسل، زعفران، خشکبار…'],
+        'livestock' => ['name' => 'دام و طیور', 'icon' => '🐄', 'color' => '#84cc16', 'fields' => [], 'delivery' => 'ship', 'unit' => 'رأس', 'desc' => 'گاو، گوسفند، مرغ…'],
+        'ticket' => ['name' => 'بلیت / رزرو', 'icon' => '🎟️', 'color' => '#14b8a6', 'fields' => [['key' => 'date', 'label' => 'تاریخ مورد نظر', 'type' => 'text', 'required' => 1, 'placeholder' => 'مثلاً ۱۴۰۵/۰۹/۲۰']], 'delivery' => 'manual', 'unit' => 'نفر', 'desc' => 'رزرو نوبت، بلیت رویداد…'],
+        'service' => ['name' => 'خدمات', 'icon' => '🛠️', 'color' => '#3dbbff', 'fields' => [['key' => 'details', 'label' => 'توضیح کار', 'type' => 'textarea', 'required' => 0, 'placeholder' => '']], 'delivery' => 'manual', 'unit' => 'ساعت', 'desc' => 'طراحی، تعمیر، مشاوره…'],
+        'other' => ['name' => 'سایر', 'icon' => '🛍️', 'color' => '#ff7a3d', 'fields' => [], 'delivery' => 'manual', 'unit' => 'عدد', 'desc' => 'هر چیز دیگه‌ای'],
+    ];
+}
+
+/** how an order item reaches the buyer */
+function auth_skins(): array
+{
+    return [
+        'nebula' => ['🌌 سحابی (پیش‌فرض)', 'شیشه‌ی تیره با حاشیه‌ی رنگ تم', 'linear-gradient(160deg,#2a0d16,#0b0910)', 'linear-gradient(135deg,var(--primary),var(--secondary))'],
+        'glass' => ['🧊 شیشه‌ای یخی', 'شیشه‌ی مات روشن با دکمه‌ی سفید', 'linear-gradient(160deg,rgba(255,255,255,.22),rgba(255,255,255,.06))', 'linear-gradient(180deg,#fff,#e6e9f2)'],
+        'neon' => ['⚡ سایبر نئونی', 'گوشه‌های بریده، خط زیر فیلدها، دکمه‌ی نئونی', '#05060b', 'transparent'],
+        'aurora' => ['🌈 شفق قطبی', 'رنگ‌های شفق متحرک و فیلدهای گرد', 'linear-gradient(160deg,#0e2a44,#2a1450)', 'linear-gradient(110deg,#22d3ee,#a78bfa,#f472b6)'],
+        'gold' => ['👑 لوکس طلایی', 'مشکی و طلایی، مثل کارت VIP', 'linear-gradient(165deg,#1b1407,#050505)', 'linear-gradient(135deg,#f7e08e,#d4af37,#a67c00)'],
+        'paper' => ['📄 روشن مینیمال', 'کارت سفید و تمیز روی پس‌زمینه‌ی تیره', '#fbfbfd', 'linear-gradient(135deg,var(--primary),var(--secondary))'],
+    ];
+}
+
+function delivery_types(): array
+{
+    return [
+        'manual' => ['🧑‍💼', 'تحویل دستی', 'بعد از تایید پرداخت، خودت از صفحه‌ی سفارش تحویل می‌دی (متن، کد یا پیام)'],
+        'ship' => ['🚚', 'ارسال پستی', 'کالای فیزیکی؛ آدرس و روش ارسال از مشتری گرفته می‌شه و کد رهگیری براش می‌ره'],
+        'codes' => ['⚡', 'کد خودکار', 'کدها رو یکی‌یکی وارد کن؛ بعد از تایید پرداخت، هر خریدار کد خودش رو خودکار می‌گیره'],
+        'link' => ['🔗', 'لینک / فایل خودکار', 'بعد از تایید پرداخت، لینک دانلود یا متنی که می‌نویسی خودکار به خریدار نشون داده می‌شه'],
     ];
 }
 
@@ -292,6 +331,15 @@ function theme_presets(): array
         'aurora' => $t('Aurora Borealis', 'شفق قطبی سبز و بنفش', '#00ffa3', '#7c4dff', '#020a10', 'pro', 'aurora'),
         'pearl' => $t('Pearl Light', 'روشن و مرواریدی', '#6b4dff', '#00b3ff', '#f4f5fb', 'pro', 'none', null, true),
         'sakura' => $t('Sakura Light', 'روشن صورتی شکوفه‌ای', '#e8467c', '#ff9e7a', '#fff4f7', 'pro', 'bokeh', null, true),
+        // ---------- استودیویی
+        'midnight' => $t('Midnight Pro', 'سرمه‌ای و بنفش آرام — حرفه‌ای', '#5b8cff', '#9b6bff', '#050816', 'studio', 'mesh'),
+        'mono' => $t('Mono Noir', 'سیاه و سفید خالص — مینیمال', '#ffffff', '#a1a1aa', '#000000', 'studio', 'dots'),
+        'mint' => $t('Mint Fresh', 'نعنایی و لیمویی تازه', '#2dd4bf', '#a3e635', '#03110f', 'studio', 'topo'),
+        'coral' => $t('Coral Reef', 'مرجانی و هلویی گرم', '#ff6b6b', '#ffb86b', '#12070a', 'studio', 'beams'),
+        'electric' => $t('Electric Violet', 'بنفش برقی و فیروزه‌ای', '#8b5cf6', '#22d3ee', '#07041a', 'studio', 'circuit'),
+        'espresso' => $t('Espresso', 'قهوه‌ای و کرم گرم — کافه‌ای', '#c08457', '#f2c48d', '#0d0805', 'studio', 'spotlight'),
+        'cloud' => $t('Cloud Light', 'روشن آبی و آسمانی', '#2563eb', '#06b6d4', '#f3f6fc', 'studio', 'dots', null, true),
+        'sand' => $t('Desert Sand', 'روشن کرم و نارنجی خاکی', '#c2410c', '#d97706', '#faf6ef', 'studio', 'topo', null, true),
         // ---------- مناسبتی
         'nowruz' => $t('نوروز', 'بهار، سبزه و شکوفه 🌸', '#2ecc71', '#ff6fa5', '#04120a', 'occasion', 'bokeh', 'petals'),
         'sizdah' => $t('سیزده‌بدر', 'طبیعت و سبزه 🌿', '#7bd34a', '#ffd23d', '#061205', 'occasion', 'fireflies', 'leaves_green'),
@@ -312,7 +360,7 @@ function theme_presets(): array
 
 function theme_groups(): array
 {
-    return ['base' => '🎨 تم‌های اصلی', 'pro' => '💎 تم‌های حرفه‌ای', 'occasion' => '🎉 تم‌های مناسبتی'];
+    return ['base' => '🎨 تم‌های اصلی', 'pro' => '💎 تم‌های حرفه‌ای', 'studio' => '🖤 تم‌های استودیویی (جدید)', 'occasion' => '🎉 تم‌های مناسبتی'];
 }
 
 function card_styles(): array
@@ -333,6 +381,9 @@ function bg_effects(): array
         'bokeh' => ['بوکه', 'دایره‌های نورانی محو'], 'fireflies' => ['کرم شب‌تاب', 'نقطه‌های درخشان شناور'],
         'embers' => ['جرقه و آتش', 'جرقه‌های بالارونده'], 'rain' => ['باران نئونی', 'خطوط باران سایبرپانکی'],
         'nebula' => ['سحابی', 'ابرهای رنگی کهکشانی'], 'hex' => ['شش‌ضلعی', 'شبکه‌ی کندوی تپنده'],
+        'mesh' => ['گرادیان مش', 'رنگ‌های نرم که آروم در هم می‌رن'], 'circuit' => ['مدار الکترونیکی', 'خطوط مدار با پالس نوری'],
+        'dots' => ['شبکه‌ی نقطه‌ای', 'نقطه‌های ریز با نور ملایم'], 'beams' => ['پرتوهای نور', 'نورهای مورب که آروم رد می‌شن'],
+        'topo' => ['خطوط توپوگرافی', 'خطوط نقشه‌ای موج‌دار'], 'spotlight' => ['نورافکن', 'دو نورافکن صحنه‌ای چرخان'],
         'none' => ['ساده', 'فقط هاله‌های رنگی'],
     ];
 }

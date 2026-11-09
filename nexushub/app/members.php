@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 17;   // v17: one ad can show in several places
+const NX_DB_VERSION = 18;   // v18: universal shop (shipping, auto delivery, gallery, specs, units)
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
@@ -81,6 +81,19 @@ function nx_migrate(): void
         $ac = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ads'"), 'COLUMN_NAME');
         if ($ac && !in_array('places', $ac, true)) db()->exec("ALTER TABLE `ads` ADD COLUMN `places` VARCHAR(500) NULL AFTER `position`");
         q("UPDATE ads SET places = position WHERE places IS NULL OR places = ''");
+    }
+    if ($v < 18) {
+        // v18: sell anything — units & limits, delivery type (manual / post / codes / link), gallery, specs, shipping on orders
+        $add = function (string $t, array $cols) {
+            $have = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", [$t]), 'COLUMN_NAME');
+            if (!$have) return;
+            foreach ($cols as $c => $def) if (!in_array($c, $have, true)) db()->exec("ALTER TABLE `$t` ADD COLUMN `$c` $def");
+        };
+        $add('products', ['unit' => 'VARCHAR(30) NULL', 'min_qty' => 'INT UNSIGNED NOT NULL DEFAULT 1', 'max_qty' => 'INT UNSIGNED NOT NULL DEFAULT 0',
+            'delivery' => "VARCHAR(10) NOT NULL DEFAULT 'manual'", 'delivery_data' => 'MEDIUMTEXT NULL', 'ship_extra' => 'BIGINT UNSIGNED NOT NULL DEFAULT 0',
+            'gallery' => 'TEXT NULL', 'specs' => 'TEXT NULL']);
+        $add('orders', ['ship_cost' => 'BIGINT UNSIGNED NOT NULL DEFAULT 0', 'ship_info' => 'TEXT NULL', 'tracking' => 'VARCHAR(120) NULL']);
+        $add('order_items', ['delivered' => 'TEXT NULL']);
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

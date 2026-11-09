@@ -329,8 +329,12 @@ function cart_count(): int
 /** Add a line; same product+package+answers merges into one line. Returns error message or ''. */
 function cart_add(array $p, int $vid, ?float $amount, int $qty, array $fields): string
 {
-    $qty = max(1, min(20, $qty));
+    [$qMin, $qMax] = product_qty_limits($p);
+    if ($vid && $qty < $qMin) return 'حداقل سفارش ' . fa_num((string) $qMin) . ' ' . product_unit($p) . ' است.';
+    if ($vid && $qty > $qMax) return 'حداکثر ' . fa_num((string) $qMax) . ' ' . product_unit($p) . ' در هر سفارش.';
+    $qty = max(1, $qty);
     if ($p['status'] !== 'active') return 'این محصول در حال حاضر قابل سفارش نیست.';
+    if (product_delivery($p) === 'codes' && count(product_codes($p)) < $qty) return count(product_codes($p)) ? 'فقط ' . fa_num((string) count(product_codes($p))) . ' عدد موجوده.' : 'موجودی این محصول تموم شده.';
     if ($vid) {
         $v = row('SELECT * FROM product_variants WHERE id = ? AND product_id = ? AND is_active = 1', [$vid, $p['id']]);
         if (!$v) return 'بسته انتخابی معتبر نیست.';
@@ -348,7 +352,7 @@ function cart_add(array $p, int $vid, ?float $amount, int $qty, array $fields): 
     }
     $key = substr(sha1($p['id'] . '|' . $vid . '|' . (string) $amount . '|' . json_encode($fields, JSON_UNESCAPED_UNICODE)), 0, 12);
     $cart = cart_raw();
-    if (isset($cart[$key]) && $vid) $cart[$key]['qty'] = min(20, $cart[$key]['qty'] + $qty);
+    if (isset($cart[$key]) && $vid) $cart[$key]['qty'] = min($qMax, $cart[$key]['qty'] + $qty);
     else $cart[$key] = ['pid' => (int) $p['id'], 'vid' => $vid, 'amount' => $amount, 'qty' => $qty, 'fields' => $fields, 'at' => time()];
     if (count($cart) > 30) return 'سبد خرید پر است.';
     $_SESSION['cart'] = $cart;
@@ -377,6 +381,9 @@ function cart_lines(): array
             if (!$c['on']) $line['error'] = 'خرید مقدار دلخواه برای این محصول غیرفعال شد.';
         }
         if ($line['unit'] === null && !$line['error']) $line['error'] = 'قیمت لحظه‌ای در دسترس نیست.';
+        [$qMin, $qMax] = product_qty_limits($p);
+        if (!$line['error'] && $l['vid'] && ($line['qty'] < $qMin || $line['qty'] > $qMax)) $line['error'] = 'تعداد باید بین ' . fa_num((string) $qMin) . ' و ' . fa_num((string) $qMax) . ' ' . product_unit($p) . ' باشه.';
+        if (!$line['error'] && product_delivery($p) === 'codes' && count(product_codes($p)) < $line['qty']) $line['error'] = count(product_codes($p)) ? 'فقط ' . fa_num((string) count(product_codes($p))) . ' عدد موجوده.' : 'موجودی تموم شد.';
         $line['total'] = $line['unit'] === null ? null : $line['unit'] * $line['qty'];
         $out[] = $line;
     }
@@ -394,10 +401,17 @@ function new_code(string $table, string $prefix): string
 }
 
 /** Create an order from the cart. Returns [order|null, error]. */
-function order_create(array $member, string $note = '', $pick = 0): array
+function order_create(array $member, string $note = '', $pick = 0, ?array $ship = null): array
 {
     $lines = cart_lines();
     if (!$lines) return [null, 'سبد خرید شما خالی است.'];
+    $shipCost = 0; $shipInfo = null;
+    if (cart_needs_ship($lines)) {
+        if (!$ship) return [null, 'آدرس و روش ارسال رو کامل کن.'];
+        $q = ship_quote($lines, (int) ($ship['method'] ?? 0));
+        $shipCost = $q['cost'];
+        $shipInfo = json_encode($ship + ['method_name' => $q['method']['name'], 'days' => $q['method']['days'], 'free' => $q['free'] ? 1 : 0], JSON_UNESCAPED_UNICODE);
+    }
     foreach ($lines as $l) if ($l['error']) return [null, $l['title'] . ': ' . $l['error']];
     $total = array_sum(array_column($lines, 'total'));
     if ($total <= 0) return [null, 'مبلغ سفارش معتبر نیست.'];
@@ -420,7 +434,8 @@ function order_create(array $member, string $note = '', $pick = 0): array
     try {
         $code = new_code('orders', 'NX');
         $oid = insert('orders', [
-            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total - $discount, 'discount' => $discount, 'coupon_id' => $coupon ? (int) $coupon['c']['id'] : null, 'promo_id' => $promo ? (int) $promo['id'] : null,
+            'code' => $code, 'member_id' => (int) $member['id'], 'status' => 'pending_payment', 'total' => $total - $discount + $shipCost, 'discount' => $discount,
+            'ship_cost' => $shipCost, 'ship_info' => $shipInfo, 'coupon_id' => $coupon ? (int) $coupon['c']['id'] : null, 'promo_id' => $promo ? (int) $promo['id'] : null,
             'items_count' => array_sum(array_column($lines, 'qty')), 'customer_note' => mb_substr(trim($note), 0, 1000) ?: null,
             'rates' => json_encode(['usd' => $r['usd'], 'ton' => $r['ton'], 'margin' => (float) setting('shop_margin', '0')]),
             'ip' => client_ip(), 'expires_at' => date('Y-m-d H:i:s', time() + 60 * max(10, (int) setting('shop_pay_minutes', '60'))),
@@ -509,6 +524,13 @@ function order_set_status(array $o, string $status, array $extra = []): array
         foreach (order_items((int) $o['id']) as $it) if ($it['product_id']) q('UPDATE products SET sales = sales + ? WHERE id = ?', [$it['qty'], $it['product_id']]);
     }
     $o = row('SELECT * FROM orders WHERE id = ?', [(int) $o['id']]);
+    // payment approved: codes and links go out by themselves; nothing left by hand = the order is done
+    if (in_array($status, ['approved', 'completed'], true) && !in_array($prev, ['approved', 'completed'], true)) {
+        $all = false;
+        try { $all = order_auto_deliver($o); } catch (Throwable $e) { nx_log_error($e); }
+        $o = row('SELECT * FROM orders WHERE id = ?', [(int) $o['id']]);
+        if ($all && $status === 'approved') return order_set_status($o, 'completed');
+    }
     order_notify($o);
     return $o;
 }
@@ -693,4 +715,140 @@ function after_login_url(bool $consume = true): string
 function shop_menu_item(): array
 {
     return ['title' => (string) setting('shop_menu_label', 'فروشگاه'), 'url' => '/shop', 'shop' => true];
+}
+
+/* =========================================================================
+   Universal products: units, limits, delivery type, gallery, specs, shipping
+   ========================================================================= */
+
+function product_delivery(array $p): string
+{
+    $d = (string) ($p['delivery'] ?? 'manual');
+    return isset(delivery_types()[$d]) ? $d : 'manual';
+}
+
+function product_unit(array $p): string { return trim((string) ($p['unit'] ?? '')) ?: 'عدد'; }
+
+/** [min, max] quantity per order line */
+function product_qty_limits(array $p): array
+{
+    $min = max(1, (int) ($p['min_qty'] ?? 1));
+    $max = (int) ($p['max_qty'] ?? 0);
+    if ($max <= 0) $max = 99;
+    return [$min, max($min, $max)];
+}
+
+function product_gallery(array $p): array
+{
+    $g = json_decode((string) ($p['gallery'] ?? ''), true);
+    return is_array($g) ? array_values(array_slice(array_filter(array_map('strval', $g), fn($x) => trim($x) !== ''), 0, 12)) : [];
+}
+
+/** [[label, value], ...] */
+function product_specs(array $p): array
+{
+    $s = json_decode((string) ($p['specs'] ?? ''), true);
+    $out = [];
+    if (is_array($s)) foreach ($s as $r) if (is_array($r) && trim((string) ($r[0] ?? '')) !== '' && trim((string) ($r[1] ?? '')) !== '') $out[] = [trim((string) $r[0]), trim((string) $r[1])];
+    return array_slice($out, 0, 40);
+}
+
+/** codes waiting in the pool (one per line) */
+function product_codes(array $p): array
+{
+    return array_values(array_filter(array_map('trim', preg_split('~\R~u', (string) ($p['delivery_data'] ?? ''))), fn($x) => $x !== ''));
+}
+
+function ship_methods(): array
+{
+    $l = json_decode((string) setting('ship_methods'), true);
+    $out = [];
+    if (is_array($l)) foreach ($l as $m) {
+        if (!is_array($m) || trim((string) ($m['name'] ?? '')) === '') continue;
+        $out[] = ['name' => trim((string) $m['name']), 'cost' => max(0, (int) ($m['cost'] ?? 0)), 'days' => trim((string) ($m['days'] ?? ''))];
+    }
+    return $out ?: [['name' => 'ارسال پستی', 'cost' => 0, 'days' => '']];
+}
+
+function cart_needs_ship(array $lines): bool
+{
+    foreach ($lines as $l) if (product_delivery($l['product']) === 'ship') return true;
+    return false;
+}
+
+/** shipping cost of a cart with the chosen method: ['cost', 'base', 'extra', 'free', 'method'] */
+function ship_quote(array $lines, int $method): array
+{
+    $ms = ship_methods();
+    $m = $ms[$method] ?? $ms[0];
+    $sub = array_sum(array_map(fn($l) => (int) $l['total'], $lines));
+    $freeOver = (int) setting('ship_free_over', '0');
+    $free = $freeOver > 0 && $sub >= $freeOver;
+    $extra = 0;
+    foreach ($lines as $l) if (product_delivery($l['product']) === 'ship') $extra += (int) ($l['product']['ship_extra'] ?? 0) * max(1, (int) $l['qty']);
+    $base = $free ? 0 : $m['cost'];
+    return ['cost' => $base + $extra, 'base' => $base, 'extra' => $extra, 'free' => $free, 'method' => $m];
+}
+
+/** checks the address form; returns [info, errors] */
+function ship_validate(array $in): array
+{
+    $g = fn($k, $max = 190) => mb_substr(trim(preg_replace('~\s+~u', ' ', (string) ($in[$k] ?? ''))), 0, $max);
+    $info = ['name' => $g('name', 80), 'phone' => en_num($g('phone', 20)), 'province' => $g('province', 60), 'city' => $g('city', 60),
+        'address' => $g('address', 400), 'postcode' => en_num($g('postcode', 20)), 'method' => max(0, (int) ($in['method'] ?? 0))];
+    $err = [];
+    if (mb_strlen($info['name']) < 3) $err['name'] = 'نام گیرنده رو بنویس.';
+    if (!preg_match('~^0?9\d{9}$|^0\d{10}$~', preg_replace('~\D~', '', $info['phone']))) $err['phone'] = 'شماره تماس گیرنده درست نیست.';
+    if ($info['province'] === '') $err['province'] = 'استان رو بنویس.';
+    if ($info['city'] === '') $err['city'] = 'شهر رو بنویس.';
+    if (mb_strlen($info['address']) < 10) $err['address'] = 'آدرس کامل رو بنویس (خیابان، کوچه، پلاک، واحد).';
+    if (setting_on('ship_postcode_req') && !preg_match('~^\d{10}$~', preg_replace('~\D~', '', $info['postcode']))) $err['postcode'] = 'کد پستی ۱۰ رقمیه.';
+    return [$info, $err];
+}
+
+/** the address of this member's last shipped order, to fill the form again */
+function ship_last_info(int $memberId): array
+{
+    $j = val("SELECT ship_info FROM orders WHERE member_id = ? AND ship_info IS NOT NULL AND ship_info <> '' ORDER BY id DESC LIMIT 1", [$memberId]);
+    $a = json_decode((string) $j, true);
+    return is_array($a) ? $a : [];
+}
+
+function ship_track_link(string $code): string
+{
+    $u = (string) setting('ship_track_url');
+    return $u !== '' && $code !== '' ? str_replace('{code}', rawurlencode($code), $u) : '';
+}
+
+/** after the payment is approved: codes and links go out by themselves. Returns true when nothing is left to deliver by hand. */
+function order_auto_deliver(array $o): bool
+{
+    $lines = []; $manual = false; $short = [];
+    db()->beginTransaction();
+    try {
+        foreach (order_items((int) $o['id']) as $it) {
+            if (trim((string) ($it['delivered'] ?? '')) !== '') continue;
+            $p = $it['product_id'] ? row('SELECT * FROM products WHERE id = ? FOR UPDATE', [(int) $it['product_id']]) : null;
+            $mode = $p ? product_delivery($p) : 'manual';
+            $name = $it['title'] . ($it['variant_title'] ? ' — ' . $it['variant_title'] : '');
+            if ($mode === 'codes') {
+                $codes = product_codes($p); $n = max(1, (int) $it['qty']);
+                if (count($codes) < $n) { $short[] = $it['title']; $manual = true; continue; }
+                update('products', ['delivery_data' => implode("\n", array_slice($codes, $n))], (int) $p['id']);
+                $take = array_slice($codes, 0, $n);
+                update('order_items', ['delivered' => implode("\n", $take)], (int) $it['id']);
+                $lines[] = '🎁 ' . $name . ":\n" . implode("\n", $take);
+            } elseif ($mode === 'link' && trim((string) $p['delivery_data']) !== '') {
+                $txt = trim((string) $p['delivery_data']);
+                update('order_items', ['delivered' => $txt], (int) $it['id']);
+                $lines[] = '🔗 ' . $name . ":\n" . $txt;
+            } else $manual = true;          // by hand or by post: a person finishes it
+        }
+        db()->commit();
+    } catch (Throwable $e) { db()->rollBack(); throw $e; }
+    if ($lines) update('orders', ['delivery' => trim(trim((string) $o['delivery']) . "\n\n" . implode("\n\n", $lines))], (int) $o['id']);
+    if ($short) {
+        try { notify('admin', 'codes_short', (int) $o['id'], '⚠️', 'کد کافی نبود — سفارش ' . $o['code'], 'برای «' . implode('، ', $short) . '» کد کم اومد؛ دستی تحویل بده و کد جدید اضافه کن.', 'admin/order-view.php?id=' . $o['id'], 'warn'); } catch (Throwable $e) { }
+    }
+    return $lines && !$manual;
 }

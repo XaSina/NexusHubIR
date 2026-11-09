@@ -330,16 +330,22 @@ switch ($seg[0] ?? '') {
         if (!$member) { $_SESSION['after_login'] = 'checkout'; redirect('auth'); }
         $lines = cart_lines();
         if (!$lines) redirect('cart');
-        $err = '';
+        $err = ''; $shipErr = [];
+        $needShip = cart_needs_ship($lines);
+        $last = $needShip ? ship_last_info((int) $member['id']) : [];
+        $shipIn = $needShip ? ($last + ['name' => member_full_name($member), 'phone' => $member['phone'], 'province' => '', 'city' => '', 'address' => '', 'postcode' => '', 'method' => 0]) : [];
         if (is_post()) {
+            $ship = null;
+            if ($needShip) { $shipIn = array_merge($shipIn, (array) ($_POST['ship'] ?? [])); [$ship, $shipErr] = ship_validate($shipIn); }
             if (!csrf_valid()) $err = 'نشست منقضی شده؛ دوباره تلاش کنید.';
+            elseif ($shipErr) $err = 'آدرس ارسال کامل نیست: ' . reset($shipErr);
             elseif (empty($_POST['agree'])) $err = 'برای ثبت سفارش، قوانین فروشگاه را بپذیرید.';
             else {
-                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''), (string) ($_POST['coupon'] ?? '0'));
+                [$order, $err] = order_create($member, (string) ($_POST['note'] ?? ''), (string) ($_POST['coupon'] ?? '0'), $ship);
                 if ($order) redirect('order/' . $order['code'] . '?new=1');
             }
         }
-        page_out('checkout', ['lines' => $lines, 'member' => $member, 'err' => $err, 'coupons' => coupons_for_cart($member, $lines), 'bodyClass' => 'page-shop page-checkout'], ['title' => 'تکمیل خرید | ' . setting('shop_title'), 'noindex' => true]);
+        page_out('checkout', ['lines' => $lines, 'member' => $member, 'err' => $err, 'coupons' => coupons_for_cart($member, $lines), 'needShip' => $needShip, 'shipIn' => $shipIn, 'shipErr' => $shipErr, 'bodyClass' => 'page-shop page-checkout'], ['title' => 'تکمیل خرید | ' . setting('shop_title'), 'noindex' => true]);
         break;
 
     case 'order':

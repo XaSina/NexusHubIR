@@ -45,6 +45,14 @@ if (is_post()) {
             update('orders', ['delivery' => $delivery ?: null], (int) $o['id']);
             flash('اطلاعات تحویل به‌روز شد.');
             break;
+        case 'tracking':
+            $tr = mb_substr(trim(en_num((string) ($_POST['tracking'] ?? ''))), 0, 120);
+            update('orders', ['tracking' => $tr ?: null], (int) $o['id']);
+            if ($tr !== '' && $tr !== (string) $o['tracking']) {
+                notify('m:' . $o['member_id'], 'order_ship', (int) $o['id'], '📦', 'مرسوله‌ی سفارش ' . $o['code'] . ' ارسال شد', 'کد رهگیری: ' . $tr, 'order/' . $o['code'], 'success');
+                flash('کد رهگیری ثبت شد و به مشتری اعلان رفت 📦');
+            } else flash('ذخیره شد.');
+            break;
     }
     redirect('admin/order-view.php?id=' . $o['id']);
 }
@@ -134,6 +142,7 @@ adm_head('سفارش ' . $o['code'], 'orders');
                     <?php foreach ($fs as [$lab, $val]): ?>
                         <div class="ov-field"><span><?= e($lab) ?>:</span> <b dir="auto"><?= e($val) ?></b> <button type="button" class="adm-ib xs" data-copy="<?= e($val) ?>" title="کپی"><?= icon('copy', 13) ?></button></div>
                     <?php endforeach; ?>
+                    <?php if (trim((string) ($it['delivered'] ?? '')) !== ''): ?><div class="ov-field ov-auto"><span>⚡ خودکار تحویل شد:</span> <b dir="auto"><?= nl2br(e((string) $it['delivered'])) ?></b></div><?php endif; ?>
                 </div>
                 <b class="ov-p"><?= money((int) $it['total']) ?></b>
             </div>
@@ -141,6 +150,25 @@ adm_head('سفارش ' . $o['code'], 'orders');
             <?php if ($o['customer_note']): ?><div class="alert alert-info small mt"><b>توضیح مشتری:</b> <?= nl2br(e($o['customer_note'])) ?></div><?php endif; ?>
             <?php if ($rates): ?><p class="muted small mt">نرخ‌ها هنگام ثبت: دلار <?= !empty($rates['usd']) ? money((int) $rates['usd']) . ' ت' : '—' ?> · TON <?= !empty($rates['ton']) ? '$' . number_format((float) $rates['ton'], 3) : '—' ?> · سود <?= fa_num((string) ($rates['margin'] ?? 0)) ?>٪</p><?php endif; ?>
         </div>
+
+        <?php $si = json_decode((string) ($o['ship_info'] ?? ''), true); if (is_array($si) && $si):
+            $addr = trim(($si['province'] ?? '') . '، ' . ($si['city'] ?? '') . '، ' . ($si['address'] ?? ''), '، ');
+            $label = ($si['name'] ?? '') . "\n" . ($si['phone'] ?? '') . "\n" . $addr . (!empty($si['postcode']) ? "\nکد پستی: " . $si['postcode'] : ''); ?>
+        <div class="card mb ov-ship">
+            <div class="card-head"><h3>🚚 ارسال مرسوله</h3><button type="button" class="abtn abtn-ghost abtn-sm" data-copy="<?= e($label) ?>" data-copy-msg="مشخصات گیرنده کپی شد ✅"><?= icon('copy', 15) ?> کپی برای برچسب پستی</button></div>
+            <div class="ov-kv col">
+                <span>گیرنده: <b><?= e((string) ($si['name'] ?? '')) ?></b></span>
+                <span>تماس: <b class="ltr"><?= e(fa_num((string) ($si['phone'] ?? ''))) ?></b></span>
+                <span>آدرس: <b><?= e($addr) ?></b></span>
+                <?php if (!empty($si['postcode'])): ?><span>کد پستی: <b class="ltr"><?= e(fa_num((string) $si['postcode'])) ?></b></span><?php endif; ?>
+                <span>روش: <b><?= e((string) ($si['method_name'] ?? '')) ?></b> · هزینه: <b><?= (int) $o['ship_cost'] ? money((int) $o['ship_cost']) . ' ت' : 'رایگان' ?></b></span>
+            </div>
+            <form method="post" class="ov-track"><?= csrf_field() ?><input type="hidden" name="act" value="tracking">
+                <label class="af"><span class="af-label">📦 کد رهگیری مرسوله</span><input name="tracking" dir="ltr" value="<?= e((string) ($o['tracking'] ?? '')) ?>" placeholder="مثلاً 1234567890"></label>
+                <button class="abtn abtn-primary" type="submit" data-busy="در حال ثبت…" data-done="ثبت شد">ثبت و اطلاع به مشتری</button>
+            </form>
+        </div>
+        <?php endif; ?>
 
         <?php if ($o['status'] === 'completed'): ?>
         <form class="card mb" method="post"><?= csrf_field() ?><input type="hidden" name="act" value="delivery">

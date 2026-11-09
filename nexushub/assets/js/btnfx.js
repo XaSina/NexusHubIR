@@ -8,7 +8,7 @@
     if (window.NXBtn) return;
 
     var BUSY = [
-        [/بازگشت|برگشت|^قبلی/, 'در حال بازگشت'], [/ذخیره/, 'در حال ذخیره'], [/پاسخ/, 'در حال ارسال پاسخ'], [/ارسال|بفرست/, 'در حال ارسال'],
+        [/ذخیره/, 'در حال ذخیره'], [/بازگشت|برگشت|^قبلی/, 'در حال بازگشت'], [/پاسخ/, 'در حال ارسال پاسخ'], [/ارسال|بفرست/, 'در حال ارسال'],
         [/حذف|پاک کن|پاکسازی/, 'در حال حذف'], [/خروج/, 'در حال خروج'], [/ثبت‌?نام/, 'در حال ثبت‌نام'], [/ورود|وارد شو/, 'در حال ورود'],
         [/دانلود|خروجی|پشتیبان/, 'در حال آماده‌سازی فایل'], [/جستجو|پیدا کن/, 'در حال جستجو'], [/خرید سریع|تسویه|پرداخت|تکمیل خرید/, 'در حال رفتن به پرداخت'],
         [/تایید|تأیید/, 'در حال تأیید'], [/^رد |رد کن|رد شود/, 'در حال رد کردن'], [/آپلود|بارگذاری/, 'در حال بارگذاری'],
@@ -39,7 +39,7 @@
     function busyText(el) {
         if (el.dataset.busy) return el.dataset.busy;
         if (el.hasAttribute('data-download')) return 'در حال آماده‌سازی فایل…';
-        var t = pick(BUSY, txt(el), 'لطفاً صبر کن'); return t === null ? null : t + '…';
+        var t = pick(BUSY, txt(el), null); return t === null ? null : t + '…';   // no action word (open, pick, …) = no message
     }
     function doneText(el) { return el.dataset.done || (el.hasAttribute('data-download') ? 'دانلود شروع شد' : pick(DONE, txt(el), 'انجام شد')); }
 
@@ -54,21 +54,22 @@
         return txt(el).length >= 2;
     }
 
+    // the layer uses its own tag names, so no page style for «button span / button i» can reach it
     var css = '' +
         '.fb-on{color:transparent!important;pointer-events:none}' +
-        '.fb-on>*:not(.fb-ov){visibility:hidden}' +
-        '.fb-ov{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;white-space:nowrap;overflow:hidden;' +
-        'font:inherit;font-weight:800;color:var(--fb-c,currentColor);visibility:visible!important;border-radius:inherit;animation:fbIn .2s ease both}' +
-        '.fb-ov b{font-weight:inherit;overflow:hidden;text-overflow:ellipsis}' +
-        '.fb-sp{flex-shrink:0;width:1.05em;height:1.05em;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;opacity:.85;animation:fbSpin .7s linear infinite}' +
-        '.fb-ok{flex-shrink:0;width:1.25em;height:1.25em;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:.8em;background:currentColor;animation:fbPop .4s cubic-bezier(.34,1.56,.64,1) both}' +
-        '.fb-ok::after{content:"✓";color:var(--fb-bg,#111);font-weight:900}' +
+        '.fb-on>*:not(nx-fb){visibility:hidden!important}' +
+        'nx-fb{all:initial;position:absolute!important;inset:0!important;z-index:5!important;display:flex!important;align-items:center;justify-content:center;gap:8px;' +
+        'padding:0 10px!important;margin:0!important;box-sizing:border-box;white-space:nowrap;overflow:hidden;font-family:inherit;font-size:inherit;font-weight:800;line-height:1.2;' +
+        'color:var(--fb-c,currentColor);direction:rtl;visibility:visible!important;border-radius:inherit;background:none!important;animation:fbIn .2s ease both}' +
+        'nx-ft{all:initial;font:inherit;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}' +
+        'nx-fs{all:initial;flex-shrink:0;display:block;width:1.05em;height:1.05em;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;opacity:.85;box-sizing:border-box;animation:fbSpin .7s linear infinite}' +
+        'nx-fk{all:initial;flex-shrink:0;display:grid;place-items:center;width:1.25em;height:1.25em;border-radius:50%;font-family:inherit;font-size:.8em;font-weight:900;color:var(--fb-bg,#111);background:var(--fb-c,currentColor);animation:fbPop .4s cubic-bezier(.34,1.56,.64,1) both}' +
         '.fb-done{box-shadow:0 0 0 3px rgba(61,220,132,.28)!important}' +
         '.fb-bad{animation:fbShake .4s}' +
-        '.fb-tiny .fb-ov b{display:none}' +
+        '.fb-tiny nx-fb nx-ft{display:none}' +
         '@keyframes fbSpin{to{transform:rotate(360deg)}}@keyframes fbIn{from{opacity:0;transform:translateY(4px)}}' +
         '@keyframes fbPop{from{transform:scale(.3);opacity:0}}@keyframes fbShake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}' +
-        '@media (prefers-reduced-motion:reduce){.fb-sp{animation-duration:1.6s}.fb-ov,.fb-ok,.fb-bad{animation:none}}';
+        '@media (prefers-reduced-motion:reduce){nx-fs{animation-duration:1.6s}nx-fb,nx-fk,.fb-bad{animation:none}}';
     var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
 
     function bgOf(el) {
@@ -78,20 +79,28 @@
         return '#111';
     }
     function layer(el, html) {
-        var ov = el.querySelector(':scope > .fb-ov');
-        if (!ov) { ov = document.createElement('span'); ov.className = 'fb-ov'; ov.setAttribute('aria-hidden', 'true'); el.appendChild(ov); }
+        var ov = el.querySelector(':scope > nx-fb');
+        if (!ov) { ov = document.createElement('nx-fb'); ov.setAttribute('aria-hidden', 'true'); el.appendChild(ov); }
         ov.innerHTML = html;
         return ov;
     }
     // a short button grows a little so its message fits; if it still can't, only the icon shows
     function fit(el, ov, w0) {
         el.classList.remove('fb-tiny');
-        var t = ov.querySelector('b'); if (!t) return;
+        var t = ov.querySelector('nx-ft'); if (!t) return;
         var extra = t.scrollWidth - t.clientWidth;
         if (extra <= 1) return;
         var need = w0 + extra + 6;
         var max = Math.min(Math.max(w0 * 1.7, w0 + 70), 260);
-        if (need <= max) el.style.minWidth = Math.ceil(need) + 'px'; else el.classList.add('fb-tiny');
+        if (w0 < 64 || need > max) { el.classList.add('fb-tiny'); return; }
+        // grow only if nothing around the button moves; otherwise just the icon
+        var p = el.parentElement, near = p ? [].slice.call(p.children).filter(function (x) { return x !== el; }) : [];
+        if (p && p.parentElement) near = near.concat([].slice.call(p.parentElement.children).filter(function (x) { return x !== p; }));
+        var before = near.map(function (x) { var r = x.getBoundingClientRect(); return r.top + ',' + r.left; });
+        var keep = el.style.minWidth;
+        el.style.minWidth = Math.floor(need) + 'px';
+        var moved = near.some(function (x, i) { var r = x.getBoundingClientRect(); return r.top + ',' + r.left !== before[i]; });
+        if (moved) { el.style.minWidth = keep; el.classList.add('fb-tiny'); }
     }
     function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -101,12 +110,11 @@
         var cs = getComputedStyle(el), r = el.getBoundingClientRect();
         el.style.setProperty('--fb-c', cs.color);
         el.style.setProperty('--fb-bg', bgOf(el));
-        el.dataset.fbMinw = el.style.minWidth || '';
+        el.dataset.fbMinw = el.style.minWidth || '';   // only changed if the message needs more room (see fit)
         if (cs.position === 'static') { el.style.position = 'relative'; el.dataset.fbPos = '1'; }
-        el.style.minWidth = Math.ceil(r.width) + 'px';
         el.classList.add('fb-on', 'fb-busy');
         el.setAttribute('aria-busy', 'true');
-        var ov = layer(el, '<i class="fb-sp"></i><b>' + esc(text) + '</b>');
+        var ov = layer(el, '<nx-fs></nx-fs><nx-ft>' + esc(text) + '</nx-ft>');
         fit(el, ov, r.width);
         clearTimeout(el._fbT); el._fbT = setTimeout(function () { reset(el); }, 20000);   // never stuck
         return true;
@@ -114,7 +122,7 @@
     function done(el, text) {
         if (!el || !el.classList.contains('fb-on')) return;
         el.classList.remove('fb-busy'); el.classList.add('fb-done');
-        var ov = layer(el, '<i class="fb-ok"></i><b>' + esc(text || doneText(el)) + '</b>');
+        var ov = layer(el, '<nx-fk>✓</nx-fk><nx-ft>' + esc(text || doneText(el)) + '</nx-ft>');
         fit(el, ov, el.getBoundingClientRect().width);
         clearTimeout(el._fbT); el._fbT = setTimeout(function () { reset(el); }, 1500);
     }
@@ -127,13 +135,13 @@
     function reset(el) {
         if (!el) return;
         clearTimeout(el._fbT);
-        var ov = el.querySelector(':scope > .fb-ov'); if (ov) ov.remove();
+        var ov = el.querySelector(':scope > nx-fb'); if (ov) ov.remove();
         el.classList.remove('fb-on', 'fb-busy', 'fb-done', 'fb-tiny');
         el.removeAttribute('aria-busy');
         if (el.dataset.fbMinw !== undefined) { el.style.minWidth = el.dataset.fbMinw; delete el.dataset.fbMinw; }
         if (el.dataset.fbPos) { el.style.position = ''; delete el.dataset.fbPos; }
     }
-    window.NXBtn = { busy: busy, done: done, fail: fail, reset: reset };
+    window.NXBtn = { busy: busy, done: done, fail: fail, reset: reset, eligible: eligible };
 
     // 1) a form really leaving the page (not stopped by the page's own code)
     document.addEventListener('submit', function (e) {

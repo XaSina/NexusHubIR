@@ -3,7 +3,7 @@ require __DIR__ . '/inc/boot.php';
 require_cap('*');
 
 $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_blur', 'glass_opacity', 'radius', 'font_scale', 'card_style', 'hero_style', 'bg_effect',
-    'auth_logo_style', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
+    'auth_logo_style', 'auth_skin', 'anim_preloader', 'anim_cursor', 'anim_tilt', 'anim_reveal', 'anim_glitch', 'anim_noise', 'show_stories', 'show_ticker', 'ticker_label', 'ticker_speed',
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'footer_brand_on', 'footer_brand_social', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
     'latest_mode', 'latest_count', 'latest_hours', 'latest_since',
@@ -27,6 +27,7 @@ if (is_post()) {
     if (isset($save['card_style']) && !isset(card_styles()[$save['card_style']])) $save['card_style'] = 'glass';
     if (isset($save['bg_effect']) && !isset(bg_effects()[$save['bg_effect']])) $save['bg_effect'] = 'particles';
     if (isset($save['theme_decor']) && !in_array($save['theme_decor'], array_merge(['auto', 'off'], array_keys(decor_types())), true)) $save['theme_decor'] = 'auto';
+    if (isset($save['auth_skin']) && !isset(auth_skins()[$save['auth_skin']])) $save['auth_skin'] = 'nebula';
     if (isset($save['auth_logo_style']) && !in_array($save['auth_logo_style'], ['particles', 'laser', 'glass'], true)) $save['auth_logo_style'] = 'particles';
     if (isset($save['decor_density'])) $save['decor_density'] = (string) max(6, min(40, (int) $save['decor_density']));
     foreach (['social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'announce_link'] as $lk) if (isset($save[$lk])) $save[$lk] = safe_link($save[$lk]);
@@ -173,9 +174,9 @@ adm_head('ظاهر سایت', ($_GET['tab'] ?? '') === 'layout' ? 'home' : 'appe
     <div class="card mt">
         <div class="card-head"><h3>🖼️ سبک بخش ویژه (بالای صفحه اصلی)</h3></div>
         <div class="opt-grid">
-            <?php foreach (['magazine' => ['مجله‌ای', '۱ خبر بزرگ + ۴ خبر کوچک'], 'slider' => ['اسلایدر', 'اسلایدر تمام عرض با افکت Ken Burns'], 'grid' => ['سه‌تایی', '۳ کارت بزرگ کنار هم']] as $k => [$n, $d]): ?>
+            <?php foreach (['magazine' => ['مجله‌ای', '۱ خبر بزرگ + ۴ خبر کوچک'], 'slider' => ['اسلایدر', 'اسلایدر تمام عرض با افکت Ken Burns'], 'grid' => ['سه‌تایی', '۳ کارت بزرگ کنار هم'], 'spotlight' => ['اسپات‌لایت', '۱ خبر تمام‌عرض + ۳ خبر زیرش'], 'mosaic' => ['موزاییکی', '۵ خبر در چیدمان نامتقارن مجله‌ای'], 'list' => ['لیست خبری', '۶ خبر فشرده در دو ستون، مثل خبرگزاری']] as $k => [$n, $d]): ?>
                 <label class="opt"><input type="radio" name="hero_style" value="<?= $k ?>" <?= $s['hero_style'] === $k ? 'checked' : '' ?>>
-                    <span class="layout-thumb lt-<?= $k ?>"><?= str_repeat('<span></span>', $k === 'magazine' ? 5 : ($k === 'grid' ? 3 : 1)) ?></span><b><?= $n ?></b><small><?= $d ?></small></label>
+                    <span class="layout-thumb lt-<?= $k ?>"><?= str_repeat('<span></span>', ['magazine' => 5, 'grid' => 3, 'spotlight' => 4, 'mosaic' => 5, 'list' => 6][$k] ?? 1) ?></span><b><?= $n ?></b><small><?= $d ?></small></label>
             <?php endforeach; ?>
         </div>
     </div>
@@ -287,7 +288,18 @@ adm_head('ظاهر سایت', ($_GET['tab'] ?? '') === 'layout' ? 'home' : 'appe
 </div>
 
 <div data-pane="anim">
-        <div class="card">
+        <div class="card mb">
+        <div class="card-head"><h3>🎨 تم کادر ورود و ثبت‌نام</h3><span class="muted small">شکل کادر، فیلدها، دکمه‌ها و کلید «ورود | ثبت‌نام» صفحه‌ی ورود سایت</span></div>
+        <div class="opt-grid as-grid">
+            <?php $ask = (string) ($s['auth_skin'] ?? 'nebula'); foreach (auth_skins() as $k => [$n, $d, $bg, $btn]): ?>
+                <label class="opt as-opt"><input type="radio" name="auth_skin" value="<?= e($k) ?>" <?= $ask === $k ? 'checked' : '' ?>>
+                    <span class="as-prev as-<?= e($k) ?>" style="--as-bg:<?= e($bg) ?>;--as-btn:<?= e($btn) ?>"><i class="as-f"></i><i class="as-f"></i><i class="as-b"></i></span>
+                    <b><?= e($n) ?></b><small><?= e($d) ?></small></label>
+            <?php endforeach; ?>
+        </div>
+        <p class="muted small mt">بعد از ذخیره، صفحه‌ی <a href="<?= e(url('auth')) ?>" target="_blank">ورود سایت ↗</a> رو باز کن و ببین.</p>
+    </div>
+<div class="card">
         <div class="card-head"><h3>🔐 لوگوی صفحه ورود</h3><span class="muted small">انیمیشن لوگوی NX در صفحه ورود و ثبت‌نام</span></div>
         <div class="opt-grid">
             <?php $als = (string) ($s['auth_logo_style'] ?? 'particles'); foreach (['particles' => ['✨ ذرات نورانی', 'ذرات قرمز از فضا جمع می‌شوند و NX را می‌سازند'], 'laser' => ['🔦 لیزر نورانی', 'دور NX با نور قرمز کشیده می‌شود، بعد پر و نورانی می‌شود'], 'glass' => ['💎 شیشه‌ای سه‌بعدی', 'NX شیشه‌ای قرمز که با موس یا کج کردن گوشی می‌چرخد']] as $k => [$n, $d]): ?>

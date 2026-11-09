@@ -14,7 +14,8 @@ $preset = (string) ($_GET['type'] ?? 'premium');
 if (!isset($types[$preset])) $preset = 'other';
 $p = $p ?: ['id' => 0, 'category_id' => null, 'type' => $preset, 'title' => '', 'slug' => '', 'subtitle' => '', 'description' => '', 'image' => '',
     'icon' => $types[$preset]['icon'], 'color' => $types[$preset]['color'], 'badge' => '', 'delivery_note' => '', 'fields' => json_encode($types[$preset]['fields'], JSON_UNESCAPED_UNICODE),
-    'custom_amount' => '', 'margin' => null, 'is_featured' => 0, 'status' => 'active', 'sort_order' => 0, 'sales' => 0];
+    'custom_amount' => '', 'margin' => null, 'is_featured' => 0, 'status' => 'active', 'sort_order' => 0, 'sales' => 0,
+    'unit' => $types[$preset]['unit'] ?? 'عدد', 'min_qty' => 1, 'max_qty' => 0, 'delivery' => $types[$preset]['delivery'] ?? 'manual', 'delivery_data' => '', 'ship_extra' => 0, 'gallery' => '', 'specs' => ''];
 $variants = $p['id'] ? product_variants((int) $p['id'], false) : [];
 $errors = [];
 
@@ -30,7 +31,24 @@ if (is_post()) {
         'status' => in_array($_POST['status'] ?? '', ['active', 'draft', 'soldout'], true) ? $_POST['status'] : 'draft',
         'is_featured' => !empty($_POST['is_featured']) ? 1 : 0, 'sort_order' => (int) ($_POST['sort_order'] ?? 0),
         'margin' => $num($_POST['margin'] ?? ''),
+        'unit' => $in('unit', 30) ?: 'عدد',
+        'min_qty' => max(1, (int) en_num((string) ($_POST['min_qty'] ?? '1'))),
+        'max_qty' => max(0, (int) en_num((string) ($_POST['max_qty'] ?? '0'))),
+        'delivery' => isset(delivery_types()[$_POST['delivery'] ?? '']) ? $_POST['delivery'] : 'manual',
+        'ship_extra' => max(0, (int) ($num($_POST['ship_extra'] ?? '') ?? 0)),
     ];
+    if ($d['max_qty'] && $d['max_qty'] < $d['min_qty']) $d['max_qty'] = $d['min_qty'];
+    // codes: one per line, duplicates removed · link: free text
+    $dd = (string) ($_POST['delivery_data_' . $d['delivery']] ?? '');
+    if ($d['delivery'] === 'codes') $dd = implode("\n", array_values(array_unique(array_filter(array_map('trim', preg_split('~\R~u', $dd)), fn($x) => $x !== ''))));
+    $d['delivery_data'] = in_array($d['delivery'], ['codes', 'link'], true) ? mb_substr(trim($dd), 0, 200000) : null;
+    if ($d['delivery'] === 'link' && trim((string) $d['delivery_data']) === '') $errors[] = 'برای «لینک / فایل خودکار»، لینک یا متن تحویل رو بنویس.';
+    // gallery (paths) and specs (label / value)
+    $gal = json_decode((string) ($_POST['gallery'] ?? '[]'), true);
+    $d['gallery'] = json_encode(array_values(array_slice(array_filter(array_map(fn($x) => mb_substr(trim((string) $x), 0, 255), is_array($gal) ? $gal : []), fn($x) => $x !== '' && !preg_match('~^(javascript|data):~i', $x)), 0, 12)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $sp = [];
+    foreach ((array) ($_POST['spec'] ?? []) as $r) { $k = mb_substr(trim((string) ($r['k'] ?? '')), 0, 80); $v = mb_substr(trim((string) ($r['v'] ?? '')), 0, 300); if ($k !== '' && $v !== '') $sp[] = [$k, $v]; }
+    $d['specs'] = json_encode(array_slice($sp, 0, 40), JSON_UNESCAPED_UNICODE);
     if ($d['title'] === '') $errors[] = 'نام محصول را وارد کنید.';
     $slug = slugify($in('slug') ?: $d['title']);
     $d['slug'] = unique_slug('products', $slug ?: 'product', (int) $p['id']);
@@ -104,6 +122,11 @@ $cats = rows('SELECT * FROM shop_categories ORDER BY sort_order, id');
 $r = shop_rates();
 $pt = price_type_names();
 $fmt = fn($n) => $n === null || $n === '' ? '' : rtrim(rtrim(number_format((float) $n, 6, '.', ''), '0'), '.');
+$dtypes = delivery_types();
+$dmode = product_delivery($p);
+$gallery = product_gallery($p);
+$specs = product_specs($p);
+$codesN = count(product_codes($p));
 $ftypes = ['text' => 'متن', 'username' => 'آیدی تلگرام (@username)', 'email' => 'ایمیل', 'tel' => 'شماره تماس', 'number' => 'عدد', 'textarea' => 'متن چندخطی', 'select' => 'انتخاب از لیست'];
 
 adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products');
@@ -113,7 +136,7 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
 <div class="card mb">
     <div class="card-head"><h3>⚡ شروع سریع — نوع محصول را انتخاب کنید</h3><span class="muted small">فیلدها و آیکن پیش‌فرض همان نوع پر می‌شود؛ بعداً همه‌چیز قابل تغییر است</span></div>
     <div class="type-grid">
-        <?php foreach ($types as $k => $t): ?><a class="type-opt<?= $p['type'] === $k ? ' on' : '' ?>" href="?type=<?= $k ?>" style="--c:<?= e($t['color']) ?>"><span><?= e($t['icon']) ?></span><b><?= e($t['name']) ?></b></a><?php endforeach; ?>
+        <?php foreach ($types as $k => $t): ?><a class="type-opt<?= $p['type'] === $k ? ' on' : '' ?>" href="?type=<?= $k ?>" style="--c:<?= e($t['color']) ?>"><span><?= e($t['icon']) ?></span><b><?= e($t['name']) ?></b><?php if (!empty($t['desc'])): ?><small><?= e($t['desc']) ?></small><?php endif; ?></a><?php endforeach; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -174,6 +197,41 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
         </div>
 
         <div class="card mt">
+            <div class="card-head"><h3>🔢 تعداد و واحد</h3><span class="muted small">مثلاً «۲ رأس»، «۳ کیلو»، «۱ عدد»</span></div>
+            <div class="grid g3">
+                <?= f_text('unit', 'واحد شمارش', product_unit($p), ['placeholder' => 'عدد', 'attrs' => 'id="pUnit" list="unitList"']) ?>
+                <?= f_text('min_qty', 'حداقل در هر سفارش', (string) max(1, (int) $p['min_qty']), ['type' => 'number', 'ltr' => true, 'min' => 1]) ?>
+                <?= f_text('max_qty', 'حداکثر در هر سفارش', (int) $p['max_qty'] ? (string) (int) $p['max_qty'] : '', ['type' => 'number', 'ltr' => true, 'min' => 0, 'placeholder' => 'نامحدود (۹۹)']) ?>
+            </div>
+            <datalist id="unitList"><?php foreach (['عدد', 'بسته', 'جعبه', 'کیلو', 'گرم', 'لیتر', 'متر', 'جفت', 'رأس', 'قطعه', 'نفر', 'ساعت', 'روز', 'ماه', 'جلسه', 'TON', 'استارز'] as $uu): ?><option value="<?= e($uu) ?>"><?php endforeach; ?></datalist>
+            <div class="unit-chips"><?php foreach (['عدد', 'کیلو', 'گرم', 'لیتر', 'متر', 'رأس', 'بسته', 'نفر', 'ساعت'] as $uu): ?><button type="button" class="abtn abtn-ghost abtn-xs" data-unit="<?= e($uu) ?>"><?= e($uu) ?></button><?php endforeach; ?></div>
+        </div>
+
+        <div class="card mt">
+            <div class="card-head"><h3>🚚 نحوه‌ی تحویل به مشتری</h3><span class="muted small">هر محصولی: از کد و فایل تا کالای پستی</span></div>
+            <div class="dv-grid">
+                <?php foreach ($dtypes as $dk => [$di, $dn, $dd]): ?>
+                <label class="dv-opt"><input type="radio" name="delivery" value="<?= $dk ?>" <?= $dmode === $dk ? 'checked' : '' ?>><span class="dv-ic"><?= $di ?></span><b><?= e($dn) ?></b><small><?= e($dd) ?></small></label>
+                <?php endforeach; ?>
+            </div>
+            <div class="dv-panel" data-dv="manual"><div class="alert alert-info small">بعد از تایید فیش، از صفحه‌ی همون سفارش «انجام شد» رو بزن و متن تحویل (کد، توضیح یا پیام) رو بنویس.</div></div>
+            <div class="dv-panel" data-dv="ship">
+                <?= f_text('ship_extra', 'هزینه‌ی ارسال اضافه برای هر ' . e(product_unit($p)) . ' (تومان)', (int) $p['ship_extra'] ? (string) (int) $p['ship_extra'] : '', ['ltr' => true, 'attrs' => 'inputmode="numeric"', 'placeholder' => '۰', 'hint' => 'برای کالای سنگین یا حجیم (مثلاً دام)؛ روی هزینه‌ی روش ارسال اضافه می‌شه']) ?>
+                <div class="alert alert-info small">موقع خرید، آدرس، کد پستی و روش ارسال از مشتری گرفته می‌شه. روش‌ها و هزینه‌ها: <a href="shop-settings.php?tab=ship">تنظیمات فروشگاه ← ارسال</a>. بعد از ارسال، کد رهگیری رو توی صفحه‌ی سفارش بزن تا به مشتری اعلان بره.</div>
+            </div>
+            <div class="dv-panel" data-dv="codes">
+                <label class="af"><span class="af-label">کدها (هر خط یک کد) <em class="codes-n" id="codesN"><?= fa_num((string) $codesN) ?> کد آماده</em></span>
+                    <textarea name="delivery_data_codes" rows="6" dir="ltr" class="code" placeholder="XXXX-XXXX-XXXX&#10;YYYY-YYYY-YYYY" id="codesIn"><?= $dmode === 'codes' ? e((string) $p['delivery_data']) : '' ?></textarea>
+                    <small class="af-hint">بعد از تایید فیش، به هر خریدار به تعدادی که خریده کد می‌رسه و از این لیست برداشته می‌شه. کد که تموم بشه، محصول خودکار «ناموجود» می‌شه.</small></label>
+            </div>
+            <div class="dv-panel" data-dv="link">
+                <label class="af"><span class="af-label">لینک دانلود یا متن تحویل</span>
+                    <textarea name="delivery_data_link" rows="4" dir="auto" placeholder="https://… لینک دانلود&#10;رمز فایل: 1234"><?= $dmode === 'link' ? e((string) $p['delivery_data']) : '' ?></textarea>
+                    <small class="af-hint">بعد از تایید فیش، همین متن به خریدار نشون داده می‌شه (برای فایل، اول توی کتابخانه رسانه یا هر جای دیگه آپلود کن و لینکش رو اینجا بذار).</small></label>
+            </div>
+        </div>
+
+        <div class="card mt">
             <div class="card-head"><h3>📝 اطلاعاتی که از مشتری گرفته می‌شود</h3><button type="button" class="abtn abtn-primary abtn-sm" id="addFld"><?= adm_icon('plus', 16) ?> فیلد جدید</button></div>
             <p class="muted small">مثلاً آیدی تلگرام برای پریمیوم و استارز، آدرس کیف پول برای تون، ایمیل اکانت برای بازی. برای گیفت کارت می‌توانید هیچ فیلدی نگذارید.</p>
             <div class="fld-list sortable" id="fldList">
@@ -192,6 +250,23 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
                     <button type="button" class="adm-ib danger" data-del title="حذف فیلد"><?= adm_icon('trash', 16) ?></button>
                 </div>
                 <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="card mt">
+            <div class="card-head"><h3>🖼️ گالری تصاویر</h3><span class="muted small">تا ۱۲ تصویر کنار تصویر اصلی</span></div>
+            <input type="hidden" name="gallery" id="galIn" value="<?= e(json_encode($gallery, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+            <div class="gal-grid" id="galGrid">
+                <?php foreach ($gallery as $g): ?><div class="gal-it" data-path="<?= e($g) ?>"><img src="<?= e(media_url($g)) ?>" alt=""><button type="button" class="gal-x" aria-label="حذف تصویر">✕</button></div><?php endforeach; ?>
+                <button type="button" class="gal-add" id="galAdd" data-nofb><?= adm_icon('plus', 22) ?><small>افزودن تصویر</small></button>
+            </div>
+        </div>
+
+        <div class="card mt">
+            <div class="card-head"><h3>📋 مشخصات</h3><button type="button" class="abtn abtn-ghost abtn-sm" id="addSpec" data-nofb><?= adm_icon('plus', 16) ?> ردیف جدید</button></div>
+            <p class="muted small">مثلاً وزن: ۵۰۰ گرم · جنس: پنبه · نژاد: هلشتاین · گارانتی: ۱۸ ماه — زیر توضیحات محصول به‌صورت جدول نشون داده می‌شه.</p>
+            <div class="spec-rows" id="specRows">
+                <?php foreach ($specs as [$sk, $sv]): ?><div class="spec-r"><input data-s="k" value="<?= e($sk) ?>" placeholder="عنوان"><input data-s="v" value="<?= e($sv) ?>" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف"><?= adm_icon('trash', 15) ?></button></div><?php endforeach; ?>
             </div>
         </div>
     </div>
@@ -259,4 +334,39 @@ adm_head($p['id'] ? 'ویرایش محصول' : 'محصول جدید', 'products
         <button type="button" class="adm-ib danger" data-del title="حذف فیلد"><?= adm_icon('trash', 16) ?></button>
     </div>
 </template>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('prodForm');
+    // delivery type: show its own settings
+    var dv = function () { var v = (form.querySelector('[name=delivery]:checked') || {}).value || 'manual'; [].forEach.call(document.querySelectorAll('.dv-panel'), function (p) { p.hidden = p.dataset.dv !== v; }); };
+    form.addEventListener('change', function (e) { if (e.target.name === 'delivery') dv(); }); dv();
+    var ci = document.getElementById('codesIn'), cn = document.getElementById('codesN');
+    if (ci) ci.addEventListener('input', function () { var n = ci.value.split(/\r?\n/).filter(function (x) { return x.trim(); }).length; cn.textContent = n.toLocaleString('fa-IR') + ' کد آماده'; });
+    // unit chips
+    [].forEach.call(document.querySelectorAll('[data-unit]'), function (b) { b.addEventListener('click', function () { document.getElementById('pUnit').value = b.dataset.unit; }); });
+    // gallery
+    var gIn = document.getElementById('galIn'), gGrid = document.getElementById('galGrid'), gAdd = document.getElementById('galAdd');
+    var gSync = function () { gIn.value = JSON.stringify([].map.call(gGrid.querySelectorAll('.gal-it'), function (x) { return x.dataset.path; })); gAdd.hidden = gGrid.querySelectorAll('.gal-it').length >= 12; };
+    gAdd.addEventListener('click', function () {
+        NXA.pickMedia(function (m) {
+            var d = document.createElement('div'); d.className = 'gal-it'; d.dataset.path = m.path;
+            d.innerHTML = '<img alt=""><button type="button" class="gal-x" aria-label="حذف تصویر">✕</button>'; d.querySelector('img').src = m.url;
+            gGrid.insertBefore(d, gAdd); gSync();
+        });
+    });
+    gGrid.addEventListener('click', function (e) { var x = e.target.closest('.gal-x'); if (x) { x.closest('.gal-it').remove(); gSync(); } });
+    gSync();
+    // specs
+    var sRows = document.getElementById('specRows');
+    document.getElementById('addSpec').addEventListener('click', function () {
+        var r = document.createElement('div'); r.className = 'spec-r';
+        r.innerHTML = '<input data-s="k" placeholder="عنوان"><input data-s="v" placeholder="مقدار"><button type="button" class="adm-ib danger" data-sdel title="حذف">✕</button>';
+        sRows.appendChild(r); r.querySelector('input').focus();
+    });
+    sRows.addEventListener('click', function (e) { var b = e.target.closest('[data-sdel]'); if (b) b.closest('.spec-r').remove(); });
+    form.addEventListener('submit', function () {
+        [].forEach.call(sRows.querySelectorAll('.spec-r'), function (r, i) { r.querySelector('[data-s=k]').name = 'spec[' + i + '][k]'; r.querySelector('[data-s=v]').name = 'spec[' + i + '][v]'; });
+    });
+});
+</script>
 <?php adm_foot(['shop-admin.js']); ?>

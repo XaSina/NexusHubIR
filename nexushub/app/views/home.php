@@ -3,7 +3,7 @@ $sections = setting_json('home_sections');
 if (!$sections) $sections = json_decode(default_settings()['home_sections'], true);
 $heroStyle = (string) setting('hero_style', 'magazine');
 // featured posts always come first in the top section; remaining slots are filled with the latest news
-$heroNeed = $heroStyle === 'grid' ? 3 : 5;
+$heroNeed = ['grid' => 3, 'spotlight' => 4, 'mosaic' => 5, 'list' => 6][$heroStyle] ?? 5;
 $featured = get_posts(['featured' => 1, 'limit' => $heroNeed]);
 if (count($featured) < $heroNeed) {
     $featured = array_merge($featured, get_posts(['limit' => $heroNeed - count($featured), 'exclude' => array_column($featured, 'id') ?: [0]]));
@@ -69,6 +69,28 @@ case 'hero': if (!$featured) break; ?>
                 <button class="icon-btn" data-dir="-1" aria-label="قبلی"><?= icon('chevron-right') ?></button>
                 <div class="slider-dots"><?php foreach ($featured as $i => $p): ?><button class="<?= $i === 0 ? 'active' : '' ?>" data-go="<?= $i ?>" aria-label="اسلاید <?= $i + 1 ?>"><i></i></button><?php endforeach; ?></div>
                 <button class="icon-btn" data-dir="1" aria-label="بعدی"><?= icon('chevron-left') ?></button>
+            </div>
+        </div>
+    <?php elseif ($heroStyle === 'spotlight'): ?>
+        <div class="hero-spot">
+            <div class="hs-main"><?php partial('card', ['p' => $featured[0], 'variant' => 'big', 'i' => 0]); ?></div>
+            <?php if (count($featured) > 1): ?><div class="hs-row"><?php foreach (array_slice($featured, 1, 3) as $i => $p) partial('card', ['p' => $p, 'variant' => 'big', 'i' => $i + 1]); ?></div><?php endif; ?>
+        </div>
+    <?php elseif ($heroStyle === 'mosaic'): ?>
+        <div class="hero-mosaic hm-n<?= count($featured) ?>">
+            <?php foreach ($featured as $i => $p): ?><div class="hx hx-<?= $i + 1 ?>"><?php partial('card', ['p' => $p, 'variant' => 'big', 'i' => $i]); ?></div><?php endforeach; ?>
+        </div>
+    <?php elseif ($heroStyle === 'list'): ?>
+        <div class="hero-list glass">
+            <div class="hl-head"><span class="hl-live"><i></i> مهم‌ترین خبرها</span><a href="<?= e(url('archive')) ?>">همه اخبار <?= icon('arrow-left', 15) ?></a></div>
+            <div class="hl-grid">
+                <?php foreach ($featured as $i => $p): ?>
+                    <a class="hl-item" href="<?= e(post_url($p)) ?>" data-reveal style="--d:<?= $i ?>">
+                        <span class="hl-n"><?= fa_num((string) ($i + 1)) ?></span>
+                        <span class="hl-media"><?= cover_html($p, '', $i < 2) ?></span>
+                        <span class="hl-t"><?php if (!empty($p['cat_name'])): ?><em style="--c:<?= e($p['cat_color']) ?>"><?= e($p['cat_icon']) ?> <?= e($p['cat_name']) ?></em><?php endif; ?><b><?= e($p['title']) ?></b><small><?= icon('clock', 13) ?> <?= jago($p['published_at']) ?> · <?= icon('eye', 13) ?> <?= fa_short_num((int) $p['views']) ?></small></span>
+                    </a>
+                <?php endforeach; ?>
             </div>
         </div>
     <?php elseif ($heroStyle === 'grid'): ?>

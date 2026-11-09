@@ -10,7 +10,7 @@ $keys = ['shop_enabled', 'shop_title', 'shop_tagline', 'shop_notice', 'shop_term
     'shop_usd_mode', 'shop_usd_rate', 'shop_ton_mode', 'shop_ton_usd', 'shop_margin', 'shop_round',
     'shop_in_header', 'shop_in_mobile', 'shop_in_footer', 'shop_menu_label',
     'shop_banner_on', 'shop_banner_title', 'shop_banner_text', 'shop_banner_btn', 'shop_banner_emoji', 'shop_banner_badge', 'shop_banner_style', 'shop_banner_accent', 'shop_banner_image',
-    'shop_tg_admin_chat', 'shop_tickers_on'];
+    'shop_tg_admin_chat', 'shop_tickers_on', 'ship_free_over', 'ship_track_url', 'ship_note', 'ship_postcode_req'];
 
 if (is_post()) {
     csrf_check();
@@ -28,6 +28,18 @@ if (is_post()) {
     $save['shop_banner_accent'] = ($save['shop_banner_accent'] ?? '') !== '' ? valid_hex($save['shop_banner_accent'], '') : '';
     $save['shop_banner_places'] = implode(',', array_values(array_intersect((array) ($_POST['places'] ?? []), array_keys(shop_banner_places()))));
     if (isset($_POST['tickers_sent'])) $save['shop_tickers'] = implode(',', array_values(array_intersect((array) ($_POST['tickers'] ?? []), array_keys(market_assets()))));
+    // shipping methods (name, cost, time) + free shipping above an amount
+    if (isset($_POST['ship_methods'])) {
+        $ml = json_decode((string) $_POST['ship_methods'], true); $okm = [];
+        if (is_array($ml)) foreach (array_slice($ml, 0, 12) as $m) {
+            $nm = mb_substr(trim((string) ($m['name'] ?? '')), 0, 60); if ($nm === '') continue;
+            $okm[] = ['name' => $nm, 'cost' => max(0, (int) str_replace(['٬', ','], '', en_num((string) ($m['cost'] ?? '0')))), 'days' => mb_substr(trim((string) ($m['days'] ?? '')), 0, 60)];
+        }
+        if ($okm) $save['ship_methods'] = json_encode($okm, JSON_UNESCAPED_UNICODE);
+    }
+    if (isset($save['ship_free_over'])) $save['ship_free_over'] = (string) max(0, (int) str_replace(['٬', ','], '', en_num($save['ship_free_over'])));
+    if (isset($save['ship_track_url'])) $save['ship_track_url'] = safe_link($save['ship_track_url']) ?: '';
+    if (isset($save['ship_note'])) $save['ship_note'] = mb_substr($save['ship_note'], 0, 300);
     save_settings($save);
     // the home banner section follows its switch
     flash('تنظیمات فروشگاه ذخیره شد ✅');
@@ -48,6 +60,7 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
     <button type="button" data-tab="pay">💳 پرداخت</button>
     <button type="button" data-tab="price">💎 قیمت دلار و تون</button>
     <button type="button" data-tab="menu">📢 منو و بنر</button>
+    <button type="button" data-tab="ship">🚚 ارسال</button>
     <button type="button" data-tab="notify">🔔 اعلان‌ها</button>
 </div>
 
@@ -205,6 +218,28 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
     </div>
 </div>
 
+<div data-pane="ship">
+    <div class="grid g2">
+        <div class="card">
+            <div class="card-head"><h3>🚚 روش‌های ارسال</h3><button type="button" class="abtn abtn-ghost abtn-sm" id="addShipM" data-nofb><?= adm_icon('plus', 16) ?> روش جدید</button></div>
+            <p class="muted small">برای محصولاتی که «نحوه‌ی تحویل»شون «ارسال پستی»ه. مشتری موقع خرید یکی رو انتخاب می‌کنه و هزینه‌اش به مبلغ اضافه می‌شه.</p>
+            <input type="hidden" name="ship_methods" id="shipMIn">
+            <div class="shipm-list" id="shipMList">
+                <?php foreach (ship_methods() as $sm): ?>
+                <div class="shipm-r"><input data-k="name" value="<?= e($sm['name']) ?>" placeholder="نام روش (مثلاً پست پیشتاز)"><input data-k="cost" value="<?= (int) $sm['cost'] ?>" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input data-k="days" value="<?= e($sm['days']) ?>" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف"><?= adm_icon('trash', 15) ?></button></div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>⚙️ قوانین ارسال</h3></div>
+            <?= f_text('ship_free_over', 'ارسال رایگان برای خرید بالای (تومان)', (int) $s['ship_free_over'] ? (string) (int) $s['ship_free_over'] : '', ['ltr' => true, 'attrs' => 'inputmode="numeric"', 'placeholder' => '۰ = خاموش', 'hint' => 'هزینه‌ی اضافه‌ی کالاهای سنگین همچنان حساب می‌شه']) ?>
+            <?= f_switch('ship_postcode_req', 'کد پستی اجباری باشد', setting_on('ship_postcode_req')) ?>
+            <?= f_text('ship_track_url', 'آدرس پیگیری مرسوله', (string) $s['ship_track_url'], ['ltr' => true, 'hint' => '{code} جای کد رهگیری قرار می‌گیره؛ خالی = فقط خود کد نشون داده می‌شه']) ?>
+            <?= f_textarea('ship_note', 'توضیح زیر روش‌های ارسال (اختیاری)', (string) $s['ship_note'], ['rows' => 2, 'placeholder' => 'مثلاً: سفارش‌ها هر روز ساعت ۱۴ تحویل پست می‌شن']) ?>
+        </div>
+    </div>
+</div>
+
 <div data-pane="notify">
     <div class="grid g2">
         <div class="card">
@@ -230,6 +265,18 @@ adm_head('تنظیمات فروشگاه', 'shop-settings');
 document.addEventListener('DOMContentLoaded', function () {
     var A = window.NXA, en = function (s) { return String(s || '').replace(/[۰-۹]/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٬,]/g, ''); };
     var tab = new URLSearchParams(location.search).get('tab');
+    var sml = document.getElementById('shipMList');
+    if (sml) {
+        document.getElementById('addShipM').addEventListener('click', function () {
+            var r = document.createElement('div'); r.className = 'shipm-r';
+            r.innerHTML = '<input data-k="name" placeholder="نام روش (مثلاً پست پیشتاز)"><input data-k="cost" dir="ltr" inputmode="numeric" placeholder="هزینه (تومان)"><input data-k="days" placeholder="زمان (مثلاً ۲ تا ۴ روز)"><button type="button" class="adm-ib danger" data-shipdel title="حذف">✕</button>';
+            sml.appendChild(r); r.querySelector('input').focus();
+        });
+        sml.addEventListener('click', function (e) { var b = e.target.closest('[data-shipdel]'); if (b) b.closest('.shipm-r').remove(); });
+        document.getElementById('shopSet').addEventListener('submit', function () {
+            document.getElementById('shipMIn').value = JSON.stringify([].map.call(sml.querySelectorAll('.shipm-r'), function (r) { var o = {}; [].forEach.call(r.querySelectorAll('[data-k]'), function (i) { o[i.dataset.k] = i.value; }); return o; }));
+        });
+    }
     if (tab) { var b = document.querySelector('[data-tab="' + tab + '"]'); if (b) b.click(); }
     document.getElementById('shopSet').addEventListener('submit', function () { var a = document.querySelector('[data-tab].active'); document.getElementById('tabKeep').value = a ? a.dataset.tab : ''; });
     var R = { ton: <?= json_encode($r['ton']) ?>, usd: <?= json_encode($r['usd']) ?> };

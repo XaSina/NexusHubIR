@@ -71,7 +71,8 @@
         $$('button[data-q]', q).forEach(function (b) {
             b.addEventListener('click', function () {
                 var v = parseInt(en(inp.value), 10) || 1;
-                v = Math.max(1, Math.min(20, v + (b.dataset.q === '+' ? 1 : -1)));
+                var mn = parseInt(q.dataset.min || '1', 10) || 1, mx = parseInt(q.dataset.max || '20', 10) || 20;
+                v = Math.max(mn, Math.min(mx, v + (b.dataset.q === '+' ? 1 : -1)));
                 inp.value = v;
                 inp.dispatchEvent(new Event('input', { bubbles: true }));
                 if (q.hasAttribute('data-autosubmit')) { clearTimeout(q._t); q._t = setTimeout(function () { q.submit(); }, 450); }
@@ -111,7 +112,7 @@
             r.addEventListener('change', function () {
                 var c = r.value === '0';
                 if (amountBox) amountBox.hidden = !c;
-                if (qtyBox) qtyBox.hidden = c;
+                if (qtyBox) { qtyBox.hidden = c; var qw = $('#qtyWrap'); if (qw) qw.hidden = c; }
                 if (c && amountIn) setTimeout(function () { amountIn.focus(); amountIn.select(); }, 60);
                 calc();
             });

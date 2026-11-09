@@ -14,6 +14,13 @@ $useCustom = $custom['on'] && (!$variants || ($old['vid'] ?? '') === '0');
 $related = shop_products(['category_id' => $p['category_id'] ?: 0, 'limit' => 5]);
 $related = array_values(array_filter($related, fn($x) => $x['id'] != $p['id']));
 $fmtNum = fn(float $n) => rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.');
+$dmode = product_delivery($p);
+$unit = product_unit($p);
+[$qMin, $qMax] = product_qty_limits($p);
+$gallery = product_gallery($p);
+$specs = product_specs($p);
+if ($dmode === 'codes' && !product_codes($p)) $sold = true;
+$dText = trim((string) $p['delivery_note']) ?: ['ship' => 'ارسال پستی به سراسر کشور', 'codes' => 'تحویل خودکار و فوری، بلافاصله بعد از تایید پرداخت', 'link' => 'لینک دسترسی خودکار بعد از تایید پرداخت'][$dmode] ?? 'تحویل سریع پس از تایید پرداخت';
 ?>
 <section class="container pd-wrap" style="--c:<?= e($p['color']) ?>">
     <nav class="breadcrumb" data-reveal>
@@ -29,12 +36,18 @@ $fmtNum = fn(float $n) => rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.');
                 <?= product_image_html($p, 'pd-hero-img') ?>
                 <?php if ($p['badge']): ?><span class="ps-badge"><?= e($p['badge']) ?></span><?php endif; ?>
             </div>
+            <?php if ($gallery): ?>
+            <div class="pd-thumbs" id="pdThumbs">
+                <?php if (!empty($p['image'])): ?><button type="button" class="pd-th on" data-src="<?= e(media_url((string) $p['image'])) ?>" aria-label="تصویر ۱"><img src="<?= e(media_url((string) $p['image'])) ?>" alt="" loading="lazy"></button><?php endif; ?>
+                <?php foreach ($gallery as $gi => $g): ?><button type="button" class="pd-th" data-src="<?= e(media_url($g)) ?>" aria-label="تصویر <?= fa_num((string) ($gi + 2)) ?>"><img src="<?= e(media_url($g)) ?>" alt="" loading="lazy"></button><?php endforeach; ?>
+            </div>
+            <?php endif; ?>
             <div class="pd-meta">
                 <span class="ps-type"><?= e($type['icon']) ?> <?= e($p['cat_name'] ?: $type['name']) ?></span>
                 <h1><?= e($p['title']) ?></h1>
                 <?php if ($p['subtitle']): ?><p class="pd-sub"><?= e($p['subtitle']) ?></p><?php endif; ?>
                 <div class="pd-trust">
-                    <span><?= icon('bolt', 16) ?> <?= e($p['delivery_note'] ?: 'تحویل سریع پس از تایید پرداخت') ?></span>
+                    <span><?= $dmode === 'ship' ? '🚚' : icon('bolt', 16) ?> <?= e($dText) ?></span>
                     <span><?= icon('shield', 16) ?> پرداخت کارت‌به‌کارت + بررسی فیش</span>
                     <?php if ((int) $p['sales'] > 0): ?><span><?= icon('fire', 16) ?> <?= fa_num((string) $p['sales']) ?> فروش موفق</span><?php endif; ?>
                 </div>
@@ -125,10 +138,13 @@ $fmtNum = fn(float $n) => rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.');
 
             <div class="pd-total">
                 <?php if ($variants): ?>
-                <div class="qty" id="qtyBox" <?= $useCustom ? 'hidden' : '' ?>>
+                <div class="qty-wrap" <?= $useCustom ? 'hidden' : '' ?> id="qtyWrap">
+                <div class="qty" id="qtyBox" data-min="<?= $qMin ?>" data-max="<?= $qMax ?>">
                     <button type="button" data-q="-" aria-label="کمتر"><?= icon('minus', 16) ?></button>
-                    <input type="text" name="qty" id="qtyIn" value="<?= max(1, (int) ($old['qty'] ?? 1)) ?>" inputmode="numeric" aria-label="تعداد">
+                    <input type="text" name="qty" id="qtyIn" value="<?= max($qMin, min($qMax, (int) ($old['qty'] ?? $qMin))) ?>" inputmode="numeric" aria-label="تعداد (<?= e($unit) ?>)">
                     <button type="button" data-q="+" aria-label="بیشتر"><?= icon('plus', 16) ?></button>
+                </div>
+                <small class="qty-unit"><?= e($unit) ?><?= $qMin > 1 ? ' · حداقل ' . fa_num((string) $qMin) : '' ?></small>
                 </div>
                 <?php endif; ?>
                 <div class="pt-sum"><small>مبلغ قابل پرداخت</small><b><span id="totalOut">—</span> <small>تومان</small></b></div>
@@ -153,6 +169,15 @@ $fmtNum = fn(float $n) => rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.');
     </article>
     <?php endif; ?>
 
+    <?php if ($specs): ?>
+    <section class="pd-specs glass" data-reveal>
+        <h2 class="sec-title"><span class="sec-icon">📋</span> مشخصات</h2>
+        <dl class="spec-list">
+            <?php foreach ($specs as [$sk, $sv]): ?><div class="spec-row"><dt><?= e($sk) ?></dt><dd><?= e($sv) ?></dd></div><?php endforeach; ?>
+        </dl>
+    </section>
+    <?php endif; ?>
+
     <?php if ($related): ?>
     <section class="pd-related">
         <div class="sec-head" data-reveal><h2 class="sec-title"><span class="sec-icon"><?= icon('grid', 20) ?></span> محصولات دیگر</h2></div>
@@ -162,3 +187,17 @@ $fmtNum = fn(float $n) => rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.');
     </section>
     <?php endif; ?>
 </section>
+<?php if ($gallery): ?>
+<script>
+(function () {
+    var t = document.getElementById('pdThumbs'); if (!t) return;
+    t.addEventListener('click', function (e) {
+        var b = e.target.closest('.pd-th'); if (!b) return;
+        var hero = document.querySelector('.pd-stage .pd-hero-img');
+        if (hero && hero.tagName === 'IMG') { hero.removeAttribute('srcset'); hero.src = b.dataset.src; }
+        else if (hero) { var im = document.createElement('img'); im.className = 'pd-hero-img'; im.src = b.dataset.src; im.alt = ''; hero.replaceWith(im); }
+        [].forEach.call(t.querySelectorAll('.pd-th'), function (x) { x.classList.toggle('on', x === b); });
+    });
+})();
+</script>
+<?php endif; ?>

@@ -7,6 +7,15 @@ foreach ($coupons as $cc) if ($cc['off'] > $bestOff) { $bestOff = $cc['off']; $b
 $promo = promo_session(); $pc = null; $pWhy = '';
 if ($promo) { $pWhy = promo_problem($promo, $member); $pc = promo_for_cart($promo, $lines); if ($pWhy === '' && $pc['why'] === '' && $pc['off'] >= $bestOff) { $bestOff = $pc['off']; $best = 'p'; } }
 $bad = (bool) array_filter($lines, fn($l) => $l['error']);
+$needShip = $needShip ?? false; $shipIn = $shipIn ?? []; $shipErr = $shipErr ?? [];
+$methods = $needShip ? ship_methods() : [];
+$quotes = []; foreach ($methods as $mi => $mm) $quotes[$mi] = ship_quote($lines, $mi);
+$selM = isset($quotes[(int) ($shipIn['method'] ?? 0)]) ? (int) ($shipIn['method'] ?? 0) : 0;
+$shipNow = $needShip ? $quotes[$selM]['cost'] : 0;
+$sf = function (string $k, string $label, string $ph = '', string $extra = '') use ($shipIn, $shipErr) {
+    return '<label class="field' . (isset($shipErr[$k]) ? ' has-err' : '') . '"><span>' . e($label) . '</span><input name="ship[' . e($k) . ']" value="' . e((string) ($shipIn[$k] ?? '')) . '" placeholder="' . e($ph) . '" ' . $extra . (str_contains($extra, 'data-optional') ? '' : ' required') . '>'
+        . (isset($shipErr[$k]) ? '<em class="field-err">' . e($shipErr[$k]) . '</em>' : '') . '</label>';
+};
 ?>
 <section class="container shop-page">
     <?php partial('shop-steps', ['at' => 2]); ?>
@@ -37,6 +46,28 @@ $bad = (bool) array_filter($lines, fn($l) => $l['error']);
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php if ($needShip): ?>
+            <div class="co-card co-ship glass" data-reveal>
+                <h3>🚚 آدرس و روش ارسال</h3>
+                <div class="co-ship-grid">
+                    <?= $sf('name', 'نام و نام خانوادگی گیرنده', '', 'autocomplete="name"') ?>
+                    <?= $sf('phone', 'شماره موبایل گیرنده', '09xxxxxxxxx', 'dir="ltr" inputmode="tel" autocomplete="tel"') ?>
+                    <?= $sf('province', 'استان', 'مثلاً اصفهان', 'autocomplete="address-level1"') ?>
+                    <?= $sf('city', 'شهر', 'مثلاً اصفهان', 'autocomplete="address-level2"') ?>
+                </div>
+                <label class="field<?= isset($shipErr['address']) ? ' has-err' : '' ?>"><span>آدرس کامل</span><textarea name="ship[address]" rows="2" required placeholder="خیابان، کوچه، پلاک، واحد" autocomplete="street-address"><?= e((string) ($shipIn['address'] ?? '')) ?></textarea><?= isset($shipErr['address']) ? '<em class="field-err">' . e($shipErr['address']) . '</em>' : '' ?></label>
+                <div class="co-ship-grid"><?= $sf('postcode', 'کد پستی' . (setting_on('ship_postcode_req') ? '' : ' (اختیاری)'), '۱۰ رقم', 'dir="ltr" inputmode="numeric" autocomplete="postal-code"' . (setting_on('ship_postcode_req') ? '' : ' data-optional')) ?></div>
+                <div class="co-ship-methods">
+                    <?php foreach ($methods as $mi => $mm): $qq = $quotes[$mi]; ?>
+                    <label class="co-sm"><input type="radio" name="ship[method]" value="<?= $mi ?>" data-cost="<?= (int) $qq['cost'] ?>" <?= $mi === $selM ? 'checked' : '' ?>>
+                        <span class="co-sm-t"><b><?= e($mm['name']) ?></b><?php if ($mm['days'] !== ''): ?><small><?= e($mm['days']) ?></small><?php endif; ?></span>
+                        <b class="co-sm-p"><?= $qq['cost'] ? money((int) $qq['cost']) . ' <small>تومان</small>' : 'رایگان' ?></b></label>
+                    <?php endforeach; ?>
+                </div>
+                <?php if ((int) setting('ship_free_over') > 0): ?><p class="co-ship-note">🎉 خرید بالای <?= money((int) setting('ship_free_over')) ?> تومان، ارسال رایگان<?= $quotes && $quotes[0]['extra'] ? ' (به‌جز هزینه‌ی ویژه‌ی بعضی کالاها)' : '' ?></p><?php endif; ?>
+                <?php if ($n = trim((string) setting('ship_note'))): ?><p class="co-ship-note"><?= e($n) ?></p><?php endif; ?>
+            </div>
+            <?php endif; ?>
             <div class="co-card glass" data-reveal>
                 <label class="field"><span>توضیحات سفارش (اختیاری)</span><textarea name="note" rows="3" maxlength="1000" placeholder="اگر نکته‌ای درباره سفارش دارید اینجا بنویسید..."></textarea></label>
             </div>
@@ -60,7 +91,8 @@ $bad = (bool) array_filter($lines, fn($l) => $l['error']);
             <div class="cs-row"><span>جمع سبد</span><b><?= money($total) ?> <small>تومان</small></b></div>
             <div class="cs-row cs-disc" id="coDiscRow"<?= $bestOff ? '' : ' hidden' ?>><span>تخفیف جایزه</span><b id="coDisc">− <?= money($bestOff) ?> <small>تومان</small></b></div>
             <?php endif; ?>
-            <div class="cs-row cs-total"><span>مبلغ قابل پرداخت</span><b><span id="coPay" data-total="<?= $total ?>"><?= money($total - min($bestOff, $total - 1)) ?></span> <small>تومان</small></b></div>
+            <?php if ($needShip): ?><div class="cs-row"><span>🚚 هزینه‌ی ارسال</span><b id="coShip"><?= $shipNow ? money($shipNow) . ' <small>تومان</small>' : 'رایگان' ?></b></div><?php endif; ?>
+            <div class="cs-row cs-total"><span>مبلغ قابل پرداخت</span><b><span id="coPay" data-total="<?= $total ?>" data-ship="<?= (int) $shipNow ?>"><?= money($total - min($bestOff, $total - 1) + $shipNow) ?></span> <small>تومان</small></b></div>
             <?php if ($n = trim((string) setting('shop_notice'))): ?><p class="co-notice"><?= icon('clock', 15) ?> <?= e($n) ?></p><?php endif; ?>
             <?php if ($terms = trim((string) setting('shop_terms'))): ?><details class="co-terms"><summary><?= icon('shield', 15) ?> قوانین فروشگاه</summary><div><?= nl2br(e($terms)) ?></div></details><?php endif; ?>
             <label class="co-agree"><input type="checkbox" name="agree" value="1" required> <span>اطلاعات سفارش را بررسی کردم و قوانین فروشگاه را می‌پذیرم.</span></label>
@@ -70,11 +102,17 @@ $bad = (bool) array_filter($lines, fn($l) => $l['error']);
     </form>
 </section>
 <script>
-document.addEventListener('change', function (e) {
-    if (e.target.name !== 'coupon') return;
-    var off = +e.target.dataset.off || 0, pay = document.getElementById('coPay'), total = +pay.dataset.total, fa = function (n) { return String(Math.round(n).toLocaleString('en-US')).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }).replace(/,/g, '٬'); };
-    off = Math.min(off, total - 1);
-    pay.textContent = fa(total - off);
-    var row = document.getElementById('coDiscRow'); if (row) { row.hidden = !off; document.getElementById('coDisc').innerHTML = '− ' + fa(off) + ' <small>تومان</small>'; }
-});
+(function () {
+    var pay = document.getElementById('coPay');
+    var fa = function (n) { return String(Math.round(n).toLocaleString('en-US')).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }).replace(/,/g, '٬'); };
+    function paint() {
+        var total = +pay.dataset.total, c = document.querySelector('input[name=coupon]:checked'), off = c ? (+c.dataset.off || 0) : 0;
+        off = Math.min(off, total - 1);
+        var m = document.querySelector('input[name="ship[method]"]:checked'), ship = m ? (+m.dataset.cost || 0) : 0;
+        pay.textContent = fa(total - off + ship);
+        var row = document.getElementById('coDiscRow'); if (row) { row.hidden = !off; document.getElementById('coDisc').innerHTML = '− ' + fa(off) + ' <small>تومان</small>'; }
+        var sh = document.getElementById('coShip'); if (sh) sh.innerHTML = ship ? fa(ship) + ' <small>تومان</small>' : 'رایگان';
+    }
+    document.addEventListener('change', function (e) { if (e.target.name === 'coupon' || e.target.name === 'ship[method]') paint(); });
+})();
 </script>
