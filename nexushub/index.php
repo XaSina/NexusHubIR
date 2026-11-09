@@ -103,7 +103,8 @@ switch ($seg[0] ?? '') {
         $pg = paginate($total, $per, $page);
         $posts = get_posts(['category_id' => $cat['id'], 'limit' => $per, 'offset' => $pg['offset']]);
         page_out('list', ['posts' => $posts, 'pg' => $pg, 'heading' => $cat['name'], 'icon' => $cat['icon'], 'color' => $cat['color'], 'sub' => $cat['description'], 'base' => cat_url($cat), 'bodyClass' => 'page-list'], [
-            'title' => $cat['name'] . ($pg['page'] > 1 ? ' — صفحه ' . fa_num((string) $pg['page']) : '') . ' | ' . setting('site_title'), 'description' => $cat['description'] ?: setting('site_description'),
+            'title' => (trim((string) ($cat['seo_title'] ?? '')) ?: $cat['name'] . ' | ' . setting('site_title')) . ($pg['page'] > 1 ? ' — صفحه ' . fa_num((string) $pg['page']) : ''),
+            'description' => trim((string) ($cat['seo_desc'] ?? '')) ?: ($cat['description'] ?: setting('site_description')),
             'crumbs' => [['خانه', site_url('')], [$cat['name'], site_url('category/' . rawurlencode($cat['slug']))]],
         ] + seo_list_meta('category/' . rawurlencode($cat['slug']), $pg));
         break;
@@ -170,7 +171,8 @@ switch ($seg[0] ?? '') {
         $pageRow = row("SELECT * FROM pages WHERE slug = ? AND status = 'published'", [$seg[1] ?? '']);
         if (!$pageRow) not_found();
         track_visit();
-        page_out('page', ['pageRow' => $pageRow], ['title' => $pageRow['title'] . ' | ' . setting('site_title'), 'description' => str_excerpt((string) $pageRow['content']),
+        page_out('page', ['pageRow' => $pageRow], ['title' => trim((string) ($pageRow['seo_title'] ?? '')) ?: $pageRow['title'] . ' | ' . setting('site_title'),
+            'description' => trim((string) ($pageRow['seo_desc'] ?? '')) ?: str_excerpt((string) $pageRow['content']),
             'url' => site_url('page/' . rawurlencode($pageRow['slug'])), 'crumbs' => [['خانه', site_url('')], [$pageRow['title'], site_url('page/' . rawurlencode($pageRow['slug']))]]]);
         break;
 

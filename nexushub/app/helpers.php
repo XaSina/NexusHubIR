@@ -387,9 +387,25 @@ function icon(string $name, int $size = 20): string
 /** Logo for on-page display: the bundled default is swapped for a sharp 512px version; custom uploads are used as-is */
 function logo_url(): string
 {
-    $l = (string) setting('logo');
-    if ($l === '' || in_array($l, ['assets/img/logo-256.png', 'assets/img/logo.jpg'], true)) return url('assets/img/logo-hd.webp');
-    return media_url($l);
+    return logo_is_default() ? url('assets/img/nx-logo-512.png') : media_url((string) setting('logo'));
+}
+
+/** true while the site uses the bundled NX logo (not a custom upload) */
+function logo_is_default(): bool
+{
+    return in_array((string) setting('logo'), ['', 'assets/img/logo-256.png', 'assets/img/logo.jpg', 'assets/img/logo-hd.webp', 'assets/img/nx-logo-512.png'], true);
+}
+
+/** <link> icons for the browser tab, Google results and phones: the transparent NX unless a custom favicon was uploaded */
+function favicon_tags(): string
+{
+    $f = (string) setting('favicon');
+    if (!in_array($f, ['', 'assets/img/favicon.png', 'assets/img/nx-favicon.png'], true)) return '<link rel="icon" href="' . e(media_url($f)) . '">' . "\n";
+    $u = fn($p) => e(url('assets/img/' . $p));
+    return '<link rel="icon" type="image/png" sizes="32x32" href="' . $u('nx-favicon-32.png') . '">' . "\n"
+        . '<link rel="icon" type="image/png" sizes="64x64" href="' . $u('nx-favicon.png') . '">' . "\n"
+        . '<link rel="icon" type="image/png" sizes="192x192" href="' . $u('nx-icon-192.png') . '">' . "\n"
+        . '<link rel="apple-touch-icon" href="' . $u('nx-icon-192.png') . '">' . "\n";
 }
 
 /**

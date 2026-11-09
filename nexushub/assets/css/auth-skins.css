@@ -114,3 +114,4 @@ body[class*="au-skin-"] .au-id-field input { padding-right: 58px; padding-left: 
 .au-skin-paper .au-start.cta .cta-face { background: #fbfbfd; box-shadow: none; }
 .au-skin-paper .au-start.cta .cta-label { color: #15161d; }
 .au-skin-paper .au-start.cta .cta-ic { color: #fff; background: #15161d; box-shadow: 0 6px 14px -6px rgba(0,0,0,.6); }
+html.theme-light .au-skin-paper .au-card { box-shadow: 0 30px 70px -30px rgba(30,40,80,.35), 0 0 0 1px rgba(18,19,26,.06); }

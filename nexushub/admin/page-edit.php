@@ -10,6 +10,8 @@ if (is_post()) {
     $data = [
         'title' => mb_substr(trim((string) $_POST['title']), 0, 190),
         'content' => content_to_store(sanitize_html((string) ($_POST['content'] ?? ''))),
+        'seo_title' => mb_substr(trim((string) ($_POST['seo_title'] ?? '')), 0, 190) ?: null,
+        'seo_desc' => mb_substr(trim((string) ($_POST['seo_desc'] ?? '')), 0, 320) ?: null,
         'status' => ($_POST['status'] ?? '') === 'draft' ? 'draft' : 'published',
         'show_in_footer' => !empty($_POST['show_in_footer']) ? 1 : 0,
         'sort_order' => (int) ($_POST['sort_order'] ?? 0),
@@ -30,6 +32,10 @@ adm_head($p['id'] ? 'ویرایش صفحه' : 'صفحه جدید', 'pages');
         <div class="card">
             <?= f_text('title', 'عنوان صفحه', $p['title'], ['required' => true, 'id' => 'pTitle', 'attrs' => 'class="title-input"']) ?>
             <?= f_text('slug', 'نامک (آدرس)', $p['slug'], ['ltr' => true, 'attrs' => 'data-slug-from="#pTitle"', 'placeholder' => 'about']) ?>
+            <div class="seo-mini"><b>🔎 نمایش در گوگل <small class="muted">(اختیاری)</small></b>
+                <?= f_text('seo_title', 'عنوان در گوگل', (string) ($p['seo_title'] ?? ''), ['placeholder' => 'خالی = خودکار از نام', 'attrs' => 'maxlength="190"']) ?>
+                <?= f_textarea('seo_desc', 'توضیح در گوگل', (string) ($p['seo_desc'] ?? ''), ['rows' => 2, 'placeholder' => 'یه جمله‌ی ۱۲۰ تا ۱۶۰ حرفی که زیر عنوان توی گوگل میاد']) ?>
+            </div>
             <div class="af"><span class="af-label">محتوا</span><textarea name="content" data-editor data-key="page-<?= (int) $p['id'] ?>"><?= e(content_for_display((string) $p['content'])) ?></textarea></div>
         </div>
         <div class="split-side">

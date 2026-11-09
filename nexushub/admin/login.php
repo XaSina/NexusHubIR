@@ -28,7 +28,7 @@ if (is_post()) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>ورود به پنل مدیریت | <?= e(setting('site_title')) ?></title>
-<link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
+<?= favicon_tags() ?>
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/captcha.css')) ?>">
 <style><?= theme_css_vars() ?></style>

@@ -29,6 +29,8 @@ if (is_post()) {
     $data = [
         'name' => mb_substr(trim((string) $_POST['name']), 0, 120),
         'description' => mb_substr(trim((string) ($_POST['description'] ?? '')), 0, 500),
+        'seo_title' => mb_substr(trim((string) ($_POST['seo_title'] ?? '')), 0, 190) ?: null,
+        'seo_desc' => mb_substr(trim((string) ($_POST['seo_desc'] ?? '')), 0, 320) ?: null,
         'color' => valid_hex((string) ($_POST['color'] ?? ''), '#ff1f3d'),
         'icon' => mb_substr(trim((string) ($_POST['icon'] ?? '📰')), 0, 8) ?: '📰',
         'sort_order' => (int) ($_POST['sort_order'] ?? 0),
@@ -91,6 +93,10 @@ adm_head('دسته‌بندی‌ها', 'categories');
                 <?php endforeach; ?>
             </div>
             <?= f_textarea('description', 'توضیحات', (string) $c['description'], ['rows' => 3]) ?>
+            <div class="seo-mini"><b>🔎 نمایش در گوگل <small class="muted">(اختیاری)</small></b>
+                <?= f_text('seo_title', 'عنوان در گوگل', (string) ($c['seo_title'] ?? ''), ['placeholder' => 'خالی = خودکار از نام', 'attrs' => 'maxlength="190"']) ?>
+                <?= f_textarea('seo_desc', 'توضیح در گوگل', (string) ($c['seo_desc'] ?? ''), ['rows' => 2, 'placeholder' => 'یه جمله‌ی ۱۲۰ تا ۱۶۰ حرفی که زیر عنوان توی گوگل میاد']) ?>
+            </div>
             <?= f_text('sort_order', 'ترتیب', (string) $c['sort_order'], ['type' => 'number']) ?>
             <div class="af-label" style="margin:10px 0 2px">کجا نمایش داده شود؟</div>
             <?= f_switch('show_in_header', '🖥️ منوی بالای سایت (کامپیوتر)', (bool) $c['show_in_header'], 'کنار «خانه» و «همه اخبار» در نوار بالا؛ روی موبایل نمایش داده نمی‌شود') ?>

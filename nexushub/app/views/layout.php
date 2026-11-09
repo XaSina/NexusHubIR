@@ -5,8 +5,8 @@ $title = $meta['title'] ?? $siteTitle;
 $desc = $meta['description'] ?? setting('site_description');
 $image = $meta['image'] ?? '';
 if ($image === '' && setting('og_image') !== '') $image = site_url((string) setting('og_image'));
-$ogLogo = in_array((string) setting('logo'), ['', 'assets/img/logo-256.png'], true) ? 'assets/img/logo.jpg' : (string) setting('logo');
-if ($image === '') $image = site_url($ogLogo);
+$ogLogo = logo_is_default() ? 'assets/img/nx-logo-512.png' : (string) setting('logo');
+if ($image === '') $image = site_url(logo_is_default() ? 'assets/img/nx-og.jpg' : $ogLogo);
 $colors = theme_colors();
 $bgEffect = (string) setting('bg_effect', 'particles');
 $cardStyle = (string) setting('card_style', 'glass');
@@ -88,8 +88,7 @@ $jsCfg['cart'] = $cartN;
 <?php if (!empty($meta['url'])): ?><meta property="og:url" content="<?= e($meta['url']) ?>"><link rel="canonical" href="<?= e($meta['url']) ?>"><?php endif; ?>
 <meta name="twitter:card" content="summary_large_image">
 <?= seo_meta_tags($meta, $title, (string) $desc, $image) ?>
-<link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
-<link rel="apple-touch-icon" href="<?= e(url('assets/img/icon-192.png')) ?>">
+<?= favicon_tags() ?>
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/boxes.css')) ?>">

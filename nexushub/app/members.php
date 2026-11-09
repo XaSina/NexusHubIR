@@ -4,7 +4,7 @@
  * جدا از کاربران پنل مدیریت (جدول users)
  */
 
-const NX_DB_VERSION = 19;   // v19: product SEO fields + custom panel roles (per-user permissions)
+const NX_DB_VERSION = 20;   // v20: Google title / description for categories and pages
 // v13 note:   // v13: personal invite codes   // v12: public promo codes   // v10: lucky wheel tables (created by schema.php)
 
 /** ارتقای خودکار پایگاه داده برای نصب‌های قبلی (بدون نیاز به نصب مجدد) */
@@ -104,6 +104,15 @@ function nx_migrate(): void
         };
         $add('products', ['seo_title' => 'VARCHAR(190) NULL', 'seo_desc' => 'VARCHAR(320) NULL', 'seo_keywords' => 'VARCHAR(300) NULL']);
         $add('users', ['perms' => 'TEXT NULL']);
+    }
+    if ($v < 20) {
+        // v20: what Google shows for a category / a page (title + description), set from the panel
+        foreach (['categories', 'pages'] as $t) {
+            $have = array_column(rows("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", [$t]), 'COLUMN_NAME');
+            if (!$have) continue;
+            if (!in_array('seo_title', $have, true)) db()->exec("ALTER TABLE `$t` ADD COLUMN `seo_title` VARCHAR(190) NULL");
+            if (!in_array('seo_desc', $have, true)) db()->exec("ALTER TABLE `$t` ADD COLUMN `seo_desc` VARCHAR(320) NULL");
+        }
     }
     save_settings(['db_version' => (string) NX_DB_VERSION]);
 }

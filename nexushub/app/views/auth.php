@@ -8,20 +8,23 @@ $siteTitle = (string) setting('site_title');
 $canRegister = setting_on('members_register');
 $cfg = ['base' => nx_base_path(), 'csrf' => csrf_token(), 'home' => url(''), 'canRegister' => $canRegister];
 ?><!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" class="<?= theme_colors()['light'] ? 'theme-light' : 'theme-dark' ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#000000">
 <title>ورود | ثبت‌نام — <?= e($siteTitle) ?></title>
-<link rel="icon" href="<?= e(media_url((string) setting('favicon'))) ?>">
+<?= favicon_tags() ?>
 <link rel="preload" href="<?= e(url('assets/fonts/Vazirmatn-Variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="<?= e($logo) ?>" as="image">
 <link rel="stylesheet" href="<?= e(asset('css/warp.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/auth.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/captcha.css')) ?>">
-<?php $authSkin = isset(auth_skins()[(string) setting('auth_skin')]) ? (string) setting('auth_skin') : 'nebula'; if ($authSkin !== 'nebula'): ?><link rel="stylesheet" href="<?= e(asset('css/auth-skins.css')) ?>"><?php endif; ?>
+<?php $authSkin = isset(auth_skins()[(string) setting('auth_skin')]) ? (string) setting('auth_skin') : 'nebula';
+    // a light site theme gets the light sign-in card unless another box theme was picked on purpose
+    if ($authSkin === 'nebula' && theme_colors()['light']) $authSkin = 'paper';
+    if ($authSkin !== 'nebula'): ?><link rel="stylesheet" href="<?= e(asset('css/auth-skins.css')) ?>"><?php endif; ?>
 <?php $decorHtml = decor_html('auth'); if ($decorHtml): ?><link rel="stylesheet" href="<?= e(asset('css/decor.css')) ?>"><?php endif; ?>
 <style><?= theme_css_vars() ?></style>
 <?= perf_head() ?>
@@ -89,7 +92,7 @@ $auWaves = [
 
 <!-- ============ Intro ============ -->
 <main class="au-intro" id="auIntro">
-    <?php $bundled = in_array((string) setting('logo'), ['', 'assets/img/logo-256.png', 'assets/img/logo.jpg'], true);
+    <?php $bundled = logo_is_default();
           $logoStyle = $bundled ? (string) setting('auth_logo_style', 'particles') : 'particles';
           if (!in_array($logoStyle, ['particles', 'laser', 'glass'], true)) $logoStyle = 'particles'; ?>
     <div class="au-emblem st-<?= e($logoStyle) ?>" id="auEmblem" data-style="<?= e($logoStyle) ?>"<?= $bundled ? ' data-mark="' . e(url('assets/img/logo-mark.png')) . '"' : '' ?>>
