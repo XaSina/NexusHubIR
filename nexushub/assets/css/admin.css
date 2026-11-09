@@ -1841,3 +1841,18 @@ html.perf-lite .srp-state.is-live i, html.perf-off .srp-state.is-live i { animat
 .pex-steps { margin: 0 0 16px; padding: 0 22px 0 0; display: grid; gap: 6px; font-size: .88rem; color: var(--a-text2); }
 .pex-steps li::marker { color: var(--primary); font-weight: 800; }
 .pex-xampp .pex-opts { max-width: 640px; }
+
+/* very small phones (≤380px): the top bar always fits — smaller icon buttons, the title may wrap */
+.adm-title { min-width: 0; flex: 0 1 auto; overflow-wrap: anywhere; }
+@media (max-width: 380px) {
+    .adm-top { gap: 6px; padding: 8px; }
+    .adm-top-actions { gap: 5px; }
+    .adm-top .adm-ib, .adm-top-actions .abtn-sm { width: 34px; height: 34px; min-width: 34px; min-height: 34px; padding: 0; justify-content: center; border-radius: 10px; }
+    .adm-title { font-size: .92rem; line-height: 1.5; }
+}
+/* sortable rows with arrows + switch on very narrow cards: the name keeps the first line */
+@container sortl (max-width: 330px) {
+    .sort-item:has(.mv) { flex-wrap: wrap; row-gap: 8px; }
+    .sort-item:has(.mv) > b { flex: 1 1 calc(100% - 44px); min-width: 0; }
+    .sort-item:has(.mv) .mv { margin-right: auto; }
+}

@@ -1720,3 +1720,5 @@ html.perf-off .nx-invalid { animation: none; }
     .f-about { padding: 20px 16px; }
     .footer-grid:not(:has(> .f-about)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* invite buttons: two rows on very narrow phones instead of cut text */
+@media (max-width: 600px) { .acc-invite .ai-act > * { flex: 1 1 140px; } }
