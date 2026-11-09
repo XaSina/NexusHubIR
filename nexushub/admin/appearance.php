@@ -7,7 +7,7 @@ $keys = ['theme_preset', 'color_primary', 'color_secondary', 'color_bg', 'glass_
     'announce_on', 'announce_text', 'announce_link', 'announce_style', 'logo', 'favicon', 'footer_text', 'copyright', 'trust_badges', 'trust_title', 'show_online',
     'social_telegram', 'social_group', 'social_admin', 'social_instagram', 'social_x', 'social_youtube', 'social_aparat', 'custom_css', 'home_sections', 'menu',
     'latest_mode', 'latest_count', 'latest_hours', 'latest_since',
-    'home_latest_title', 'home_latest_more', 'home_latest_btn', 'home_cat_count', 'home_trend_title', 'home_trend_count', 'home_shop_count',
+    'home_latest_title', 'home_latest_more', 'home_latest_btn', 'home_cat_count', 'home_trend_title', 'home_trend_count', 'home_shop_count', 'wide_single',
     'sidebar_widgets', 'sb_trend_title', 'sb_trend_count', 'sb_tg_title', 'sb_tg_text', 'sb_tg_btn', 'sb_tags_title', 'sb_tags_count', 'theme_decor', 'decor_density', 'decor_admin',
     'brand_sub', 'topbar_on', 'topbar_date_on', 'topbar_social_on', 'hdr_search_on', 'hdr_login_on', 'hdr_tg_on', 'hdr_tg_label', 'hdr_login_label', 'footer_cats_title', 'footer_links_title', 'footer_cta_on', 'footer_cta_title', 'footer_cta_text', 'footer_cta_btn', 'vmsg_check', 'vmsg_field', 'vmsg_email', 'vmsg_short', 'footer_made', 'tgblock_eyebrow', 'tgblock_title', 'tgblock_text', 'tgblock_btn', 'tgblock_group_btn', 'contact_style', 'contact_icons_title', 'to_top_on', 'perf_widget_on', 'warp_on', 'auth_tagline', 'auth_btn_label', 'auth_back_label', 'auth_welcome_title', 'auth_welcome_text'];
 
@@ -62,6 +62,7 @@ if (is_post()) {
         if (isset($save[$nk])) $save[$nk] = (string) max($mn, min($mx, (int) en_num($save[$nk])));
     foreach (['home_latest_title', 'home_latest_more', 'home_latest_btn', 'home_trend_title', 'sb_trend_title', 'sb_tg_title', 'sb_tg_btn', 'sb_tags_title'] as $tk)
         if (isset($save[$tk])) $save[$tk] = mb_substr(str_replace(["\r", "\n"], ' ', $save[$tk]), 0, 80);
+    if (isset($save['wide_single'])) $save['wide_single'] = $save['wide_single'] === 'full' ? 'full' : 'half';
     if (isset($save['sb_tg_text'])) $save['sb_tg_text'] = mb_substr($save['sb_tg_text'], 0, 300);
     foreach (['home_latest_title', 'home_trend_title', 'sb_trend_title', 'sb_tg_btn', 'sb_tags_title'] as $tk)
         if (isset($save[$tk]) && trim($save[$tk]) === '') $save[$tk] = default_settings()[$tk];
@@ -239,6 +240,14 @@ adm_head('ظاهر سایت', ($_GET['tab'] ?? '') === 'layout' ? 'home' : 'appe
             <div class="grid g2">
                 <?= f_text('home_cat_count', 'تعداد خبر هر بلوک دسته', (string) $s['home_cat_count'], ['type' => 'number', 'ltr' => true, 'min' => 3, 'max' => 20, 'hint' => 'کدوم دسته‌ها بیان: دسته‌بندی‌ها ← 🏠']) ?>
                 <?= f_text('home_shop_count', 'تعداد محصول در بخش فروشگاه', (string) $s['home_shop_count'], ['type' => 'number', 'ltr' => true, 'min' => 2, 'max' => 12]) ?>
+            </div>
+            <div class="af"><span class="af-label">📐 باکس تنها در جاهای عریض (تبلیغ، گردونه، قرعه‌کشی…)</span>
+                <div class="opt-grid">
+                    <?php $wsg = (string) ($s['wide_single'] ?? 'half'); ?>
+                    <label class="opt"><input type="radio" name="wide_single" value="half" <?= $wsg !== 'full' ? 'checked' : '' ?>><b>نصف عرض، وسط صفحه</b><small>جمع‌وجور؛ دوتا که باشن کنار هم پر می‌شن</small></label>
+                    <label class="opt"><input type="radio" name="wide_single" value="full" <?= $wsg === 'full' ? 'checked' : '' ?>><b>تمام عرض</b><small>یه نوار کامل از این سر تا اون سر</small></label>
+                </div>
+                <small class="af-hint">دو یا چند باکس در یه جا همیشه دوتا کنار هم میان. روی گوشی همیشه تمام‌عرضه.</small>
             </div>
             <p class="muted small">متن‌های بخش «دعوت به کانال تلگرام» در زبانه‌ی «✍️ متن‌ها و بخش‌ها» هستن.</p>
         </div>

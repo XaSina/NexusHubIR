@@ -1838,3 +1838,6 @@ html.perf-lite .srp-state.is-live i, html.perf-off .srp-state.is-live i { animat
 .home-hub-links span { grid-row: 1 / 3; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; font-size: 1.15rem; background: rgba(var(--primary-rgb), .1); border: 1px solid rgba(var(--primary-rgb), .25); }
 .home-hub-links b { font-size: .88rem; }
 .home-hub-links small { color: var(--a-muted); font-size: .72rem; line-height: 1.6; }
+.pex-steps { margin: 0 0 16px; padding: 0 22px 0 0; display: grid; gap: 6px; font-size: .88rem; color: var(--a-text2); }
+.pex-steps li::marker { color: var(--primary); font-weight: 800; }
+.pex-xampp .pex-opts { max-width: 640px; }

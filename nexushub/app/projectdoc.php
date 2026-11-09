@@ -20,17 +20,20 @@ function export_private_tables(): array
 }
 
 /** writes an SQL dump to a stream; $safe strips secrets and personal rows */
-function sql_dump_to($fh, bool $safe = false): void
+function sql_dump_to($fh, bool $safe = false, string $createDb = ''): void
 {
     @set_time_limit(300);
     $pdo = db();
     $tables = array_map(fn($r) => array_values($r)[0], rows('SHOW TABLES'));
     fwrite($fh, "-- NEXUS | HUB database\n-- " . jdate('Y/m/d H:i', null, false) . ($safe ? "\n-- SAFE COPY: secrets removed, personal data tables exported as structure only" : '') . "\nSET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\n\n");
+    if ($createDb !== '') fwrite($fh, "CREATE DATABASE IF NOT EXISTS `$createDb` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\nUSE `$createDb`;\n\n");
     $private = array_flip(export_private_tables());
     foreach ($tables as $t) {
         $t = str_replace('`', '', $t);
         $create = row('SHOW CREATE TABLE `' . $t . '`');
-        fwrite($fh, "DROP TABLE IF EXISTS `$t`;\n" . array_values($create)[1] . ";\n\n");
+        // MySQL 8 collations don't exist in XAMPP's MariaDB: use the portable one
+        $ddl = preg_replace('~utf8mb4_0900_[a-z_]+~', 'utf8mb4_unicode_ci', (string) array_values($create)[1]);
+        fwrite($fh, "DROP TABLE IF EXISTS `$t`;\n" . $ddl . ";\n\n");
         if ($safe && isset($private[$t])) { fwrite($fh, "-- rows of `$t` left out (personal data)\n\n"); continue; }
         $cols = array_column(rows("SHOW COLUMNS FROM `$t`"), 'Field');
         $st = $pdo->query("SELECT * FROM `$t`");
@@ -99,6 +102,72 @@ function project_export_zip(array $o): string
     $zip->setArchiveComment('NEXUS | HUB ' . NX_VERSION . ' · ' . date('Y-m-d H:i') . ' · ' . $count . ' files');
     $zip->close();
     return $tmp;
+}
+
+/** a copy that runs on a Windows PC with XAMPP: files + ready config + a database file that creates its own database */
+function project_xampp_zip(bool $uploads = true): string
+{
+    if (!class_exists('ZipArchive')) throw new RuntimeException('افزونه‌ی ZipArchive روی هاست فعال نیست.');
+    @set_time_limit(900);
+    @ini_set('memory_limit', '512M');
+    $tmp = tempnam(sys_get_temp_dir(), 'nxx');
+    $zip = new ZipArchive();
+    if ($zip->open($tmp, ZipArchive::OVERWRITE) !== true) throw new RuntimeException('ساخت فایل ZIP ممکن نشد.');
+    $root = rtrim(str_replace('\\', '/', NX_ROOT), '/');
+    $o = ['uploads' => $uploads, 'safe' => false, 'db' => true];
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::LEAVES_ONLY);
+    foreach ($it as $f) {
+        if (!$f->isFile()) continue;
+        $rel = ltrim(substr(str_replace('\\', '/', $f->getPathname()), strlen($root)), '/');
+        if ($rel === 'app/config.php' || !export_take($rel, $o)) continue;
+        $zip->addFile($f->getPathname(), 'nexushub/' . $rel);
+    }
+    if (is_file($root . '/README.md')) $zip->addFile($root . '/README.md', 'nexushub/FEATURES-fa.md');
+    $zip->addFromString('nexushub/README.md', project_readme(['db' => true, 'uploads' => $uploads]));
+    // config for XAMPP's defaults (MySQL user root, no password); the address is detected by itself
+    $cfg = "<?php\n// XAMPP — ساخته‌شده از پنل ← پشتیبان‌گیری. اگه رمز MySQL گذاشتی، db_pass رو پر کن.\nreturn [\n    'db_host' => 'localhost',\n    'db_port' => 3306,\n    'db_name' => 'nexushub',\n    'db_user' => 'root',\n    'db_pass' => '',\n    'site_url' => '',\n    'secret' => '" . bin2hex(random_bytes(24)) . "',\n    'debug' => false,\n];\n";
+    $zip->addFromString('nexushub/app/config.php', $cfg);
+    if (!is_file($root . '/app/installed.lock')) $zip->addFromString('nexushub/app/installed.lock', date('c'));
+    $fh = fopen('php://temp/maxmemory:' . (8 * 1048576), 'w+');
+    sql_dump_to($fh, false, 'nexushub');
+    rewind($fh);
+    $zip->addFromString('nexushub-database.sql', stream_get_contents($fh));
+    fclose($fh);
+    $zip->addFromString('راهنمای-نصب-XAMPP.txt', xampp_guide());
+    $zip->setArchiveComment('NEXUS | HUB ' . NX_VERSION . ' for XAMPP · ' . date('Y-m-d H:i'));
+    $zip->close();
+    return $tmp;
+}
+
+function xampp_guide(): string
+{
+    $L = [
+        'NEXUS | HUB — نصب روی کامپیوتر با XAMPP',
+        'ساخته‌شده: ' . jdate('Y/m/d H:i', null, false),
+        '',
+        '۱) XAMPP رو نصب کن و از XAMPP Control Panel دو تا گزینه‌ی Apache و MySQL رو Start کن.',
+        '۲) پوشه‌ی nexushub رو (همونی که کنار این فایله) کپی کن داخل:  C:\\xampp\\htdocs\\',
+        '   یعنی آخرش بشه:  C:\\xampp\\htdocs\\nexushub\\index.php',
+        '۳) مرورگر رو باز کن و برو به:  http://localhost/phpmyadmin',
+        '   بالای صفحه «Import» (درون‌ریزی) رو بزن، فایل nexushub-database.sql رو انتخاب کن و پایین صفحه «Import / Go» رو بزن.',
+        '   (این فایل خودش دیتابیس nexushub رو می‌سازه؛ لازم نیست دستی بسازیش.)',
+        '۴) سایت آماده‌ست:  http://localhost/nexushub/',
+        '',
+        'ورود به پنل مدیریت:',
+        '   همون لینک مخفی که روی سایت اصلی استفاده می‌کنی، فقط اولش رو عوض کن:',
+        '   http://localhost/nexushub/ + همون کد طولانی آخر لینکت',
+        '   اگه لینک یادت نیست: یه فایل خالی به اسم admin-unlock.txt داخل C:\\xampp\\htdocs\\nexushub\\app\\ بساز،',
+        '   برو به http://localhost/nexushub/admin/login.php و وارد شو، بعد از «امنیت» یه لینک جدید بساز و اون فایل رو پاک کن.',
+        '',
+        'اگه چیزی کار نکرد:',
+        '   • صفحه‌ها «Not Found» میدن → فایل C:\\xampp\\htdocs\\nexushub\\.htaccess رو با Notepad باز کن و جلوی خط «# RewriteBase /nexushub/» علامت # رو پاک کن.',
+        '   • خطای اتصال به دیتابیس → اگه برای MySQL رمز گذاشتی، داخل nexushub\\app\\config.php جلوی db_pass بنویسش.',
+        '   • پورت 80 گرفته‌ست (Skype/IIS) → از XAMPP ← Config ← httpd.conf پورت رو 8080 کن و برو به http://localhost:8080/nexushub/',
+        '',
+        'نکته: این نسخه کامله (همه‌ی اعضا، سفارش‌ها و تنظیمات). فقط برای خودت نگهش دار و به کسی نده.',
+        'برای دادن به برنامه‌نویس یا هوش مصنوعی از «دانلود ZIP کامل پروژه» با «نسخه‌ی امن» استفاده کن.',
+    ];
+    return "\xEF\xBB\xBF" . implode("\r\n", $L) . "\r\n";
 }
 
 /** one-line notes for the files another developer / AI will look for first */

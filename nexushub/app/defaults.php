@@ -130,6 +130,7 @@ function default_settings(): array
         'home_trend_title' => 'پربازدیدترین‌ها',
         'home_trend_count' => '4',
         'home_shop_count' => '4',
+        'wide_single' => 'half',        // a lone box in a wide place: half = half width, centred · full = full width
         'sidebar_widgets' => json_encode([['key' => 'trend', 'on' => 1], ['key' => 'ads', 'on' => 1], ['key' => 'telegram', 'on' => 1], ['key' => 'tags', 'on' => 1]]),
         'sb_trend_title' => 'داغ‌ترین‌ها',
         'sb_trend_count' => '5',
@@ -349,7 +350,7 @@ function ad_positions(): array
     return [
         'header_top' => ['name' => 'بالای هدر (نوار سراسری)', 'hint' => 'یه خط باریک بالای همه صفحات با دکمه‌ی بستن — متن کوتاه بنویس', 'size' => 'یک خط'],
         'home_top' => ['name' => 'صفحه اصلی — زیر اسلایدر', 'hint' => 'بنر عریض بعد از بخش ویژه', 'size' => '1200×200'],
-        'home_middle' => ['name' => 'صفحه اصلی — وسط', 'hint' => 'بین دسته‌بندی‌ها', 'size' => '1200×200'],
+        'home_middle' => ['name' => 'صفحه اصلی — وسط (بعد از اولین بلوک دسته)', 'hint' => 'بعد از اولین بلوک دسته‌بندی (مثلاً بعد از «گیم»)', 'size' => '1200×200'],
         'sidebar' => ['name' => 'سایدبار', 'hint' => 'کنار اخبار و صفحه خبر', 'size' => '400×400'],
         'post_top' => ['name' => 'خبر — بالای متن', 'hint' => 'قبل از شروع متن خبر', 'size' => '800×150'],
         'post_middle' => ['name' => 'خبر — وسط متن', 'hint' => 'بعد از پاراگراف N ام', 'size' => '800×150'],

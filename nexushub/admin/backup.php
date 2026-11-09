@@ -14,6 +14,21 @@ if (is_post()) {
         sql_dump_to($out);
         exit;
     }
+    if ($act === 'xampp') {
+        try {
+            $zip = project_xampp_zip(!empty($_POST['xx_uploads']));
+        } catch (Throwable $e) {
+            flash('ساخت فایل XAMPP ممکن نشد: ' . $e->getMessage(), 'error');
+            redirect('admin/backup.php');
+        }
+        while (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="nexushub-xampp-' . jdate('Y-m-d', null, false) . '.zip"');
+        header('Content-Length: ' . filesize($zip));
+        readfile($zip);
+        @unlink($zip);
+        exit;
+    }
     if ($act === 'project' || $act === 'readme') {
         $o = ['db' => !empty($_POST['x_db']), 'uploads' => !empty($_POST['x_uploads']), 'safe' => !empty($_POST['x_safe'])];
         save_settings(['export_db' => $o['db'] ? '1' : '0', 'export_uploads' => $o['uploads'] ? '1' : '0', 'export_safe' => $o['safe'] ? '1' : '0']);
@@ -87,6 +102,26 @@ adm_head('پشتیبان‌گیری و ابزارها', 'backup');
             </div>
             <p class="pex-warn small" data-safe-off<?= $exSafe ? ' hidden' : '' ?>>⚠️ نسخه‌ی کامل شامل رمز دیتابیس و اطلاعات اعضاست؛ فقط برای پشتیبان شخصی خودت نگهش دار و به کسی نده.</p>
         </div>
+    </div>
+</form>
+<form method="post" class="card pex pex-xampp">
+    <?= csrf_field() ?>
+    <div class="pex-head">
+        <span class="pex-ic">💻</span>
+        <div>
+            <h3>نسخه‌ی آماده برای XAMPP (اجرا روی کامپیوتر خودت)</h3>
+            <p class="muted small">کل سایت با همه‌ی اخبار، اعضا، سفارش‌ها و تنظیمات؛ فایل <span class="ltr">config.php</span> از قبل برای XAMPP تنظیم شده و فایل دیتابیس خودش دیتابیس رو می‌سازه. راهنمای فارسی قدم‌به‌قدم هم داخل ZIP هست.</p>
+        </div>
+    </div>
+    <ol class="pex-steps">
+        <li>پوشه‌ی <b class="ltr">nexushub</b> رو بذار توی <b class="ltr">C:\xampp\htdocs</b></li>
+        <li>توی <b class="ltr">localhost/phpmyadmin</b> فایل <b class="ltr">nexushub-database.sql</b> رو Import کن</li>
+        <li>برو به <b class="ltr">localhost/nexushub</b> — تمام 🎉</li>
+    </ol>
+    <div class="pex-opts">
+        <?= f_switch('xx_uploads', '🖼️ همراه عکس‌ها و فایل‌های آپلودی', true, 'حجم فعلی: ' . fa_num(number_format($upSize / 1048576, 1)) . ' مگابایت — بدون عکس‌ها، تصویر خبرها روی کامپیوتر خالی دیده می‌شن') ?>
+        <div class="pex-btns"><button class="abtn abtn-primary" name="act" value="xampp">⬇️ دانلود نسخه‌ی XAMPP</button></div>
+        <p class="pex-warn small">⚠️ این نسخه کامل و خصوصیه (اطلاعات اعضا داخلشه)؛ برای خودت نگهش دار.</p>
     </div>
 </form>
 <script>

@@ -390,3 +390,8 @@ html.perf-off .nx-strip { transition: none; }
     .nxp-fmt-card .nxp-inner { justify-content: center; gap: 28px; padding: 18px 28px; }
     .nxp-fmt-card .nxp-content { flex: 0 1 auto; max-width: 620px; }
 }
+/* a lone box in a wide place: half width in the middle (panel → home page) */
+@media (min-width: 900px) {
+    .nxp-row.nxp-half { justify-content: center; }
+    .nxp-row.nxp-half > .nxp-slot { flex: 0 1 calc(50% - 9px); }
+}

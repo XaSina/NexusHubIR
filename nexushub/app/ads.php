@@ -53,7 +53,8 @@ function ad_slot(string $position): string
     if ($position === 'header_top') return top_strips();
     $html = ad_slot_inner($position);
     // wide places: several boxes sit side by side (two per row) instead of a stack of long empty bars
-    if ($html !== '' && !in_array($position, ['sidebar', 'popup', 'floating'], true)) return '<div class="nxp-row nxp-row-' . e($position) . '">' . $html . '</div>';
+    if ($html !== '' && !in_array($position, ['sidebar', 'popup', 'floating'], true))
+        return '<div class="nxp-row nxp-row-' . e($position) . (setting('wide_single', 'half') === 'full' ? '' : ' nxp-half') . '">' . $html . '</div>';
     return $html;
 }
 
@@ -185,7 +186,7 @@ function render_ad(array $a, bool $preview = false): string
 /** Places the shop banner may use (ad slots) */
 function shop_banner_places(): array
 {
-    return ['home_shop' => 'صفحه اصلی — بخش فروشگاه (بالای محصولات ویژه)', 'home_top' => 'صفحه اصلی — زیر اسلایدر', 'home_middle' => 'صفحه اصلی — وسط', 'sidebar' => 'سایدبار', 'post_top' => 'خبر — بالای متن',
+    return ['home_shop' => 'صفحه اصلی — بخش فروشگاه (بالای محصولات ویژه)', 'home_top' => 'صفحه اصلی — زیر اسلایدر', 'home_middle' => 'صفحه اصلی — وسط (بعد از اولین بلوک دسته)', 'sidebar' => 'سایدبار', 'post_top' => 'خبر — بالای متن',
         'post_bottom' => 'خبر — پایان متن', 'footer_top' => 'بالای فوتر (همه صفحات)', 'header_top' => 'بالای هدر — نوار باریک یک‌خطی (همه صفحات)'];
 }
 
