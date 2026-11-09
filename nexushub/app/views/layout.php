@@ -229,18 +229,20 @@ $jsCfg['cart'] = $cartN;
 <footer class="site-footer">
     <div class="footer-glow" aria-hidden="true"></div>
     <div class="container footer-grid">
-        <div class="f-about">
+        <?php if (setting_on('footer_brand_on')): $fText = trim((string) setting('footer_text')); $fSoc = setting_on('footer_brand_social') ? social_links() : []; ?>
+        <div class="f-about<?= $fText === '' ? ' is-compact' : '' ?>">
             <a class="brand" href="<?= e(url('')) ?>">
                 <span class="brand-logo"><img src="<?= e(logo_url()) ?>" alt="" width="46" height="46"></span>
                 <span class="brand-text"><b><?= e($siteTitle) ?></b><small><?= e(setting('brand_sub')) ?></small></span>
             </a>
-            <p><?= e(setting('footer_text')) ?></p>
-            <div class="f-social">
-                <?php foreach (social_links() as $s): ?>
+            <?php if ($fText !== ''): ?><p><?= e($fText) ?></p><?php endif; ?>
+            <?php if ($fSoc): ?><div class="f-social">
+                <?php foreach ($fSoc as $s): ?>
                     <a href="<?= e($s['url']) ?>" target="_blank" rel="noopener" title="<?= e($s['label']) ?>"><?= icon($s['icon'], 18) ?></a>
                 <?php endforeach; ?>
-            </div>
+            </div><?php endif; ?>
         </div>
+        <?php endif; ?>
         <div>
             <h4><?= e(setting('footer_cats_title')) ?></h4>
             <ul class="f-links">
@@ -340,6 +342,7 @@ $jsCfg['cart'] = $cartN;
 
 <script>window.NX = <?= json_encode($jsCfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= e(asset('js/confirm.js')) ?>" defer></script>
+<script src="<?= e(asset('js/btnfx.js')) ?>" defer></script>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <?php if ($shopOn || $me): ?><script src="<?= e(asset('js/shop.js')) ?>" defer></script><?php endif; ?>
 <?php if (str_contains((string) ($bodyClass ?? ''), 'page-account')): ?><script src="<?= e(asset('js/pw.js')) ?>" defer></script><?php endif; ?>

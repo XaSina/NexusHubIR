@@ -576,7 +576,15 @@
         $$('.au-field.err', form).forEach(function (f) { f.classList.remove('err'); });
         $$('.au-ferr', form).forEach(function (f) { f.textContent = ''; });
     }
-    function loading(form, on) { var b = $('.au-btn', form) || form; b.classList.toggle('loading', on); b.disabled = on; }
+    function loading(form, on) {
+        var b = $('.au-btn', form) || form; b.classList.toggle('loading', on); b.disabled = on;
+        // each button says what it is doing while it works («در حال ورود…», «در حال ساخت حساب…»)
+        var s = b.querySelector && b.querySelector(':scope > span');
+        if (s && b.dataset && b.dataset.busy) {
+            if (on) { if (!b.dataset.label) b.dataset.label = s.textContent; s.textContent = b.dataset.busy; }
+            else if (b.dataset.label) s.textContent = b.dataset.label;
+        }
+    }
 
     /* identifier live type detection */
     var ICONS = {

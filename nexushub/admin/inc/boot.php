@@ -125,6 +125,18 @@ function adm_cmd_items(): array
     return $out;
 }
 
+/** downloads of the whole site / database ask for the signed-in user's password again */
+function adm_pw_check(): bool
+{
+    $u = current_user();
+    if (!$u) return false;
+    if (!rate_hit('dlpw', 8, 900, 'u' . $u['id'])) { flash('چند بار رمز اشتباه زده شد؛ ۱۵ دقیقه بعد دوباره امتحان کن.', 'error'); return false; }
+    $ok = password_verify((string) ($_POST['confirm_pw'] ?? ''), (string) $u['password']);
+    if ($ok) rate_clear('dlpw', 'u' . $u['id']);
+    else flash('رمز عبور درست نبود ❌', 'error');
+    return $ok;
+}
+
 function adm_head(string $title, string $active = ''): void
 {
     $u = current_user();
@@ -222,6 +234,7 @@ window.NXA = <?= json_encode([
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="<?= e(asset('js/confirm.js')) ?>"></script>
+<script src="<?= e(asset('js/btnfx.js')) ?>"></script>
 <script src="<?= e(asset('js/admin.js')) ?>"></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 <script src="<?= e(asset('js/cmdk.js')) ?>" defer></script>

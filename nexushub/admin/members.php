@@ -18,7 +18,9 @@ if (in_array($status, ['active', 'banned'], true)) { $where[] = 'status = ?'; $p
 $w = implode(' AND ', $where);
 
 // خروجی اکسل (CSV با BOM برای نمایش درست فارسی)
-if (($_GET['export'] ?? '') === 'csv') {
+if (is_post() && ($_POST['act'] ?? '') === 'export') {
+    csrf_check();
+    if (!adm_pw_check()) redirect('admin/members.php');
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="nexus-members-' . jdate('Y-m-d', null, false) . '.csv"');
     $out = fopen('php://output', 'w');
@@ -68,7 +70,7 @@ adm_head('اعضای سایت', 'members');
             <option value="banned" <?= $status === 'banned' ? 'selected' : '' ?>>مسدود</option>
         </select>
         <button class="abtn abtn-ghost abtn-sm" type="submit"><?= icon('search', 16) ?> جستجو</button>
-        <a class="abtn abtn-primary abtn-sm" href="?<?= e(http_build_query(array_filter(['q' => $qs, 'status' => $status]) + ['export' => 'csv'])) ?>"><?= adm_icon('upload', 16) ?> خروجی اکسل</a>
+        <form method="post" data-pw style="display:contents"><?= csrf_field() ?><button class="abtn abtn-primary abtn-sm" name="act" value="export" data-download><?= adm_icon('upload', 16) ?> خروجی اکسل</button></form>
     </form>
 
     <?php if (!$list): ?>

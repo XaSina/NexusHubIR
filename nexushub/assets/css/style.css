@@ -1707,3 +1707,16 @@ html.perf-off .nx-invalid { animation: none; }
 :where(a, button, summary, [role=button], [tabindex]):focus-visible { outline: 2px solid rgba(var(--primary-rgb), .9); outline-offset: 3px; }
 /* every sidebar part switched off in the panel: the content takes the full width */
 .layout-2col:not(:has(> .sidebar)) { grid-template-columns: minmax(0, 1fr); }
+
+/* footer brand box: one tidy card that never stretches into a big empty block */
+.f-about { align-self: start; padding: 20px; border: 1px solid var(--line); border-radius: calc(var(--radius) - 2px); background: rgba(var(--text-rgb), .025); }
+.f-about.is-compact { padding: 16px 18px; }
+.f-about.is-compact .f-social { margin-top: 14px; }
+.f-about p:last-child { margin-bottom: 0; }
+/* brand box switched off: the other columns share the row */
+.footer-grid:not(:has(> .f-about)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .footer-grid:not(:has(> .f-about)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+    .f-about { padding: 20px 16px; }
+    .footer-grid:not(:has(> .f-about)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

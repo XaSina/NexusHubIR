@@ -208,6 +208,8 @@ function project_file_notes(): array
         'assets/js/app.js' => 'Main site script (toasts, API helper `api()`, reactions, comments, saved posts…).',
         'assets/js/admin.js' => 'Main panel script.',
         'assets/js/cmdk.js' => 'Panel quick search (Ctrl + K).',
+        'assets/js/btnfx.js' => 'Button feedback everywhere («در حال ذخیره…» → «ذخیره شد ✓»).',
+        'assets/js/confirm.js' => 'Themed confirm dialog (`data-confirm`) and password prompt (`data-pw`, `nxPassword()`).',
     ];
 }
 
@@ -306,6 +308,8 @@ function project_readme(array $o = []): string
     $L[] = '- Text shown to people is **Persian**, layout is RTL. Dates via `jdate()`, digits via `fa_num()`, money via `money()` (Toman).';
     $L[] = '- Panel permissions: `require_cap(\'*\')` (owner) or a capability like `shop`, `posts`; check `can()` before showing links.';
     $L[] = '- Styles: reuse the theme variables (`--primary`, `--primary-rgb`, `--grad`, `--a-surface`, `--a-line`…). Boxes must never touch: keep 12–18px gaps, test at 360, 390, 768, 1024, 1280, 1440px.';
+    $L[] = '- Buttons: `assets/js/btnfx.js` (loaded on site, panel and both login pages) shows «در حال …» while a button works and «… شد ✓» after a request. It reads the button label; set `data-busy` / `data-done` for custom texts, `data-download` for buttons that return a file, `data-nofb` to switch it off.';
+    $L[] = '- Sensitive downloads: add `data-pw` to the form (asks «رمز عبور را وارد کنید», sends `confirm_pw`) and call `adm_pw_check()` on the server before sending the file.';
     $L[] = '- Performance modes (`html.perf-ultra / perf-balanced / perf-lite / perf-off`): heavy effects only in ultra; phones default to lighter modes.';
     $L[] = '';
     $L[] = '## To change it ✅ (safe places)';

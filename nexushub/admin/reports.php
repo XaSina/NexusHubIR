@@ -2,8 +2,15 @@
 require __DIR__ . '/inc/boot.php';
 require_cap('shop');
 
+$doExport = false;
 if (is_post()) {
     csrf_check();
+    if (($_POST['act'] ?? '') === 'export') {
+        if (!adm_pw_check()) redirect('admin/reports.php');
+        $doExport = true;
+    }
+}
+if (is_post() && !$doExport) {
     if (($_POST['act'] ?? '') === 'rebuild' && can('*')) {
         $n = sales_close_months(true);
         flash('🔄 ' . fa_num((string) $n) . ' ماه بسته‌شده دوباره از روی سفارش‌ها حساب شد.');
@@ -38,7 +45,7 @@ if (!$all) $all[] = [$cy, $cm];
 $all = array_reverse($all);
 
 // CSV export of every month
-if (($_GET['export'] ?? '') === 'csv') {
+if ($doExport) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="sales-report-' . $curKey . '.csv"');
     echo "\xEF\xBB\xBF" . "ماه,وضعیت,فروش (تومان),سفارش موفق,کل سفارش‌ها,لغو/منقضی,میانگین سفارش,مشتری,اقلام,تخفیف,عضو جدید,تغییر فروش نسبت به ماه قبل (%)\n";
@@ -88,7 +95,7 @@ adm_head('گزارش فروش ماهانه', 'reports');
         </div>
         <div class="srp-hero-act">
             <?php if (!$isLive): ?><a class="abtn abtn-ghost abtn-sm" href="<?= e(url('admin/reports.php')) ?>">⏱️ ماه جاری</a><?php endif; ?>
-            <a class="abtn abtn-ghost abtn-sm" href="<?= e($link(['export' => 'csv'])) ?>">⬇️ خروجی اکسل</a>
+            <form method="post" data-pw style="display:contents"><?= csrf_field() ?><button class="abtn abtn-ghost abtn-sm" name="act" value="export" data-download>⬇️ خروجی اکسل</button></form>
         </div>
     </div>
     <div class="srp-month-bar" aria-hidden="true"><i style="width:<?= round($elapsed * 100 / max(1, $days)) ?>%"></i></div>

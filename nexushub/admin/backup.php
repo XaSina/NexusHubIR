@@ -6,6 +6,7 @@ require_once NX_APP . '/projectdoc.php';
 if (is_post()) {
     csrf_check();
     $act = $_POST['act'] ?? '';
+    if (in_array($act, ['download', 'project', 'readme', 'xampp'], true) && !adm_pw_check()) redirect('admin/backup.php');
     if ($act === 'download') {
         $name = 'nexushub-backup-' . jdate('Y-m-d', null, false) . '-' . date('His') . '.sql';
         header('Content-Type: application/sql; charset=utf-8');
@@ -70,7 +71,7 @@ $upSize = (int) val('SELECT COALESCE(SUM(size),0) FROM media');
 $exDb = setting_on('export_db'); $exSafe = setting_on('export_safe'); $exUp = setting_on('export_uploads');
 adm_head('پشتیبان‌گیری و ابزارها', 'backup');
 ?>
-<form method="post" class="card pex">
+<form method="post" class="card pex" data-pw>
     <?= csrf_field() ?>
     <div class="pex-head">
         <span class="pex-ic">📦</span>
@@ -97,14 +98,14 @@ adm_head('پشتیبان‌گیری و ابزارها', 'backup');
             <?= f_switch('x_db', '🗄️ همراه دیتابیس (SQL)', $exDb, 'ساختار همه‌ی جدول‌ها + محتوا (در نسخه‌ی امن، داده‌های شخصی حذف می‌شن)') ?>
             <?= f_switch('x_uploads', '🖼️ همراه عکس‌ها و فایل‌های آپلودی', $exUp, 'حجم فعلی: ' . fa_num(number_format($upSize / 1048576, 1)) . ' مگابایت — اگه فقط برای هوش مصنوعی می‌خوای خاموش بمونه سبک‌تره') ?>
             <div class="pex-btns">
-                <button class="abtn abtn-primary" name="act" value="project">⬇️ دانلود ZIP کامل پروژه</button>
-                <button class="abtn abtn-ghost" name="act" value="readme">📄 فقط README.md</button>
+                <button class="abtn abtn-primary" name="act" value="project" data-download>⬇️ دانلود ZIP کامل پروژه</button>
+                <button class="abtn abtn-ghost" name="act" value="readme" data-download>📄 فقط README.md</button>
             </div>
             <p class="pex-warn small" data-safe-off<?= $exSafe ? ' hidden' : '' ?>>⚠️ نسخه‌ی کامل شامل رمز دیتابیس و اطلاعات اعضاست؛ فقط برای پشتیبان شخصی خودت نگهش دار و به کسی نده.</p>
         </div>
     </div>
 </form>
-<form method="post" class="card pex pex-xampp">
+<form method="post" class="card pex pex-xampp" data-pw>
     <?= csrf_field() ?>
     <div class="pex-head">
         <span class="pex-ic">💻</span>
@@ -120,7 +121,7 @@ adm_head('پشتیبان‌گیری و ابزارها', 'backup');
     </ol>
     <div class="pex-opts">
         <?= f_switch('xx_uploads', '🖼️ همراه عکس‌ها و فایل‌های آپلودی', true, 'حجم فعلی: ' . fa_num(number_format($upSize / 1048576, 1)) . ' مگابایت — بدون عکس‌ها، تصویر خبرها روی کامپیوتر خالی دیده می‌شن') ?>
-        <div class="pex-btns"><button class="abtn abtn-primary" name="act" value="xampp">⬇️ دانلود نسخه‌ی XAMPP</button></div>
+        <div class="pex-btns"><button class="abtn abtn-primary" name="act" value="xampp" data-download>⬇️ دانلود نسخه‌ی XAMPP</button></div>
         <p class="pex-warn small">⚠️ این نسخه کامل و خصوصیه (اطلاعات اعضا داخلشه)؛ برای خودت نگهش دار.</p>
     </div>
 </form>
@@ -134,7 +135,7 @@ document.addEventListener('change', function (e) {
     <div class="card">
         <div class="card-head"><h3><?= adm_icon('database', 20) ?> پشتیبان پایگاه داده</h3></div>
         <p class="muted">حجم فعلی دیتابیس: <b><?= fa_num(number_format($dbSize / 1048576, 2)) ?></b> مگابایت · حجم تصاویر: <b><?= fa_num(number_format($upSize / 1048576, 1)) ?></b> مگابایت</p>
-        <form method="post"><?= csrf_field() ?><button class="abtn abtn-primary" name="act" value="download"><?= adm_icon('upload', 18) ?> دانلود فایل پشتیبان (SQL)</button></form>
+        <form method="post" data-pw><?= csrf_field() ?><button class="abtn abtn-primary" name="act" value="download" data-download><?= adm_icon('upload', 18) ?> دانلود فایل پشتیبان (SQL)</button></form>
         <div class="alert alert-info small mt">
             <b>انتقال از XAMPP به هاست cPanel:</b><br>
             ۱. از اینجا فایل SQL را دانلود کنید.<br>

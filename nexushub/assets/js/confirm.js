@@ -28,6 +28,13 @@
         '.nxc-no{color:inherit;background:rgba(127,127,140,.12);border:1px solid rgba(127,127,140,.25)}' +
         '.nxc-no:hover{background:rgba(127,127,140,.2)}' +
         '.nxc-row button:focus-visible{outline:2px solid var(--primary,#ff1f3d);outline-offset:2px}' +
+        '.nxc-pw{position:relative;margin:0 0 16px}' +
+        '.nxc-pw input{width:100%;height:50px;padding:0 14px;border-radius:14px;font:inherit;font-size:16px;letter-spacing:.5px;direction:ltr;text-align:left;color:inherit;' +
+        'background:rgba(127,127,140,.1);border:1px solid rgba(127,127,140,.3);outline:0;transition:border-color .2s,box-shadow .2s}' +
+        '.nxc-pw input:focus{border-color:rgba(var(--primary-rgb,255,31,61),.7);box-shadow:0 0 0 4px rgba(var(--primary-rgb,255,31,61),.15)}' +
+        '.nxc-err{margin:-8px 0 12px;font-size:.8rem;color:#ff5a6e;min-height:1.4em}' +
+        '.nxc.shake .nxc-box{animation:nxcShake .4s}' +
+        '@keyframes nxcShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}' +
         '@media (prefers-reduced-motion:reduce){.nxc-box,.nxc-bd{transition:none}.nxc-ic{animation:none}}';
     var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
 
@@ -66,6 +73,59 @@
         });
     }
     window.nxConfirm = nxConfirm;
+
+    /* password box: nxPassword({ title }).then(function (pw) { pw === null → cancelled }) */
+    function nxPassword(o) {
+        o = o || {};
+        return new Promise(function (resolve) {
+            var w = document.createElement('div');
+            w.className = 'nxc primary'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true'); w.dir = 'rtl';
+            w.innerHTML = '<div class="nxc-bd"></div><form class="nxc-box" autocomplete="off"><div class="nxc-ic">🔒</div>' +
+                '<p class="nxc-t">' + esc(o.title || 'رمز عبور را وارد کنید') + '</p>' + (o.sub ? '<p class="nxc-s">' + esc(o.sub) + '</p>' : '<p class="nxc-s"></p>') +
+                '<label class="nxc-pw pw-box"><input type="password" autocomplete="current-password" aria-label="رمز عبور" required></label>' +
+                '<p class="nxc-err" aria-live="polite"></p>' +
+                '<div class="nxc-row"><button type="submit" class="nxc-ok">' + esc(o.ok || 'تأیید') + '</button><button type="button" class="nxc-no">انصراف</button></div></form>';
+            document.body.appendChild(w);
+            var prev = document.activeElement, done = false, inp = w.querySelector('input'), err = w.querySelector('.nxc-err');
+            requestAnimationFrame(function () { w.classList.add('on'); });
+            setTimeout(function () { inp.focus(); }, 40);
+            function close(v) {
+                if (done) return; done = true;
+                w.classList.add('out'); document.removeEventListener('keydown', key, true);
+                setTimeout(function () { w.remove(); if (prev && prev.focus) try { prev.focus({ preventScroll: true }); } catch (e) {} }, 200);
+                resolve(v);
+            }
+            function key(e) { if (e.key === 'Escape') { e.preventDefault(); close(null); } }
+            document.addEventListener('keydown', key, true);
+            w.querySelector('form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!inp.value) { err.textContent = 'رمز رو بنویس'; w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake'); inp.focus(); return; }
+                close(inp.value);
+            });
+            w.querySelector('.nxc-no').addEventListener('click', function () { close(null); });
+            w.querySelector('.nxc-bd').addEventListener('click', function () { close(null); });
+        });
+    }
+    window.nxPassword = nxPassword;
+
+    // forms with data-pw ask for the password first; it travels as a hidden field «confirm_pw»
+    var pwPassed = new WeakSet();
+    document.addEventListener('submit', function (e) {
+        var f = e.target;
+        if (!f.hasAttribute || !f.hasAttribute('data-pw')) return;
+        if (pwPassed.has(f)) { pwPassed.delete(f); return; }
+        e.preventDefault(); e.stopImmediatePropagation();
+        var sub = e.submitter;
+        nxPassword({ title: f.getAttribute('data-pw') || 'رمز عبور را وارد کنید' }).then(function (pw) {
+            if (pw === null) return;
+            var h = f.querySelector('input[name=confirm_pw]');
+            if (!h) { h = document.createElement('input'); h.type = 'hidden'; h.name = 'confirm_pw'; f.appendChild(h); }
+            h.value = pw;
+            pwPassed.add(f);
+            if (f.requestSubmit) f.requestSubmit(sub && sub.form === f ? sub : undefined); else f.submit();
+            setTimeout(function () { h.value = ''; }, 1500);   // the password never stays in the page
+        });
+    }, true);
 
     // buttons / links with data-confirm (capture: runs before other handlers)
     var passed = new WeakSet();

@@ -54,6 +54,7 @@ if (is_post()) {
     </div>
 </div>
 <script src="<?= e(asset('js/pw.js')) ?>"></script>
+<script src="<?= e(asset('js/btnfx.js')) ?>"></script>
 <script src="<?= e(asset('js/captcha.js')) ?>"></script>
 </body>
 </html>

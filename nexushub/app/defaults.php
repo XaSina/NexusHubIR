@@ -22,6 +22,8 @@ function default_settings(): array
         'brand_sub' => 'Gaming · Tech · News',
         'hdr_tg_on' => '1',
         'topbar_on' => '1',
+        'footer_brand_on' => '1',
+        'footer_brand_social' => '1',
         'topbar_date_on' => '1',
         'topbar_social_on' => '1',
         'hdr_search_on' => '1',

@@ -142,7 +142,7 @@ $auWaves = [
                     <span class="au-id-sparks" aria-hidden="true"></span>
                 </label>
                 <div class="au-error" role="alert"></div>
-                <button class="au-btn" type="submit"><span>ادامه</span><i class="au-spin"></i></button>
+                <button class="au-btn" type="submit" data-busy="در حال بررسی…"><span>ادامه</span><i class="au-spin"></i></button>
             </form>
 
             <!-- 2: login -->
@@ -158,7 +158,7 @@ $auWaves = [
                 </label>
                 <?= captcha_html('login') ?>
                 <div class="au-error" role="alert"></div>
-                <button class="au-btn" type="submit"><span>ورود</span><i class="au-spin"></i><svg class="au-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="100"/></svg></button>
+                <button class="au-btn" type="submit" data-busy="در حال ورود…"><span>ورود</span><i class="au-spin"></i><svg class="au-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="100"/></svg></button>
             </form>
 
             <!-- 3: register -->
@@ -188,7 +188,7 @@ $auWaves = [
                 <?= captcha_html('register') ?>
                 <div class="au-strength" id="auStrength"><i></i><i></i><i></i><i></i><span>حداقل ۸ کاراکتر، شامل حروف انگلیسی و عدد</span></div>
                 <div class="au-error" role="alert"></div>
-                <button class="au-btn" type="submit"><span>ثبت‌نام</span><i class="au-spin"></i></button>
+                <button class="au-btn" type="submit" data-busy="در حال ساخت حساب…"><span>ثبت‌نام</span><i class="au-spin"></i></button>
             </form>
 
             <!-- 4: success -->
@@ -206,7 +206,7 @@ $auWaves = [
                     <div class="au-mini-bottom"><span><small>CARD HOLDER</small><b id="auSucFull"></b></span><span><small>MEMBER SINCE</small><b id="auSucDate"></b></span></div>
                 </div>
                 <p class="au-sub small">این <b>کد عضویت اختصاصی</b> توئه؛ توی حساب کاربری همیشه در دسترسه.</p>
-                <button class="au-btn au-btn-xl" type="button" id="auFinish"><span>ورود به حساب</span><i class="au-spin"></i></button>
+                <button class="au-btn au-btn-xl" type="button" id="auFinish" data-busy="در حال ورود به حساب…"><span>ورود به حساب</span><i class="au-spin"></i></button>
             </div>
         </div>
     </div>
@@ -237,6 +237,7 @@ $auWaves = [
 <script>window.NXAU = <?= json_encode($cfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= e(asset('js/captcha.js')) ?>" defer></script>
 <script src="<?= e(asset('js/auth.js')) ?>" defer></script>
+<script src="<?= e(asset('js/btnfx.js')) ?>" defer></script>
 <script src="<?= e(asset('js/pw.js')) ?>" defer></script>
 <?= perf_foot() ?>
 </body>
